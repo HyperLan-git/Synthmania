@@ -10,6 +10,7 @@
 
 #include <stdexcept>
 
+#include "Buffer.hpp"
 #include "ShaderDescriptorPool.hpp"
 #include "ShaderDescriptorSetLayout.hpp"
 
@@ -25,7 +26,7 @@ struct UniformBufferObject {
  * texture samplers can be used.
  *
  */
-VkDescriptorBufferInfo* createBufferInfo(VkBuffer buffer);
+VkDescriptorBufferInfo* createBufferInfo(Buffer* buffer);
 VkDescriptorImageInfo* createImageInfo(VkImageView view, VkSampler sampler);
 class ShaderDescriptorSet {
    public:

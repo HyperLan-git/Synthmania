@@ -67,6 +67,7 @@ void HelloTriangleApplication::initVulkan() {
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
+
     VkDescriptorType types[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                 VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
     pool = new ShaderDescriptorPool(&device, types, MAX_FRAMES_IN_FLIGHT);
@@ -113,7 +114,7 @@ void HelloTriangleApplication::cleanup() {
     cleanupSwapChain();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+        delete uniformBuffers[i];
         vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
     }
 
@@ -127,10 +128,10 @@ void HelloTriangleApplication::cleanup() {
 
     delete shaderLayout;
 
-    vkDestroyBuffer(device, indexBuffer, nullptr);
+    delete indexBuffer;
     vkFreeMemory(device, indexBufferMemory, nullptr);
 
-    vkDestroyBuffer(device, vertexBuffer, nullptr);
+    delete vertexBuffer;
     vkFreeMemory(device, vertexBufferMemory, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -694,11 +695,11 @@ void HelloTriangleApplication::createTextureImage() {
                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                  stagingBuffer, stagingBufferMemory);*/
     VkDeviceMemory stagingBufferMemory;
-    Buffer* stagingBuffer =
-        new Buffer(&device, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                   &stagingBufferMemory);
+    Buffer* stagingBuffer = new Buffer(&physicalDevice, &device, imageSize,
+                                       VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                           VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                       &stagingBufferMemory);
 
     void* data;
     vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
@@ -807,8 +808,8 @@ void HelloTriangleApplication::createImage(
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex =
-        findMemoryType(memRequirements.memoryTypeBits, properties);
+    allocInfo.memoryTypeIndex = findMemoryType(
+        &physicalDevice, memRequirements.memoryTypeBits, properties);
 
     if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) !=
         VK_SUCCESS) {
@@ -822,7 +823,8 @@ void HelloTriangleApplication::transitionImageLayout(VkImage image,
                                                      VkFormat format,
                                                      VkImageLayout oldLayout,
                                                      VkImageLayout newLayout) {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+    VkCommandBuffer commandBuffer =
+        beginSingleTimeCommands(device, commandPool);
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -861,13 +863,14 @@ void HelloTriangleApplication::transitionImageLayout(VkImage image,
     vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0,
                          nullptr, 0, nullptr, 1, &barrier);
 
-    endSingleTimeCommands(commandBuffer);
+    endSingleTimeCommands(graphicsQueue, device, commandPool, commandBuffer);
 }
 
 void HelloTriangleApplication::copyBufferToImage(VkBuffer buffer, VkImage image,
                                                  uint32_t width,
                                                  uint32_t height) {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+    VkCommandBuffer commandBuffer =
+        beginSingleTimeCommands(device, commandPool);
 
     VkBufferImageCopy region{};
     region.bufferOffset = 0;
@@ -883,19 +886,20 @@ void HelloTriangleApplication::copyBufferToImage(VkBuffer buffer, VkImage image,
     vkCmdCopyBufferToImage(commandBuffer, buffer, image,
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-    endSingleTimeCommands(commandBuffer);
+    endSingleTimeCommands(graphicsQueue, device, commandPool, commandBuffer);
 }
 
 void HelloTriangleApplication::createVertexBuffer() {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
     VkDeviceMemory stagingBufferMemory;
-    Buffer* stagingBuffer =
-        new Buffer(&device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                   &stagingBufferMemory);
-    /*createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    Buffer* stagingBuffer = new Buffer(&physicalDevice, &device, bufferSize,
+                                       VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                           VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                       &stagingBufferMemory);
+    /*VkBuffer stagingBuffer;
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                  stagingBuffer, stagingBufferMemory);*/
@@ -905,12 +909,19 @@ void HelloTriangleApplication::createVertexBuffer() {
     memcpy(data, vertices.data(), (size_t)bufferSize);
     vkUnmapMemory(device, stagingBufferMemory);
 
-    createBuffer(
+    vertexBuffer = new Buffer(
+        &physicalDevice, &device, bufferSize,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &vertexBufferMemory);
+    /*createBuffer(
         bufferSize,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer,
+       vertexBufferMemory);*/
 
-    copyBuffer(*(stagingBuffer->getBuffer()), vertexBuffer, bufferSize);
+    stagingBuffer->copyTo(vertexBuffer, graphicsQueue, commandPool);
+
+    // copyBuffer(*(stagingBuffer->getBuffer()), vertexBuffer, bufferSize);
 
     delete stagingBuffer;
     vkFreeMemory(device, stagingBufferMemory, nullptr);
@@ -920,11 +931,11 @@ void HelloTriangleApplication::createIndexBuffer() {
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
     VkDeviceMemory stagingBufferMemory;
-    Buffer* stagingBuffer =
-        new Buffer(&device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                   &stagingBufferMemory);
+    Buffer* stagingBuffer = new Buffer(&physicalDevice, &device, bufferSize,
+                                       VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                           VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                       &stagingBufferMemory);
     /*createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -935,12 +946,12 @@ void HelloTriangleApplication::createIndexBuffer() {
     memcpy(data, indices.data(), (size_t)bufferSize);
     vkUnmapMemory(device, stagingBufferMemory);
 
-    createBuffer(
-        bufferSize,
+    indexBuffer = new Buffer(
+        &physicalDevice, &device, bufferSize,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &indexBufferMemory);
 
-    copyBuffer(*(stagingBuffer->getBuffer()), indexBuffer, bufferSize);
+    stagingBuffer->copyTo(indexBuffer, graphicsQueue, commandPool);
 
     delete stagingBuffer;
     vkFreeMemory(device, stagingBufferMemory, nullptr);
@@ -949,14 +960,19 @@ void HelloTriangleApplication::createIndexBuffer() {
 void HelloTriangleApplication::createUniformBuffers() {
     VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        uniformBuffers.push_back(
+            new Buffer(&physicalDevice, &device, bufferSize,
+                       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                           VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                       &(uniformBuffersMemory[i])));
+        /*createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                     uniformBuffers[i], uniformBuffersMemory[i]);
+                     uniformBuffers[i], uniformBuffersMemory[i]);*/
     }
 }
 
@@ -981,100 +997,6 @@ void HelloTriangleApplication::createDescriptorSets() {
         delete imageInfo;
         delete bufferInfo;
     }
-}
-
-void HelloTriangleApplication::createBuffer(VkDeviceSize size,
-                                            VkBufferUsageFlags usage,
-                                            VkMemoryPropertyFlags properties,
-                                            VkBuffer& buffer,
-                                            VkDeviceMemory& bufferMemory) {
-    /*VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create buffer!");
-    }
-
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex =
-        findMemoryType(memRequirements.memoryTypeBits, properties);
-
-    if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate buffer memory!");
-    }
-
-    vkBindBufferMemory(device, buffer, bufferMemory, 0);*/
-}
-
-VkCommandBuffer HelloTriangleApplication::beginSingleTimeCommands() {
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = commandPool;
-    allocInfo.commandBufferCount = 1;
-
-    VkCommandBuffer commandBuffer;
-    vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-    return commandBuffer;
-}
-
-void HelloTriangleApplication::endSingleTimeCommands(
-    VkCommandBuffer commandBuffer) {
-    vkEndCommandBuffer(commandBuffer);
-
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-
-    vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(graphicsQueue);
-
-    vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
-}
-
-void HelloTriangleApplication::copyBuffer(VkBuffer srcBuffer,
-                                          VkBuffer dstBuffer,
-                                          VkDeviceSize size) {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-
-    VkBufferCopy copyRegion{};
-    copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-    endSingleTimeCommands(commandBuffer);
-}
-
-uint32_t HelloTriangleApplication::findMemoryType(
-    uint32_t typeFilter, VkMemoryPropertyFlags properties) {
-    VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-
-    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-        if ((typeFilter & (1 << i)) &&
-            (memProperties.memoryTypes[i].propertyFlags & properties) ==
-                properties) {
-            return i;
-        }
-    }
-
-    throw std::runtime_error("failed to find suitable memory type!");
 }
 
 void HelloTriangleApplication::recordCommandBuffer(
@@ -1106,11 +1028,12 @@ void HelloTriangleApplication::recordCommandBuffer(
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       graphicsPipeline);
 
-    VkBuffer vertexBuffers[] = {vertexBuffer};
+    VkBuffer* vertexBuffers = vertexBuffer->getBuffer();
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindIndexBuffer(commandBuffer, *(indexBuffer->getBuffer()), 0,
+                         VK_INDEX_TYPE_UINT16);
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             pipelineLayout, 0, 1,
@@ -1414,24 +1337,6 @@ bool HelloTriangleApplication::checkValidationLayerSupport() {
     }
 
     return true;
-}
-
-std::vector<char> readFile(const std::string& filename) {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open()) {
-        throw std::runtime_error("failed to open file!");
-    }
-
-    size_t fileSize = (size_t)file.tellg();
-    std::vector<char> buffer(fileSize);
-
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-
-    file.close();
-
-    return buffer;
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL

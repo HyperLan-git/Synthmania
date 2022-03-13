@@ -31,6 +31,7 @@
 #include "Shader.hpp"
 #include "ShaderDescriptorPool.hpp"
 #include "ShaderDescriptorSet.hpp"
+#include "Utils.hpp"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -168,12 +169,12 @@ class HelloTriangleApplication {
     VkImageView textureImageView;
     VkSampler textureSampler;
 
-    VkBuffer vertexBuffer;
+    Buffer* vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
+    Buffer* indexBuffer;
     VkDeviceMemory indexBufferMemory;
 
-    std::vector<VkBuffer> uniformBuffers;
+    std::vector<Buffer*> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
 
     ShaderDescriptorPool* pool;
@@ -252,15 +253,6 @@ class HelloTriangleApplication {
     void createIndexBuffer();
     void createUniformBuffers();
     void createDescriptorSets();
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
-                      VkMemoryPropertyFlags properties, VkBuffer& buffer,
-                      VkDeviceMemory& bufferMemory);
-    VkCommandBuffer beginSingleTimeCommands();
-    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-
-    uint32_t findMemoryType(uint32_t typeFilter,
-                            VkMemoryPropertyFlags properties);
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer,
                              uint32_t imageIndex);
@@ -279,7 +271,6 @@ class HelloTriangleApplication {
     bool checkValidationLayerSupport();
 };
 
-std::vector<char> readFile(const std::string& filename);
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,

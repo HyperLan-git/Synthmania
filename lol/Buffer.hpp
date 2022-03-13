@@ -5,16 +5,21 @@
 
 #include <stdexcept>
 
+#include "Utils.hpp"
+
 class Buffer {
    public:
-    Buffer(VkDevice* device, VkDeviceSize size, VkBufferUsageFlags usage,
+    Buffer(VkPhysicalDevice* physicalDevice, VkDevice* device,
+           VkDeviceSize size, VkBufferUsageFlags usage,
            VkMemoryPropertyFlags properties, VkDeviceMemory* bufferMemory);
-
     VkBuffer* getBuffer();
+    void copyTo(Buffer* other, VkQueue graphicsQueue,
+                VkCommandPool commandPool);
 
     ~Buffer();
 
    private:
     VkDevice* device;
     VkBuffer* buffer;
-}
+    VkDeviceSize size;
+};

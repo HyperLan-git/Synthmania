@@ -1,8 +1,9 @@
 #include "ShaderDescriptorSet.hpp"
 
-VkDescriptorBufferInfo *createBufferInfo(VkBuffer buffer) {
+VkDescriptorBufferInfo *createBufferInfo(Buffer *buffer) {
     VkDescriptorBufferInfo *bufferInfo = new VkDescriptorBufferInfo();
-    bufferInfo->buffer = buffer;
+
+    bufferInfo->buffer = *(buffer->getBuffer());
     bufferInfo->offset = 0;
     bufferInfo->range = sizeof(UniformBufferObject);
     return bufferInfo;
