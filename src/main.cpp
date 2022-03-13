@@ -1,6 +1,5 @@
 #include "Renderer.hpp"
 
-
 int main() {
     Renderer *r = new Renderer();
 
@@ -9,7 +8,7 @@ int main() {
         r->initVulkan();
         r->mainLoop();
         r->cleanup();
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }

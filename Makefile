@@ -1,5 +1,5 @@
 CFLAGS = -std=c++17 -O2
-LDFLAGS = -idirafter include -lglfw -lvulkan -ldl -lpthread -lX11 -lXrandr
+LDFLAGS = -idirafter include -idirafter stb -lglfw -lvulkan -ldl -lpthread -lX11 -lXrandr
 
 SRC=$(wildcard src/*.cpp)
 
