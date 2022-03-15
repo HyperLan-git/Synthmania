@@ -9,11 +9,12 @@ VkDescriptorBufferInfo *createBufferInfo(Buffer *buffer) {
     return bufferInfo;
 }
 
-VkDescriptorImageInfo *createImageInfo(VkImageView view, VkSampler sampler) {
+VkDescriptorImageInfo *createImageInfo(ImageView *view,
+                                       TextureSampler *sampler) {
     VkDescriptorImageInfo *imageInfo = new VkDescriptorImageInfo();
     imageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo->imageView = view;
-    imageInfo->sampler = sampler;
+    imageInfo->imageView = *(view->getView());
+    imageInfo->sampler = *(sampler->getSampler());
     return imageInfo;
 }
 
@@ -58,7 +59,7 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
     vkUpdateDescriptorSets(*device, 1, descriptorWrites, 0, nullptr);
 }
 
-VkDescriptorSet *ShaderDescriptorSet::getSet() { return set; }
+VkDescriptorSet *ShaderDescriptorSet::getSet() const { return set; }
 
 ShaderDescriptorSet::~ShaderDescriptorSet() {
     vkFreeDescriptorSets(*device, *(pool->getPool()), 1, set);

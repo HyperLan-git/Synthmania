@@ -1,5 +1,7 @@
 #pragma once
 
+class ShaderDescriptorSet;
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -11,8 +13,10 @@
 #include <stdexcept>
 
 #include "Buffer.hpp"
+#include "ImageView.hpp"
 #include "ShaderDescriptorPool.hpp"
 #include "ShaderDescriptorSetLayout.hpp"
+#include "TextureSampler.hpp"
 
 struct UniformBufferObject {
     alignas(16) glm::mat4 model;
@@ -20,14 +24,15 @@ struct UniformBufferObject {
     alignas(16) glm::mat4 proj;
 };
 
+VkDescriptorBufferInfo* createBufferInfo(Buffer* buffer);
+VkDescriptorImageInfo* createImageInfo(ImageView* view,
+                                       TextureSampler* sampler);
+
 /**
  * @brief The descriptor set is the immutable list of descriptors associated
  * with a single swapchain. It needs to be instantiated before uniforms and
  * texture samplers can be used.
- *
  */
-VkDescriptorBufferInfo* createBufferInfo(Buffer* buffer);
-VkDescriptorImageInfo* createImageInfo(VkImageView view, VkSampler sampler);
 class ShaderDescriptorSet {
    public:
     ShaderDescriptorSet(VkDevice* device, ShaderDescriptorPool* pool,
@@ -36,7 +41,7 @@ class ShaderDescriptorSet {
                       VkDescriptorType type, VkDescriptorBufferInfo* bInfo,
                       VkDescriptorImageInfo* iInfo);
 
-    VkDescriptorSet* getSet();
+    VkDescriptorSet* getSet() const;
     ~ShaderDescriptorSet();
 
    private:

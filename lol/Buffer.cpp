@@ -2,7 +2,7 @@
 
 Buffer::Buffer(VkPhysicalDevice* physicalDevice, VkDevice* device,
                VkDeviceSize size, VkBufferUsageFlags usage,
-               VkMemoryPropertyFlags properties, VkDeviceMemory* bufferMemory) {
+               VkMemoryPropertyFlags properties) {
     this->device = device;
     this->buffer = new VkBuffer();
     this->size = size;
@@ -19,35 +19,30 @@ Buffer::Buffer(VkPhysicalDevice* physicalDevice, VkDevice* device,
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(*device, *buffer, &memRequirements);
 
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(
-        physicalDevice, memRequirements.memoryTypeBits, properties);
+    memory = new Memory(physicalDevice, device, memRequirements, properties);
 
-    if (vkAllocateMemory(*device, &allocInfo, nullptr, bufferMemory) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate buffer memory!");
-    }
-
-    vkBindBufferMemory(*device, *buffer, *bufferMemory, 0);
+    vkBindBufferMemory(*device, *buffer, *(memory->getMemory()), 0);
 }
 
 void Buffer::copyTo(Buffer* other, VkQueue graphicsQueue,
-                    VkCommandPool commandPool) {
-    VkCommandBuffer commandBuffer =
-        beginSingleTimeCommands(*device, commandPool);
+                    CommandPool* commandPool) {
+    CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
+    commandBuffer->begin();
 
-    VkBufferCopy copyRegion{};
-    copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer, *buffer, *(other->buffer), 1, &copyRegion);
+    commandBuffer->copyBufferRegion(this, other, size);
 
-    endSingleTimeCommands(graphicsQueue, *device, commandPool, commandBuffer);
+    commandBuffer->end();
+    commandBuffer->submit(graphicsQueue);
+
+    delete commandBuffer;
 }
+
+Memory* Buffer::getMemory() { return memory; }
 
 VkBuffer* Buffer::getBuffer() { return buffer; }
 
 Buffer::~Buffer() {
     vkDestroyBuffer(*device, *buffer, nullptr);
     delete buffer;
+    delete memory;  // :(
 }

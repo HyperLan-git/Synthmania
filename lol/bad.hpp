@@ -26,11 +26,17 @@
 
 #include "Buffer.hpp"
 #include "CommandBuffer.hpp"
+#include "CommandPool.hpp"
 #include "Fence.hpp"
+#include "Framebuffer.hpp"
+#include "Image.hpp"
+#include "ImageView.hpp"
+#include "Memory.hpp"
 #include "Semaphore.hpp"
 #include "Shader.hpp"
 #include "ShaderDescriptorPool.hpp"
 #include "ShaderDescriptorSet.hpp"
+#include "TextureSampler.hpp"
 #include "Utils.hpp"
 
 const uint32_t WIDTH = 800;
@@ -58,15 +64,6 @@ VkResult CreateDebugUtilsMessengerEXT(
 void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    VkDebugUtilsMessengerEXT debugMessenger,
                                    const VkAllocationCallbacks* pAllocator);
-
-struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
-
-    bool isComplete() {
-        return graphicsFamily.has_value() && presentFamily.has_value();
-    }
-};
 
 struct SwapChainSupportDetails {
     VkSurfaceCapabilitiesKHR capabilities;
@@ -146,11 +143,11 @@ class HelloTriangleApplication {
     VkQueue presentQueue;
 
     VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
-    std::vector<VkImageView> swapChainImageViews;
-    std::vector<VkFramebuffer> swapChainFramebuffers;
+    std::vector<Image*> swapChainImages;
+    std::vector<ImageView*> swapChainImageViews;
+    std::vector<Framebuffer*> swapChainFramebuffers;
 
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
@@ -158,24 +155,19 @@ class HelloTriangleApplication {
 
     ShaderDescriptorSetLayout* shaderLayout;
 
-    VkCommandPool commandPool;
+    CommandPool* commandPool;
 
-    VkImage depthImage;
-    VkDeviceMemory depthImageMemory;
-    VkImageView depthImageView;
+    Image* depthImage;
+    ImageView* depthImageView;
 
-    VkImage textureImage;
-    VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView;
-    VkSampler textureSampler;
+    Image* textureImage;
+    ImageView* textureImageView;
+    TextureSampler* textureSampler;
 
     Buffer* vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
     Buffer* indexBuffer;
-    VkDeviceMemory indexBufferMemory;
 
     std::vector<Buffer*> uniformBuffers;
-    std::vector<VkDeviceMemory> uniformBuffersMemory;
 
     ShaderDescriptorPool* pool;
     std::vector<ShaderDescriptorSet*> descriptorSets;
@@ -220,7 +212,6 @@ class HelloTriangleApplication {
     void createDescriptorSetLayout();
 
     void createGraphicsPipeline();
-    void createFramebuffers();
     void createCommandPool();
     void createDepthResources();
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates,
@@ -236,26 +227,16 @@ class HelloTriangleApplication {
 
     void createTextureSampler();
 
-    VkImageView createImageView(VkImage image, VkFormat format,
-                                VkImageAspectFlags aspectFlags);
-
-    void createImage(uint32_t width, uint32_t height, VkFormat format,
-                     VkImageTiling tiling, VkImageUsageFlags usage,
-                     VkMemoryPropertyFlags properties, VkImage& image,
-                     VkDeviceMemory& imageMemory);
-
-    void transitionImageLayout(VkImage image, VkFormat format,
-                               VkImageLayout oldLayout,
+    void transitionImageLayout(Image* image, VkImageLayout oldLayout,
                                VkImageLayout newLayout);
-    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width,
+    void copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
                            uint32_t height);
     void createVertexBuffer();
     void createIndexBuffer();
     void createUniformBuffers();
     void createDescriptorSets();
 
-    void recordCommandBuffer(VkCommandBuffer commandBuffer,
-                             uint32_t imageIndex);
+    void recordCommandBuffer(CommandBuffer* commandBuffer, uint32_t imageIndex);
     void updateUniformBuffer(uint32_t currentImage);
     void drawFrame();
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
