@@ -73,12 +73,12 @@ void CommandBuffer::submit(VkQueue queue, Semaphore *waitSemaphore,
     }
 }
 
-void CommandBuffer::beginRenderPass(VkRenderPass renderPass,
+void CommandBuffer::beginRenderPass(RenderPass *renderPass,
                                     Framebuffer *framebuffer, VkExtent2D extent,
                                     VkClearValue *clearValues, uint32_t count) {
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = renderPass;
+    renderPassInfo.renderPass = *(renderPass->getPass());
     renderPassInfo.framebuffer = *(framebuffer->getFramebuffer());
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = extent;

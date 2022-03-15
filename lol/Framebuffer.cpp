@@ -1,6 +1,6 @@
 #include "Framebuffer.hpp"
 
-Framebuffer::Framebuffer(VkDevice *device, VkRenderPass pass, VkExtent2D extent,
+Framebuffer::Framebuffer(VkDevice *device, RenderPass *pass, VkExtent2D extent,
                          std::vector<ImageView *> views) {
     this->device = device;
     this->framebuffer = new VkFramebuffer();
@@ -8,7 +8,7 @@ Framebuffer::Framebuffer(VkDevice *device, VkRenderPass pass, VkExtent2D extent,
     for (int i = 0; i < views.size(); i++) v[i] = *(views[i]->getView());
     VkFramebufferCreateInfo framebufferInfo{};
     framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass = pass;
+    framebufferInfo.renderPass = *(pass->getPass());
     framebufferInfo.attachmentCount = views.size();
     framebufferInfo.pAttachments = v;
     framebufferInfo.width = extent.width;

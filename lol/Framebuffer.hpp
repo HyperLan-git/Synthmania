@@ -9,10 +9,11 @@ class Framebuffer;
 #include <vector>
 
 #include "ImageView.hpp"
+#include "RenderPass.hpp"
 
 class Framebuffer {
    public:
-    Framebuffer(VkDevice *device, VkRenderPass pass, VkExtent2D extent,
+    Framebuffer(VkDevice *device, RenderPass *pass, VkExtent2D extent,
                 std::vector<ImageView *> views);
     VkFramebuffer *getFramebuffer();
     ~Framebuffer();

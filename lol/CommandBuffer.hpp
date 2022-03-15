@@ -10,6 +10,7 @@
 #include "Fence.hpp"
 #include "Framebuffer.hpp"
 #include "Image.hpp"
+#include "RenderPass.hpp"
 #include "Semaphore.hpp"
 #include "ShaderDescriptorSet.hpp"
 
@@ -31,7 +32,7 @@ class CommandBuffer {
 
     void copyBufferRegion(Buffer *src, Buffer *dest, VkDeviceSize size);
 
-    void beginRenderPass(VkRenderPass renderPass, Framebuffer *framebuffer,
+    void beginRenderPass(RenderPass *renderPass, Framebuffer *framebuffer,
                          VkExtent2D extent, VkClearValue *clearValues,
                          uint32_t count);
     void endRenderPass();

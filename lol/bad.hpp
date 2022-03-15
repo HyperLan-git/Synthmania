@@ -32,6 +32,7 @@
 #include "Image.hpp"
 #include "ImageView.hpp"
 #include "Memory.hpp"
+#include "RenderPass.hpp"
 #include "Semaphore.hpp"
 #include "Shader.hpp"
 #include "ShaderDescriptorPool.hpp"
@@ -149,7 +150,7 @@ class HelloTriangleApplication {
     std::vector<ImageView*> swapChainImageViews;
     std::vector<Framebuffer*> swapChainFramebuffers;
 
-    VkRenderPass renderPass;
+    RenderPass* renderPass;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 
@@ -214,10 +215,6 @@ class HelloTriangleApplication {
     void createGraphicsPipeline();
     void createCommandPool();
     void createDepthResources();
-    VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates,
-                                 VkImageTiling tiling,
-                                 VkFormatFeatureFlags features);
-    VkFormat findDepthFormat();
 
     bool hasStencilComponent(VkFormat format);
 
