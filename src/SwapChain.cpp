@@ -3,7 +3,7 @@
 SwapChain::SwapChain(VkPhysicalDevice physicalDevice, VkDevice *device,
                      VkSurfaceKHR *surface, const VkExtent2D &defaultExtent,
                      VkDescriptorSetLayout *descriptorSetLayout) {
-    SwapChainSupportDetails swapChainSupport =
+    SwapchainSupportDetails swapChainSupport =
         querySwapChainSupport(physicalDevice);
     VkExtent2D extent =
         chooseSwapExtent(swapChainSupport.capabilities, defaultExtent);
@@ -138,9 +138,9 @@ void Renderer::createDescriptorPool() {
     }
 }
 
-SwapChainSupportDetails SwapChain::querySwapChainSupport(
+SwapchainSupportDetails SwapChain::querySwapChainSupport(
     VkPhysicalDevice device) {
-    SwapChainSupportDetails details;
+    SwapchainSupportDetails details;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, *surface,
                                               &details.capabilities);

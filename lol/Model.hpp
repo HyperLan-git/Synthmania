@@ -4,16 +4,17 @@
 #include <GLFW/glfw3.h>
 
 #include <array>
+#include <cstring>
 #include <glm/glm.hpp>
 #include <vector>
+
+#include "Buffer.hpp"
 
 typedef struct VkVertexInputAttributeDescription VIADesc;
 
 std::array<VIADesc, 3> getAttributeDescriptions();
 
 VkVertexInputBindingDescription getBindingDescription();
-
-const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 
 struct Vertex {
     glm::vec3 pos;
@@ -29,8 +30,12 @@ struct UniformBufferObject {
 
 class Model {
    public:
-    Model(const std::vector<struct Vertex> vdata);
+    Model(const std::vector<Vertex> vdata, const std::vector<uint16_t> idata);
+
+    Buffer* toVertexBuffer(VkPhysicalDevice* physicalDevice, VkDevice* device);
+    Buffer* toIndicesBuffer(VkPhysicalDevice* physicalDevice, VkDevice* device);
 
    private:
     std::vector<struct Vertex> vdata;
+    std::vector<uint16_t> idata;
 };

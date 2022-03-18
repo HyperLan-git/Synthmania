@@ -41,6 +41,8 @@ Memory* Buffer::getMemory() { return memory; }
 
 VkBuffer* Buffer::getBuffer() { return buffer; }
 
+VkDeviceSize Buffer::getSize() { return size; }
+
 Buffer::~Buffer() {
     vkDestroyBuffer(*device, *buffer, nullptr);
     delete buffer;

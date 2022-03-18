@@ -16,7 +16,7 @@
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-struct SwapChainSupportDetails {
+struct SwapchainSupportDetails {
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
@@ -42,7 +42,7 @@ class SwapChain {
     VkResult isQueuePresent(VkQueue queue, VkSemaphore *semaphores,
                             uint32_t *currentImage);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+    SwapchainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
     VkExtent2D getExtent();
     VkImageView createImageView(VkImage image, VkFormat format,
                                 VkImageAspectFlags aspectFlags);

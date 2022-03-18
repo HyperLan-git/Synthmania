@@ -14,15 +14,10 @@ class ShaderDescriptorSet;
 
 #include "Buffer.hpp"
 #include "ImageView.hpp"
+#include "Model.hpp"
 #include "ShaderDescriptorPool.hpp"
 #include "ShaderDescriptorSetLayout.hpp"
 #include "TextureSampler.hpp"
-
-struct UniformBufferObject {
-    alignas(16) glm::mat4 model;
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-};
 
 VkDescriptorBufferInfo* createBufferInfo(Buffer* buffer);
 VkDescriptorImageInfo* createImageInfo(ImageView* view,

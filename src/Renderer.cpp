@@ -758,7 +758,7 @@ bool Renderer::isDeviceSuitable(VkPhysicalDevice device) {
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
-        SwapChainSupportDetails swapChainSupport =
+        SwapchainSupportDetails swapChainSupport =
             swapChain->querySwapChainSupport(device);
         swapChainAdequate = !swapChainSupport.formats.empty() &&
                             !swapChainSupport.presentModes.empty();

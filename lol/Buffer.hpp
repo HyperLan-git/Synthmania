@@ -20,6 +20,7 @@ class Buffer {
     VkBuffer* getBuffer();
     void copyTo(Buffer* other, VkQueue graphicsQueue, CommandPool* commandPool);
     Memory* getMemory();
+    VkDeviceSize getSize();
     ~Buffer();
 
    private:

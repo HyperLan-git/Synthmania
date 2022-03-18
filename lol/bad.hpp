@@ -1,4 +1,4 @@
-#define NDEBUG
+//#define NDEBUG
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -32,11 +32,15 @@
 #include "Image.hpp"
 #include "ImageView.hpp"
 #include "Memory.hpp"
+#include "Model.hpp"
+#include "Pipeline.hpp"
+#include "PipelineLayout.hpp"
 #include "RenderPass.hpp"
 #include "Semaphore.hpp"
 #include "Shader.hpp"
 #include "ShaderDescriptorPool.hpp"
 #include "ShaderDescriptorSet.hpp"
+#include "Swapchain.hpp"
 #include "TextureSampler.hpp"
 #include "Utils.hpp"
 
@@ -66,49 +70,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    VkDebugUtilsMessengerEXT debugMessenger,
                                    const VkAllocationCallbacks* pAllocator);
 
-struct SwapChainSupportDetails {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-};
-
-struct Vertex {
-    glm::vec3 pos;
-    glm::vec3 color;
-    glm::vec2 texCoord;
-
-    static VkVertexInputBindingDescription getBindingDescription() {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        return bindingDescription;
-    }
-
-    static std::array<VkVertexInputAttributeDescription, 3>
-    getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 3>
-            attributeDescriptions{};
-
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-        attributeDescriptions[2].binding = 0;
-        attributeDescriptions[2].location = 2;
-        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-        return attributeDescriptions;
-    }
-};
+const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 
 const std::vector<Vertex> vertices = {
     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
@@ -121,7 +83,6 @@ const std::vector<Vertex> vertices = {
     {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
     {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}};
 
-const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 class HelloTriangleApplication {
@@ -143,23 +104,11 @@ class HelloTriangleApplication {
     VkQueue graphicsQueue;
     VkQueue presentQueue;
 
-    VkSwapchainKHR swapChain;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    std::vector<Image*> swapChainImages;
-    std::vector<ImageView*> swapChainImageViews;
-    std::vector<Framebuffer*> swapChainFramebuffers;
-
-    RenderPass* renderPass;
-    VkPipelineLayout pipelineLayout;
-    VkPipeline graphicsPipeline;
+    Swapchain* swapchain;
 
     ShaderDescriptorSetLayout* shaderLayout;
 
     CommandPool* commandPool;
-
-    Image* depthImage;
-    ImageView* depthImageView;
 
     Image* textureImage;
     ImageView* textureImageView;
@@ -167,6 +116,8 @@ class HelloTriangleApplication {
 
     Buffer* vertexBuffer;
     Buffer* indexBuffer;
+
+    Model* model;
 
     std::vector<Buffer*> uniformBuffers;
 
@@ -186,8 +137,6 @@ class HelloTriangleApplication {
 
     void mainLoop();
 
-    void cleanupSwapChain();
-
     void cleanup();
 
     void recreateSwapChain();
@@ -204,7 +153,7 @@ class HelloTriangleApplication {
 
     void createLogicalDevice();
 
-    void createSwapChain();
+    void createSwapchain();
 
     void createImageViews();
 
@@ -214,7 +163,6 @@ class HelloTriangleApplication {
 
     void createGraphicsPipeline();
     void createCommandPool();
-    void createDepthResources();
 
     bool hasStencilComponent(VkFormat format);
 
@@ -241,7 +189,6 @@ class HelloTriangleApplication {
     VkPresentModeKHR chooseSwapPresentMode(
         const std::vector<VkPresentModeKHR>& availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
     bool isDeviceSuitable(VkPhysicalDevice device);
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);

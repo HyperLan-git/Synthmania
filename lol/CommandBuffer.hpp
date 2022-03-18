@@ -6,13 +6,17 @@
 #include <stdexcept>
 
 #include "Buffer.hpp"
+#include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
 #include "Fence.hpp"
 #include "Framebuffer.hpp"
 #include "Image.hpp"
+#include "Pipeline.hpp"
+#include "PipelineLayout.hpp"
 #include "RenderPass.hpp"
 #include "Semaphore.hpp"
 #include "ShaderDescriptorSet.hpp"
+#include "Swapchain.hpp"
 
 class CommandBuffer {
    public:
@@ -32,14 +36,13 @@ class CommandBuffer {
 
     void copyBufferRegion(Buffer *src, Buffer *dest, VkDeviceSize size);
 
-    void beginRenderPass(RenderPass *renderPass, Framebuffer *framebuffer,
-                         VkExtent2D extent, VkClearValue *clearValues,
-                         uint32_t count);
+    void beginRenderPass(Swapchain *swapchain, uint32_t imageIndex,
+                         VkClearValue *clearValues, uint32_t count);
     void endRenderPass();
-    void bindPipeline(VkPipeline pipeline);
+    void bindPipeline(Pipeline *pipeline);
     void bindVertexBuffers(Buffer *vertexBuffers, uint32_t count);
     void bindIndexBuffer(Buffer *indexBuffer);
-    void bindDescriptorSet(VkPipelineLayout pipelineLayout,
+    void bindDescriptorSet(Pipeline *pipeline,
                            const ShaderDescriptorSet *descriptorSet);
     void draw(uint32_t count);
 

@@ -73,15 +73,15 @@ void CommandBuffer::submit(VkQueue queue, Semaphore *waitSemaphore,
     }
 }
 
-void CommandBuffer::beginRenderPass(RenderPass *renderPass,
-                                    Framebuffer *framebuffer, VkExtent2D extent,
+void CommandBuffer::beginRenderPass(Swapchain *swapchain, uint32_t imageIndex,
                                     VkClearValue *clearValues, uint32_t count) {
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = *(renderPass->getPass());
-    renderPassInfo.framebuffer = *(framebuffer->getFramebuffer());
+    renderPassInfo.renderPass = *(swapchain->getRenderPass()->getPass());
+    renderPassInfo.framebuffer =
+        *(swapchain->getFramebuffers()[imageIndex]->getFramebuffer());
     renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = extent;
+    renderPassInfo.renderArea.extent = swapchain->getExtent();
 
     renderPassInfo.clearValueCount = count;
     renderPassInfo.pClearValues = clearValues;
@@ -89,8 +89,9 @@ void CommandBuffer::beginRenderPass(RenderPass *renderPass,
     vkCmdBeginRenderPass(*buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void CommandBuffer::bindPipeline(VkPipeline pipeline) {
-    vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+void CommandBuffer::bindPipeline(Pipeline *pipeline) {
+    vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      *(pipeline->getPipeline()));
 }
 
 void CommandBuffer::bindVertexBuffers(Buffer *vertexBuffers, uint32_t count) {
@@ -107,10 +108,10 @@ void CommandBuffer::bindIndexBuffer(Buffer *indexBuffer) {
 }
 
 void CommandBuffer::bindDescriptorSet(
-    VkPipelineLayout pipelineLayout, const ShaderDescriptorSet *descriptorSet) {
+    Pipeline *pipeline, const ShaderDescriptorSet *descriptorSet) {
     vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            pipelineLayout, 0, 1, descriptorSet->getSet(), 0,
-                            nullptr);
+                            *(pipeline->getLayout()->getLayout()), 0, 1,
+                            descriptorSet->getSet(), 0, nullptr);
 }
 
 void CommandBuffer::draw(uint32_t count) {

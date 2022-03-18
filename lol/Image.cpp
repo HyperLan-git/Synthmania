@@ -33,12 +33,12 @@ Image::Image(VkPhysicalDevice* physicalDevice, VkDevice* device, uint32_t width,
 }
 
 std::vector<Image*> createImagesForSwapchain(VkDevice* device,
-                                             VkSwapchainKHR swapChain,
+                                             VkSwapchainKHR swapchain,
                                              uint32_t* imageCount) {
     std::vector<Image*> swapChainImages;
-    vkGetSwapchainImagesKHR(*device, swapChain, imageCount, nullptr);
+    vkGetSwapchainImagesKHR(*device, swapchain, imageCount, nullptr);
     VkImage* images = new VkImage[*imageCount];
-    vkGetSwapchainImagesKHR(*device, swapChain, imageCount, images);
+    vkGetSwapchainImagesKHR(*device, swapchain, imageCount, images);
     for (int i = 0; i < *imageCount; i++)
         swapChainImages.push_back(new Image(device, images + i));
     return swapChainImages;
