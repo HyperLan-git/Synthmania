@@ -1,7 +1,7 @@
 #include "Swapchain.hpp"
 
 Swapchain::Swapchain(VkDevice *device, VkPhysicalDevice *physicalDevice,
-                     GLFWwindow *window, Shader *vertShader, Shader *fragShader,
+                     Window *window, Shader *vertShader, Shader *fragShader,
                      ShaderDescriptorSetLayout *shaderDescriptors,
                      VkSurfaceKHR surface) {
     SwapchainSupportDetails swapchainSupport =

@@ -1,10 +1,12 @@
 #pragma once
+
+class Window;
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-class Window
-{
-public:
+class Window {
+   public:
     Window(const uint32_t width, const uint32_t height, const char *title);
 
     bool hasResized();
@@ -13,15 +15,15 @@ public:
 
     bool shouldClose();
 
-    void cleanup();
-
     void getFramebufferSize(uint32_t *width, uint32_t *height);
 
     VkResult createSurface(VkInstance instance,
                            const VkAllocationCallbacks *allocator,
                            VkSurfaceKHR *surface);
 
-private:
+    ~Window();
+
+   private:
     GLFWwindow *window;
     bool resized = false;
 };

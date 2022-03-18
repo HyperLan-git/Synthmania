@@ -43,6 +43,7 @@
 #include "Swapchain.hpp"
 #include "TextureSampler.hpp"
 #include "Utils.hpp"
+#include "Window.hpp"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -83,16 +84,12 @@ const std::vector<Vertex> vertices = {
     {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
     {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}};
 
-void framebufferResizeCallback(GLFWwindow* window, int width, int height);
-
 class HelloTriangleApplication {
    public:
     void run();
 
-    bool framebufferResized = false;
-
    private:
-    GLFWwindow* window;
+    Window* window;
 
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;

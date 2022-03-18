@@ -14,11 +14,12 @@ class Swapchain;
 #include "RenderPass.hpp"
 #include "Shader.hpp"
 #include "Utils.hpp"
+#include "Window.hpp"
 
 class Swapchain {
    public:
     Swapchain(VkDevice *device, VkPhysicalDevice *physicalDevice,
-              GLFWwindow *window, Shader *vertShader, Shader *fragShader,
+              Window *window, Shader *vertShader, Shader *fragShader,
               ShaderDescriptorSetLayout *shaderDescriptors,
               VkSurfaceKHR surface);
 

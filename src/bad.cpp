@@ -32,19 +32,7 @@ void HelloTriangleApplication::run() {
 }
 
 void HelloTriangleApplication::initWindow() {
-    glfwInit();
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-    glfwSetWindowUserPointer(window, this);
-    glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
-}
-
-void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-    auto app = reinterpret_cast<HelloTriangleApplication*>(
-        glfwGetWindowUserPointer(window));
-    app->framebufferResized = true;
+    window = new Window(WIDTH, HEIGHT, "Vulkan");
 }
 
 void HelloTriangleApplication::initVulkan() {
@@ -90,7 +78,7 @@ void HelloTriangleApplication::initVulkan() {
 }
 
 void HelloTriangleApplication::mainLoop() {
-    while (!glfwWindowShouldClose(window)) {
+    while (!window->shouldClose()) {
         glfwPollEvents();
         drawFrame();
     }
@@ -135,16 +123,16 @@ void HelloTriangleApplication::cleanup() {
     vkDestroySurfaceKHR(instance, surface, nullptr);
     vkDestroyInstance(instance, nullptr);
 
-    glfwDestroyWindow(window);
+    delete window;
 
     glfwTerminate();
 }
 
 void HelloTriangleApplication::recreateSwapChain() {
-    int width = 0, height = 0;
-    glfwGetFramebufferSize(window, &width, &height);
+    uint32_t width = 0, height = 0;
+    window->getFramebufferSize(&width, &height);
     while (width == 0 || height == 0) {
-        glfwGetFramebufferSize(window, &width, &height);
+        window->getFramebufferSize(&width, &height);
         glfwWaitEvents();
     }
 
@@ -224,8 +212,7 @@ void HelloTriangleApplication::setupDebugMessenger() {
 }
 
 void HelloTriangleApplication::createSurface() {
-    if (glfwCreateWindowSurface(instance, window, nullptr, &surface) !=
-        VK_SUCCESS) {
+    if (window->createSurface(instance, nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create window surface!");
     }
 }
@@ -266,8 +253,8 @@ void HelloTriangleApplication::createSwapchain() {
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     shaderLayout = new ShaderDescriptorSetLayout(&device, bindings, 2);
 
-    auto vertShaderCode = readFile("vert.spv");
-    auto fragShaderCode = readFile("frag.spv");
+    auto vertShaderCode = readFile("bin/vert.spv");
+    auto fragShaderCode = readFile("bin/frag.spv");
 
     Shader* vertShader = new Shader("main", &device, vertShaderCode, true);
     Shader* fragShader = new Shader("main", &device, fragShaderCode, false);
@@ -573,8 +560,8 @@ void HelloTriangleApplication::drawFrame() {
     result = vkQueuePresentKHR(presentQueue, &presentInfo);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-        framebufferResized) {
-        framebufferResized = false;
+        window->hasResized()) {
+        window->setResized(false);
         recreateSwapChain();
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");

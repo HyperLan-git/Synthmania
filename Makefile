@@ -10,6 +10,7 @@ VulkanTest: shader
 
 test: VulkanTest
 	./bin/VulkanTest
+
 shader:
 	glslc shader/def.vert -o bin/vert.spv
 	glslc shader/def.frag -o bin/frag.spv
