@@ -11,12 +11,12 @@ class ImageView;
 
 class ImageView {
    public:
-    ImageView(VkDevice *device, Image *image, VkFormat format,
+    ImageView(Device *device, Image *image, VkFormat format,
               VkImageAspectFlags aspectFlags);
     VkImageView *getView();
     ~ImageView();
 
    private:
-    VkDevice *device;
+    Device *device;
     VkImageView *view;
 };

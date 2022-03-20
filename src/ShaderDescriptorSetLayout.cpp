@@ -1,7 +1,7 @@
 #include "ShaderDescriptorSetLayout.hpp"
 
 ShaderDescriptorSetLayout::ShaderDescriptorSetLayout(
-    VkDevice* device, VkDescriptorSetLayoutBinding* bindings,
+    Device* device, VkDescriptorSetLayoutBinding* bindings,
     uint32_t nBindings) {
     this->layout = new VkDescriptorSetLayout();
 
@@ -10,8 +10,8 @@ ShaderDescriptorSetLayout::ShaderDescriptorSetLayout(
     layoutInfo.bindingCount = nBindings;
     layoutInfo.pBindings = bindings;
 
-    if (vkCreateDescriptorSetLayout(*device, &layoutInfo, nullptr, layout) !=
-        VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(*(device->getDevice()), &layoutInfo,
+                                    nullptr, layout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
     this->device = device;
@@ -20,6 +20,6 @@ ShaderDescriptorSetLayout::ShaderDescriptorSetLayout(
 VkDescriptorSetLayout* ShaderDescriptorSetLayout::getLayout() { return layout; }
 
 ShaderDescriptorSetLayout::~ShaderDescriptorSetLayout() {
-    vkDestroyDescriptorSetLayout(*device, *layout, nullptr);
+    vkDestroyDescriptorSetLayout(*(device->getDevice()), *layout, nullptr);
     delete layout;
 }

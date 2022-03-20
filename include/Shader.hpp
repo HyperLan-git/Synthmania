@@ -5,9 +5,11 @@
 #include <stdexcept>
 #include <vector>
 
+#include "Device.hpp"
+
 class Shader {
    public:
-    Shader(const char* mainFunction, VkDevice* device,
+    Shader(const char* mainFunction, Device* device,
            const std::vector<char>& code, bool vertex);
 
     VkPipelineShaderStageCreateInfo toPipeline();
@@ -15,7 +17,7 @@ class Shader {
     ~Shader();
 
    private:
-    VkDevice* device;
+    Device* device;
     VkShaderModule* module;
     const char* mainFunction;
     bool vertex;

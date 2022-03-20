@@ -8,17 +8,18 @@ class Framebuffer;
 #include <stdexcept>
 #include <vector>
 
+#include "Device.hpp"
 #include "ImageView.hpp"
 #include "RenderPass.hpp"
 
 class Framebuffer {
    public:
-    Framebuffer(VkDevice *device, RenderPass *pass, VkExtent2D extent,
+    Framebuffer(Device *device, RenderPass *pass, VkExtent2D extent,
                 std::vector<ImageView *> views);
     VkFramebuffer *getFramebuffer();
     ~Framebuffer();
 
    private:
-    VkDevice *device;
+    Device *device;
     VkFramebuffer *framebuffer;
 };

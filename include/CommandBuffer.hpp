@@ -20,7 +20,7 @@
 
 class CommandBuffer {
    public:
-    CommandBuffer(VkDevice *device, CommandPool *commandPool, bool singleTime);
+    CommandBuffer(Device *device, CommandPool *commandPool, bool singleTime);
 
     void begin();
     void reset();
@@ -46,15 +46,15 @@ class CommandBuffer {
                            const ShaderDescriptorSet *descriptorSet);
     void draw(uint32_t count);
 
-    void submit(VkQueue queue, Semaphore *waitSemaphore,
+    void submit(Queue *queue, Semaphore *waitSemaphore,
                 Semaphore *finishedSemaphore, Fence *fence);
-    void submit(VkQueue queue);
+    void submit(Queue *queue);
 
     ~CommandBuffer();
 
    private:
     VkCommandBuffer *buffer;
-    VkDevice *device;
+    Device *device;
     CommandPool *pool;
     bool singleTime;
 };

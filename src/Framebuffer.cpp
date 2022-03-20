@@ -1,6 +1,6 @@
 #include "Framebuffer.hpp"
 
-Framebuffer::Framebuffer(VkDevice *device, RenderPass *pass, VkExtent2D extent,
+Framebuffer::Framebuffer(Device *device, RenderPass *pass, VkExtent2D extent,
                          std::vector<ImageView *> views) {
     this->device = device;
     this->framebuffer = new VkFramebuffer();
@@ -15,8 +15,8 @@ Framebuffer::Framebuffer(VkDevice *device, RenderPass *pass, VkExtent2D extent,
     framebufferInfo.height = extent.height;
     framebufferInfo.layers = 1;
 
-    if (vkCreateFramebuffer(*device, &framebufferInfo, nullptr, framebuffer) !=
-        VK_SUCCESS) {
+    if (vkCreateFramebuffer(*(device->getDevice()), &framebufferInfo, nullptr,
+                            framebuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to create framebuffer!");
     }
 }
@@ -24,6 +24,6 @@ Framebuffer::Framebuffer(VkDevice *device, RenderPass *pass, VkExtent2D extent,
 VkFramebuffer *Framebuffer::getFramebuffer() { return framebuffer; }
 
 Framebuffer::~Framebuffer() {
-    vkDestroyFramebuffer(*device, *framebuffer, nullptr);
+    vkDestroyFramebuffer(*(device->getDevice()), *framebuffer, nullptr);
     delete framebuffer;
 }

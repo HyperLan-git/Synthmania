@@ -56,24 +56,23 @@ void HelloTriangleApplication::initVulkan() {
     createCommandPool();
     createTextureImage();
     textureImageView =
-        new ImageView(&device, textureImage, VK_FORMAT_R8G8B8A8_SRGB,
+        new ImageView(device, textureImage, VK_FORMAT_R8G8B8A8_SRGB,
                       VK_IMAGE_ASPECT_COLOR_BIT);
-    textureSampler = new TextureSampler(&physicalDevice, &device);
+    textureSampler = new TextureSampler(&physicalDevice, device);
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
     VkDescriptorType types[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                 VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
-    pool = new ShaderDescriptorPool(&device, types, MAX_FRAMES_IN_FLIGHT);
+    pool = new ShaderDescriptorPool(device, types, MAX_FRAMES_IN_FLIGHT);
     createDescriptorSets();
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        commandBuffers.push_back(
-            new CommandBuffer(&device, commandPool, false));
+        commandBuffers.push_back(new CommandBuffer(device, commandPool, false));
 
-        imageAvailableSemaphores.push_back(new Semaphore(&device));
-        renderFinishedSemaphores.push_back(new Semaphore(&device));
-        inFlightFences.push_back(new Fence(&device));
+        imageAvailableSemaphores.push_back(new Semaphore(device));
+        renderFinishedSemaphores.push_back(new Semaphore(device));
+        inFlightFences.push_back(new Fence(device));
     }
 }
 
@@ -83,7 +82,7 @@ void HelloTriangleApplication::mainLoop() {
         drawFrame();
     }
 
-    vkDeviceWaitIdle(device);
+    vkDeviceWaitIdle(*(device->getDevice()));
 }
 
 void HelloTriangleApplication::cleanup() {
@@ -114,7 +113,7 @@ void HelloTriangleApplication::cleanup() {
 
     delete commandPool;
 
-    vkDestroyDevice(device, nullptr);
+    delete device;
 
     if (enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
@@ -136,7 +135,7 @@ void HelloTriangleApplication::recreateSwapChain() {
         glfwWaitEvents();
     }
 
-    vkDeviceWaitIdle(device);
+    device->wait();
 
     delete swapchain;
 
@@ -229,6 +228,7 @@ void HelloTriangleApplication::pickPhysicalDevice() {
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
     for (const auto& device : devices) {
+        std::cout << "device : " << device << std::endl;
         if (isDeviceSuitable(device)) {
             physicalDevice = device;
             break;
@@ -251,71 +251,43 @@ void HelloTriangleApplication::createSwapchain() {
     textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     textureSampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
-    shaderLayout = new ShaderDescriptorSetLayout(&device, bindings, 2);
+    shaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
     auto vertShaderCode = readFile("bin/vert.spv");
     auto fragShaderCode = readFile("bin/frag.spv");
 
-    Shader* vertShader = new Shader("main", &device, vertShaderCode, true);
-    Shader* fragShader = new Shader("main", &device, fragShaderCode, false);
-    swapchain = new Swapchain(&device, &physicalDevice, window, vertShader,
+    Shader* vertShader = new Shader("main", device, vertShaderCode, true);
+    Shader* fragShader = new Shader("main", device, fragShaderCode, false);
+    swapchain = new Swapchain(device, &physicalDevice, window, vertShader,
                               fragShader, shaderLayout, surface);
     delete vertShader;
     delete fragShader;
 }
 
 void HelloTriangleApplication::createLogicalDevice() {
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(),
-                                              indices.presentFamily.value()};
-
-    float queuePriority = 1.0f;
-    for (uint32_t queueFamily : uniqueQueueFamilies) {
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-        queueCreateInfos.push_back(queueCreateInfo);
-    }
-
-    VkPhysicalDeviceFeatures deviceFeatures{};
-    deviceFeatures.samplerAnisotropy = VK_TRUE;
-
-    VkDeviceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-    createInfo.queueCreateInfoCount =
-        static_cast<uint32_t>(queueCreateInfos.size());
-    createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
-    createInfo.pEnabledFeatures = &deviceFeatures;
-
-    createInfo.enabledExtensionCount =
-        static_cast<uint32_t>(deviceExtensions.size());
-    createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
+    std::vector<FamilyPredicate> familyPredicates = {};
+    familyPredicates.push_back(
+        [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
+            return prop.queueFlags & VK_QUEUE_GRAPHICS_BIT;
+        });
+    familyPredicates.push_back([this](VkPhysicalDevice dev,
+                                      VkQueueFamilyProperties prop,
+                                      uint32_t id) {
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(dev, id, surface, &presentSupport);
+        return presentSupport;
+    });
     if (enableValidationLayers) {
-        createInfo.enabledLayerCount =
-            static_cast<uint32_t>(validationLayers.size());
-        createInfo.ppEnabledLayerNames = validationLayers.data();
+        device = new Device(&physicalDevice, deviceExtensions, familyPredicates,
+                            validationLayers);
     } else {
-        createInfo.enabledLayerCount = 0;
+        device =
+            new Device(&physicalDevice, deviceExtensions, familyPredicates);
     }
-
-    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to create logical device!");
-    }
-
-    vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
-    vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
 void HelloTriangleApplication::createCommandPool() {
-    commandPool = new CommandPool(physicalDevice, &device, surface);
+    commandPool = new CommandPool(physicalDevice, device, surface);
 }
 
 bool HelloTriangleApplication::hasStencilComponent(VkFormat format) {
@@ -325,8 +297,8 @@ bool HelloTriangleApplication::hasStencilComponent(VkFormat format) {
 
 void HelloTriangleApplication::createTextureImage() {
     int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load("sus.png", &texWidth, &texHeight, &texChannels,
-                                STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load("resources/sus.png", &texWidth, &texHeight,
+                                &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
     if (!pixels) {
@@ -334,20 +306,22 @@ void HelloTriangleApplication::createTextureImage() {
     }
 
     Buffer* stagingBuffer = new Buffer(
-        &physicalDevice, &device, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        &physicalDevice, device, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* data;
-    vkMapMemory(device, *(stagingBuffer->getMemory()->getMemory()), 0,
-                imageSize, 0, &data);
+    vkMapMemory(*(device->getDevice()),
+                *(stagingBuffer->getMemory()->getMemory()), 0, imageSize, 0,
+                &data);
     memcpy(data, pixels, static_cast<size_t>(imageSize));
-    vkUnmapMemory(device, *(stagingBuffer->getMemory()->getMemory()));
+    vkUnmapMemory(*(device->getDevice()),
+                  *(stagingBuffer->getMemory()->getMemory()));
 
     stbi_image_free(pixels);
 
     textureImage =
-        new Image(&physicalDevice, &device, texWidth, texHeight,
+        new Image(&physicalDevice, device, texWidth, texHeight,
                   VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
                   VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -365,64 +339,62 @@ void HelloTriangleApplication::createTextureImage() {
 
 void HelloTriangleApplication::createTextureImageView() {
     textureImageView =
-        new ImageView(&device, textureImage, VK_FORMAT_R8G8B8A8_SRGB,
+        new ImageView(device, textureImage, VK_FORMAT_R8G8B8A8_SRGB,
                       VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 void HelloTriangleApplication::createTextureSampler() {
-    textureSampler = new TextureSampler(&physicalDevice, &device);
+    textureSampler = new TextureSampler(&physicalDevice, device);
 }
 
 void HelloTriangleApplication::transitionImageLayout(Image* image,
                                                      VkImageLayout oldLayout,
                                                      VkImageLayout newLayout) {
-    CommandBuffer* commandBuffer =
-        new CommandBuffer(&device, commandPool, true);
+    CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
     commandBuffer->begin();
 
     commandBuffer->setImageLayout(image, oldLayout, newLayout);
 
     commandBuffer->end();
-    commandBuffer->submit(graphicsQueue);
+    commandBuffer->submit(device->getQueue(0));
     delete commandBuffer;
 }
 
 void HelloTriangleApplication::copyBufferToImage(Buffer* buffer, Image* image,
                                                  uint32_t width,
                                                  uint32_t height) {
-    CommandBuffer* commandBuffer =
-        new CommandBuffer(&device, commandPool, true);
+    CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
     commandBuffer->begin();
 
     commandBuffer->copyBufferToImage(buffer, image, {width, height, 1});
 
     commandBuffer->end();
-    commandBuffer->submit(graphicsQueue);
+    commandBuffer->submit(device->getQueue(0));
     delete commandBuffer;
 }
 
 void HelloTriangleApplication::createVertexBuffer() {
-    Buffer* temp = model->toVertexBuffer(&physicalDevice, &device);
+    Buffer* temp = model->toVertexBuffer(&physicalDevice, device);
 
     vertexBuffer = new Buffer(
-        &physicalDevice, &device, temp->getSize(),
+        &physicalDevice, device, temp->getSize(),
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    temp->copyTo(vertexBuffer, graphicsQueue, commandPool);
+    temp->copyTo(vertexBuffer, device->getQueue(0), commandPool);
 
     delete temp;
 }
 
 void HelloTriangleApplication::createIndexBuffer() {
-    Buffer* temp = model->toIndicesBuffer(&physicalDevice, &device);
+    Buffer* temp = model->toIndicesBuffer(&physicalDevice, device);
 
     indexBuffer = new Buffer(
-        &physicalDevice, &device, temp->getSize(),
+        &physicalDevice, device, temp->getSize(),
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    temp->copyTo(indexBuffer, graphicsQueue, commandPool);
+    temp->copyTo(indexBuffer, device->getQueue(0), commandPool);
 
     delete temp;
 }
@@ -432,7 +404,7 @@ void HelloTriangleApplication::createUniformBuffers() {
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         uniformBuffers.push_back(
-            new Buffer(&physicalDevice, &device, bufferSize,
+            new Buffer(&physicalDevice, device, bufferSize,
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
@@ -442,7 +414,7 @@ void HelloTriangleApplication::createUniformBuffers() {
 void HelloTriangleApplication::createDescriptorSets() {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         descriptorSets.push_back(
-            new ShaderDescriptorSet(&device, pool, shaderLayout));
+            new ShaderDescriptorSet(device, pool, shaderLayout));
         VkDescriptorBufferInfo* bufferInfo =
             createBufferInfo(uniformBuffers[i]);
 
@@ -497,7 +469,8 @@ void HelloTriangleApplication::updateUniformBuffer(uint32_t currentImage) {
     float time = std::chrono::duration<float, std::chrono::seconds::period>(
                      currentTime - startTime)
                      .count();
-    float x = cos(time * 2 / 3) / 2, y = sin(time * 5 / 3) / 2;  // Lissajous :)
+    float x = cos(time * 2 / 3) / 2,
+          y = sin(time * 5 / 3) / 2;  // Lissajous :)
 
     UniformBufferObject ubo{};
     ubo.model = glm::mat4(1.0f);
@@ -510,11 +483,11 @@ void HelloTriangleApplication::updateUniformBuffer(uint32_t currentImage) {
     ubo.proj[1][1] *= -1;
 
     void* data = NULL;
-    vkMapMemory(device,
+    vkMapMemory(*(device->getDevice()),
                 *(uniformBuffers[currentImage]->getMemory()->getMemory()), 0,
                 sizeof(ubo), 0, &data);
     memcpy(data, &ubo, sizeof(ubo));
-    vkUnmapMemory(device,
+    vkUnmapMemory(*(device->getDevice()),
                   *(uniformBuffers[currentImage]->getMemory()->getMemory()));
 }
 
@@ -523,7 +496,7 @@ void HelloTriangleApplication::drawFrame() {
 
     uint32_t imageIndex;
     VkResult result = vkAcquireNextImageKHR(
-        device, *(swapchain->getSwapchain()), UINT64_MAX,
+        *(device->getDevice()), *(swapchain->getSwapchain()), UINT64_MAX,
         *(imageAvailableSemaphores[currentFrame]->getSemaphore()),
         VK_NULL_HANDLE, &imageIndex);
 
@@ -541,7 +514,7 @@ void HelloTriangleApplication::drawFrame() {
     recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
 
     commandBuffers[currentFrame]->submit(
-        graphicsQueue, imageAvailableSemaphores[currentFrame],
+        device->getQueue(0), imageAvailableSemaphores[currentFrame],
         renderFinishedSemaphores[currentFrame], inFlightFences[currentFrame]);
 
     VkPresentInfoKHR presentInfo{};
@@ -557,7 +530,8 @@ void HelloTriangleApplication::drawFrame() {
 
     presentInfo.pImageIndices = &imageIndex;
 
-    result = vkQueuePresentKHR(presentQueue, &presentInfo);
+    result =
+        vkQueuePresentKHR(*(device->getQueue(1)->getQueue()), &presentInfo);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
         window->hasResized()) {
@@ -571,7 +545,19 @@ void HelloTriangleApplication::drawFrame() {
 }
 
 bool HelloTriangleApplication::isDeviceSuitable(VkPhysicalDevice device) {
-    QueueFamilyIndices indices = findQueueFamilies(device);
+    std::vector<FamilyPredicate> familyPredicates = {
+        [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
+            return prop.queueFlags & VK_QUEUE_GRAPHICS_BIT;
+        },
+        [this](VkPhysicalDevice dev, VkQueueFamilyProperties prop,
+               uint32_t id) {
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(dev, id, surface,
+                                                 &presentSupport);
+            return presentSupport;
+        }};
+    std::vector<uint32_t> families =
+        findQueueFamilies(device, familyPredicates);
 
     bool extensionsSupported = checkDeviceExtensionSupport(device);
 
@@ -586,7 +572,7 @@ bool HelloTriangleApplication::isDeviceSuitable(VkPhysicalDevice device) {
     VkPhysicalDeviceFeatures supportedFeatures;
     vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-    return indices.isComplete() && extensionsSupported && swapChainAdequate &&
+    return families.size() == 2 && extensionsSupported && swapChainAdequate &&
            supportedFeatures.samplerAnisotropy;
 }
 
@@ -608,42 +594,6 @@ bool HelloTriangleApplication::checkDeviceExtensionSupport(
     }
 
     return requiredExtensions.empty();
-}
-
-QueueFamilyIndices HelloTriangleApplication::findQueueFamilies(
-    VkPhysicalDevice device) {
-    QueueFamilyIndices indices;
-
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
-                                             nullptr);
-
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
-                                             queueFamilies.data());
-
-    int i = 0;
-    for (const auto& queueFamily : queueFamilies) {
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            indices.graphicsFamily = i;
-        }
-
-        VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface,
-                                             &presentSupport);
-
-        if (presentSupport) {
-            indices.presentFamily = i;
-        }
-
-        if (indices.isComplete()) {
-            break;
-        }
-
-        i++;
-    }
-
-    return indices;
 }
 
 std::vector<const char*> HelloTriangleApplication::getRequiredExtensions() {

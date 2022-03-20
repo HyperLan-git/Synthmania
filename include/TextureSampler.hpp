@@ -5,15 +5,17 @@
 
 #include <stdexcept>
 
+#include "Device.hpp"
+
 class TextureSampler {
    public:
-    TextureSampler(VkPhysicalDevice* physicalDevice, VkDevice* device);
+    TextureSampler(VkPhysicalDevice* physicalDevice, Device* device);
 
     VkSampler* getSampler();
 
     ~TextureSampler();
 
    private:
-    VkDevice* device;
+    Device* device;
     VkSampler* sampler;
 };

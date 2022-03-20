@@ -5,9 +5,11 @@
 
 #include <stdexcept>
 
+#include "Device.hpp"
+
 class Fence {
    public:
-    Fence(VkDevice *device);
+    Fence(Device *device);
 
     VkFence *getFence();
 
@@ -17,6 +19,6 @@ class Fence {
     ~Fence();
 
    private:
-    VkDevice *device;
+    Device *device;
     VkFence *fence;
 };

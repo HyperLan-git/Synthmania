@@ -1,7 +1,7 @@
 #include "TextureSampler.hpp"
 
 TextureSampler::TextureSampler(VkPhysicalDevice* physicalDevice,
-                               VkDevice* device) {
+                               Device* device) {
     sampler = new VkSampler();
     this->device = device;
     VkPhysicalDeviceProperties properties{};
@@ -22,8 +22,8 @@ TextureSampler::TextureSampler(VkPhysicalDevice* physicalDevice,
     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-    if (vkCreateSampler(*device, &samplerInfo, nullptr, sampler) !=
-        VK_SUCCESS) {
+    if (vkCreateSampler(*(device->getDevice()), &samplerInfo, nullptr,
+                        sampler) != VK_SUCCESS) {
         throw std::runtime_error("failed to create texture sampler!");
     }
 }
@@ -31,6 +31,6 @@ TextureSampler::TextureSampler(VkPhysicalDevice* physicalDevice,
 VkSampler* TextureSampler::getSampler() { return sampler; }
 
 TextureSampler::~TextureSampler() {
-    vkDestroySampler(*device, *sampler, nullptr);
+    vkDestroySampler(*(device->getDevice()), *sampler, nullptr);
     delete sampler;
 }

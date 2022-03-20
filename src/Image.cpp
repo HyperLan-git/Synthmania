@@ -1,6 +1,6 @@
 #include "Image.hpp"
 
-Image::Image(VkPhysicalDevice* physicalDevice, VkDevice* device, uint32_t width,
+Image::Image(VkPhysicalDevice* physicalDevice, Device* device, uint32_t width,
              uint32_t height, VkFormat format, VkImageTiling tiling,
              VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
     this->device = device;
@@ -20,31 +20,36 @@ Image::Image(VkPhysicalDevice* physicalDevice, VkDevice* device, uint32_t width,
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateImage(*device, &imageInfo, nullptr, image) != VK_SUCCESS) {
+    if (vkCreateImage(*(device->getDevice()), &imageInfo, nullptr, image) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
 
     VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(*device, *image, &memRequirements);
+    vkGetImageMemoryRequirements(*(device->getDevice()), *image,
+                                 &memRequirements);
 
     memory = new Memory(physicalDevice, device, memRequirements, properties);
 
-    vkBindImageMemory(*device, *image, *(memory->getMemory()), 0);
+    vkBindImageMemory(*(device->getDevice()), *image, *(memory->getMemory()),
+                      0);
 }
 
-std::vector<Image*> createImagesForSwapchain(VkDevice* device,
+std::vector<Image*> createImagesForSwapchain(Device* device,
                                              VkSwapchainKHR swapchain,
                                              uint32_t* imageCount) {
     std::vector<Image*> swapChainImages;
-    vkGetSwapchainImagesKHR(*device, swapchain, imageCount, nullptr);
+    vkGetSwapchainImagesKHR(*(device->getDevice()), swapchain, imageCount,
+                            nullptr);
     VkImage* images = new VkImage[*imageCount];
-    vkGetSwapchainImagesKHR(*device, swapchain, imageCount, images);
+    vkGetSwapchainImagesKHR(*(device->getDevice()), swapchain, imageCount,
+                            images);
     for (int i = 0; i < *imageCount; i++)
         swapChainImages.push_back(new Image(device, images + i));
     return swapChainImages;
 }
 
-Image::Image(VkDevice* device, VkImage* image) {
+Image::Image(Device* device, VkImage* image) {
     this->device = device;
     this->image = image;
     this->memory = nullptr;  // TODO find a way to get associated memory
@@ -55,7 +60,7 @@ VkImage* Image::getImage() { return image; }
 Memory* Image::getMemory() { return memory; }
 
 Image::~Image() {
-    vkDestroyImage(*device, *image, nullptr);
+    vkDestroyImage(*(device->getDevice()), *image, nullptr);
     delete image;
     if (memory != nullptr) delete memory;  // Again I wish I could do that
 }

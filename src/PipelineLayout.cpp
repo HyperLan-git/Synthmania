@@ -1,6 +1,6 @@
 #include "PipelineLayout.hpp"
 
-PipelineLayout::PipelineLayout(VkDevice* device,
+PipelineLayout::PipelineLayout(Device* device,
                                ShaderDescriptorSetLayout* shaderLayout) {
     this->device = device;
     this->layout = new VkPipelineLayout();
@@ -10,13 +10,13 @@ PipelineLayout::PipelineLayout(VkDevice* device,
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = shaderLayout->getLayout();
 
-    if (vkCreatePipelineLayout(*device, &pipelineLayoutInfo, nullptr, layout) !=
-        VK_SUCCESS) {
+    if (vkCreatePipelineLayout(*(device->getDevice()), &pipelineLayoutInfo,
+                               nullptr, layout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 }
 VkPipelineLayout* PipelineLayout::getLayout() { return layout; }
 PipelineLayout::~PipelineLayout() {
-    vkDestroyPipelineLayout(*device, *layout, nullptr);
+    vkDestroyPipelineLayout(*(device->getDevice()), *layout, nullptr);
     delete layout;
 }

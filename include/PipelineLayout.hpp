@@ -7,15 +7,16 @@ class PipelineLayout;
 
 #include <stdexcept>
 
+#include "Device.hpp"
 #include "ShaderDescriptorSetLayout.hpp"
 
 class PipelineLayout {
    public:
-    PipelineLayout(VkDevice* device, ShaderDescriptorSetLayout* shaderLayout);
+    PipelineLayout(Device* device, ShaderDescriptorSetLayout* shaderLayout);
     VkPipelineLayout* getLayout();
     ~PipelineLayout();
 
    private:
-    VkDevice* device;
+    Device* device;
     VkPipelineLayout* layout;
 };

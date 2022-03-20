@@ -30,7 +30,7 @@ VkDescriptorImageInfo* createImageInfo(ImageView* view,
  */
 class ShaderDescriptorSet {
    public:
-    ShaderDescriptorSet(VkDevice* device, ShaderDescriptorPool* pool,
+    ShaderDescriptorSet(Device* device, ShaderDescriptorPool* pool,
                         ShaderDescriptorSetLayout* layout);
     void updateAccess(VkStructureType allowed, uint32_t binding,
                       VkDescriptorType type, VkDescriptorBufferInfo* bInfo,
@@ -40,7 +40,7 @@ class ShaderDescriptorSet {
     ~ShaderDescriptorSet();
 
    private:
-    VkDevice* device;
+    Device* device;
     VkDescriptorSet* set;
     ShaderDescriptorPool* pool;
     VkWriteDescriptorSet* writeDescriptor = nullptr;

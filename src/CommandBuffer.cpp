@@ -1,6 +1,6 @@
 #include "CommandBuffer.hpp"
 
-CommandBuffer::CommandBuffer(VkDevice *device, CommandPool *commandPool,
+CommandBuffer::CommandBuffer(Device *device, CommandPool *commandPool,
                              bool singleTime) {
     this->device = device;
     this->pool = commandPool;
@@ -13,7 +13,8 @@ CommandBuffer::CommandBuffer(VkDevice *device, CommandPool *commandPool,
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = 1;
 
-    if (vkAllocateCommandBuffers(*device, &allocInfo, buffer) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(*(device->getDevice()), &allocInfo, buffer) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 }
@@ -40,17 +41,17 @@ void CommandBuffer::reset() {
                          /*VkCommandBufferResetFlagBits*/ 0);
 }
 
-void CommandBuffer::submit(VkQueue queue) {
+void CommandBuffer::submit(Queue *queue) {
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = buffer;
 
-    vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(queue);
+    vkQueueSubmit(*(queue->getQueue()), 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(*(queue->getQueue()));
 }
 
-void CommandBuffer::submit(VkQueue queue, Semaphore *waitSemaphore,
+void CommandBuffer::submit(Queue *queue, Semaphore *waitSemaphore,
                            Semaphore *finishedSemaphore, Fence *fence) {
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -67,8 +68,8 @@ void CommandBuffer::submit(VkQueue queue, Semaphore *waitSemaphore,
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = finishedSemaphore->getSemaphore();
 
-    if (vkQueueSubmit(queue, 1, &submitInfo, *(fence->getFence())) !=
-        VK_SUCCESS) {
+    if (vkQueueSubmit(*(queue->getQueue()), 1, &submitInfo,
+                      *(fence->getFence())) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 }
@@ -186,6 +187,6 @@ void CommandBuffer::copyBufferRegion(Buffer *src, Buffer *dest,
 }
 
 CommandBuffer::~CommandBuffer() {
-    vkFreeCommandBuffers(*device, *(pool->getPool()), 1, buffer);
+    vkFreeCommandBuffers(*(device->getDevice()), *(pool->getPool()), 1, buffer);
     delete buffer;
 }

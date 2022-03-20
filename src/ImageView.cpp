@@ -1,6 +1,6 @@
 #include "ImageView.hpp"
 
-ImageView::ImageView(VkDevice *device, Image *image, VkFormat format,
+ImageView::ImageView(Device *device, Image *image, VkFormat format,
                      VkImageAspectFlags aspectFlags) {
     this->device = device;
     VkImageViewCreateInfo viewInfo{};
@@ -15,7 +15,8 @@ ImageView::ImageView(VkDevice *device, Image *image, VkFormat format,
     viewInfo.subresourceRange.layerCount = 1;
 
     view = new VkImageView();
-    if (vkCreateImageView(*device, &viewInfo, nullptr, view) != VK_SUCCESS) {
+    if (vkCreateImageView(*(device->getDevice()), &viewInfo, nullptr, view) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create texture image view!");
     }
 }
@@ -23,6 +24,6 @@ ImageView::ImageView(VkDevice *device, Image *image, VkFormat format,
 VkImageView *ImageView::getView() { return view; }
 
 ImageView::~ImageView() {
-    vkDestroyImageView(*device, *view, nullptr);
+    vkDestroyImageView(*(device->getDevice()), *view, nullptr);
     delete view;
 }

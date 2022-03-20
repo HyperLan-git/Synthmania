@@ -7,11 +7,12 @@ class RenderPass;
 
 #include <stdexcept>
 
+#include "Device.hpp"
 #include "Utils.hpp"
 
 class RenderPass {
    public:
-    RenderPass(VkPhysicalDevice *physicalDevice, VkDevice *device,
+    RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
                VkFormat swapChainImageFormat);
 
     VkRenderPass *getPass();
@@ -19,6 +20,6 @@ class RenderPass {
     ~RenderPass();
 
    private:
-    VkDevice *device;
+    Device *device;
     VkRenderPass *pass;
 };

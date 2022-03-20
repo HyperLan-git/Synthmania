@@ -1,6 +1,6 @@
 #include "Memory.hpp"
 
-Memory::Memory(VkPhysicalDevice* physicalDevice, VkDevice* device,
+Memory::Memory(VkPhysicalDevice* physicalDevice, Device* device,
                VkMemoryRequirements memRequirements,
                VkMemoryPropertyFlags properties) {
     memory = new VkDeviceMemory();
@@ -11,7 +11,8 @@ Memory::Memory(VkPhysicalDevice* physicalDevice, VkDevice* device,
     allocInfo.memoryTypeIndex = findMemoryType(
         physicalDevice, memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(*device, &allocInfo, nullptr, memory) != VK_SUCCESS) {
+    if (vkAllocateMemory(*(device->getDevice()), &allocInfo, nullptr, memory) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to allocate buffer memory!");
     }
 }
@@ -19,6 +20,6 @@ Memory::Memory(VkPhysicalDevice* physicalDevice, VkDevice* device,
 VkDeviceMemory* Memory::getMemory() { return memory; }
 
 Memory::~Memory() {
-    vkFreeMemory(*device, *memory, nullptr);
+    vkFreeMemory(*(device->getDevice()), *memory, nullptr);
     delete memory;  // I wish I could do that
 }

@@ -1,10 +1,10 @@
 #include "Buffer.hpp"
 
-Buffer::Buffer(VkPhysicalDevice* physicalDevice, VkDevice* device,
+Buffer::Buffer(VkPhysicalDevice* physicalDevice, Device* device,
                VkDeviceSize size, VkBufferUsageFlags usage,
                VkMemoryPropertyFlags properties) {
-    this->device = device;
     this->buffer = new VkBuffer();
+    this->device = device;
     this->size = size;
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -12,19 +12,22 @@ Buffer::Buffer(VkPhysicalDevice* physicalDevice, VkDevice* device,
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(*device, &bufferInfo, nullptr, buffer) != VK_SUCCESS) {
+    if (vkCreateBuffer(*(device->getDevice()), &bufferInfo, nullptr, buffer) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer!");
     }
 
     VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(*device, *buffer, &memRequirements);
+    vkGetBufferMemoryRequirements(*(device->getDevice()), *buffer,
+                                  &memRequirements);
 
     memory = new Memory(physicalDevice, device, memRequirements, properties);
 
-    vkBindBufferMemory(*device, *buffer, *(memory->getMemory()), 0);
+    vkBindBufferMemory(*(device->getDevice()), *buffer, *(memory->getMemory()),
+                       0);
 }
 
-void Buffer::copyTo(Buffer* other, VkQueue graphicsQueue,
+void Buffer::copyTo(Buffer* other, Queue* graphicsQueue,
                     CommandPool* commandPool) {
     CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
     commandBuffer->begin();
@@ -44,7 +47,7 @@ VkBuffer* Buffer::getBuffer() { return buffer; }
 VkDeviceSize Buffer::getSize() { return size; }
 
 Buffer::~Buffer() {
-    vkDestroyBuffer(*device, *buffer, nullptr);
+    vkDestroyBuffer(*(device->getDevice()), *buffer, nullptr);
     delete buffer;
     delete memory;  // :(
 }

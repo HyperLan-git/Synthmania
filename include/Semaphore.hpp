@@ -5,9 +5,11 @@
 
 #include <stdexcept>
 
+#include "Device.hpp"
+
 class Semaphore {
    public:
-    Semaphore(VkDevice *device);
+    Semaphore(Device *device);
 
     VkSemaphore *getSemaphore();
 
@@ -15,5 +17,5 @@ class Semaphore {
 
    private:
     VkSemaphore *semaphore;
-    VkDevice *device;
+    Device *device;
 };

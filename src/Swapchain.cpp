@@ -1,6 +1,6 @@
 #include "Swapchain.hpp"
 
-Swapchain::Swapchain(VkDevice *device, VkPhysicalDevice *physicalDevice,
+Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
                      Window *window, Shader *vertShader, Shader *fragShader,
                      ShaderDescriptorSetLayout *shaderDescriptors,
                      VkSurfaceKHR surface) {
@@ -34,11 +34,10 @@ Swapchain::Swapchain(VkDevice *device, VkPhysicalDevice *physicalDevice,
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueFamilyIndices indices = findQueueFamilies(*physicalDevice, surface);
-    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(),
-                                     indices.presentFamily.value()};
+    uint32_t queueFamilyIndices[] = {device->getQueue(0)->getFamily(),
+                                     device->getQueue(1)->getFamily()};
 
-    if (indices.graphicsFamily != indices.presentFamily) {
+    if (device->getQueue(1)->getFamily() != device->getQueue(0)->getFamily()) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
         createInfo.pQueueFamilyIndices = queueFamilyIndices;
@@ -51,8 +50,8 @@ Swapchain::Swapchain(VkDevice *device, VkPhysicalDevice *physicalDevice,
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
-    if (vkCreateSwapchainKHR(*device, &createInfo, nullptr, swapchain) !=
-        VK_SUCCESS) {
+    if (vkCreateSwapchainKHR(*(device->getDevice()), &createInfo, nullptr,
+                             swapchain) != VK_SUCCESS) {
         throw std::runtime_error("failed to create swap chain!");
     }
 
@@ -117,6 +116,6 @@ Swapchain::~Swapchain() {
         delete imageView;
     }
 
-    vkDestroySwapchainKHR(*device, *swapchain, nullptr);
+    vkDestroySwapchainKHR(*(device->getDevice()), *swapchain, nullptr);
     delete swapchain;
 }

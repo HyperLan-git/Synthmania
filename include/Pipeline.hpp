@@ -13,7 +13,7 @@ class Pipeline;
 
 class Pipeline {
    public:
-    Pipeline(VkDevice *device, PipelineLayout *layout, RenderPass *renderPass,
+    Pipeline(Device *device, PipelineLayout *layout, RenderPass *renderPass,
              VkPipelineShaderStageCreateInfo *shaderStages,
              uint32_t shaderCount, VkExtent2D swapChainExtent);
     VkPipeline *getPipeline();
@@ -21,7 +21,7 @@ class Pipeline {
     ~Pipeline();
 
    private:
-    VkDevice *device;
+    Device *device;
     VkPipeline *pipeline;
     PipelineLayout *layout;
 };

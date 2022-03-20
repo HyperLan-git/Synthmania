@@ -1,6 +1,6 @@
 #include "Shader.hpp"
 
-Shader::Shader(const char* mainFunction, VkDevice* device,
+Shader::Shader(const char* mainFunction, Device* device,
                const std::vector<char>& code, bool vertex) {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -8,8 +8,8 @@ Shader::Shader(const char* mainFunction, VkDevice* device,
     createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
     VkShaderModule* shaderModule = new VkShaderModule();
-    if (vkCreateShaderModule(*device, &createInfo, nullptr, shaderModule) !=
-        VK_SUCCESS) {
+    if (vkCreateShaderModule(*(device->getDevice()), &createInfo, nullptr,
+                             shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("failed to create shader module!");
     }
     VkPipelineShaderStageCreateInfo shaderStageInfo =
@@ -29,6 +29,7 @@ Shader::Shader(const char* mainFunction, VkDevice* device,
 VkPipelineShaderStageCreateInfo Shader::toPipeline() { return info; }
 
 Shader::~Shader() {
-    vkDestroyShaderModule(*(this->device), *(this->module), nullptr);
+    vkDestroyShaderModule(*(this->device->getDevice()), *(this->module),
+                          nullptr);
     delete module;
 }

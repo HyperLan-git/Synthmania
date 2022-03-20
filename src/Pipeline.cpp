@@ -1,6 +1,6 @@
 #include "Pipeline.hpp"
 
-Pipeline::Pipeline(VkDevice *device, PipelineLayout *layout,
+Pipeline::Pipeline(Device *device, PipelineLayout *layout,
                    RenderPass *renderPass,
                    VkPipelineShaderStageCreateInfo *shaderStages,
                    uint32_t shaderCount, VkExtent2D swapChainExtent) {
@@ -106,8 +106,9 @@ Pipeline::Pipeline(VkDevice *device, PipelineLayout *layout,
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(*device, VK_NULL_HANDLE, 1, &pipelineInfo,
-                                  nullptr, pipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(*(device->getDevice()), VK_NULL_HANDLE, 1,
+                                  &pipelineInfo, nullptr,
+                                  pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 }
@@ -117,6 +118,6 @@ VkPipeline *Pipeline::getPipeline() { return pipeline; }
 PipelineLayout *Pipeline::getLayout() { return layout; }
 
 Pipeline ::~Pipeline() {
-    vkDestroyPipeline(*device, *pipeline, nullptr);
+    vkDestroyPipeline(*(device->getDevice()), *pipeline, nullptr);
     delete pipeline;
 }

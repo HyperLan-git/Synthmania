@@ -1,6 +1,6 @@
 #include "Fence.hpp"
 
-Fence::Fence(VkDevice *device) {
+Fence::Fence(Device *device) {
     this->device = device;
 
     VkFenceCreateInfo fenceInfo{};
@@ -9,7 +9,8 @@ Fence::Fence(VkDevice *device) {
 
     this->fence = new VkFence();
 
-    if (vkCreateFence(*device, &fenceInfo, nullptr, fence) != VK_SUCCESS) {
+    if (vkCreateFence(*(device->getDevice()), &fenceInfo, nullptr, fence) !=
+        VK_SUCCESS) {
         throw std::runtime_error(
             "failed to create synchronization objects for a frame!");
     }
@@ -17,11 +18,13 @@ Fence::Fence(VkDevice *device) {
 
 VkFence *Fence::getFence() { return fence; }
 
-void Fence::reset() { vkResetFences(*device, 1, fence); }
+void Fence::reset() { vkResetFences(*(device->getDevice()), 1, fence); }
 
-void Fence::wait() { vkWaitForFences(*device, 1, fence, VK_TRUE, UINT64_MAX); }
+void Fence::wait() {
+    vkWaitForFences(*(device->getDevice()), 1, fence, VK_TRUE, UINT64_MAX);
+}
 
 Fence::~Fence() {
-    vkDestroyFence(*device, *fence, nullptr);
+    vkDestroyFence(*(device->getDevice()), *fence, nullptr);
     delete fence;
 }

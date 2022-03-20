@@ -3,6 +3,9 @@
 #include <GLFW/glfw3.h>
 
 #include <stdexcept>
+
+#include "Device.hpp"
+
 /**
  * @brief A descriptor is a way to give access to program variables for shaders.
  * It is used for uniforms and texture images among other things.
@@ -11,13 +14,13 @@
  */
 class ShaderDescriptorSetLayout {
    public:
-    ShaderDescriptorSetLayout(VkDevice* device,
+    ShaderDescriptorSetLayout(Device* device,
                               VkDescriptorSetLayoutBinding* bindings,
                               uint32_t nBindings);
     VkDescriptorSetLayout* getLayout();
     ~ShaderDescriptorSetLayout();
 
    private:
-    VkDevice* device;
+    Device* device;
     VkDescriptorSetLayout* layout;
 };

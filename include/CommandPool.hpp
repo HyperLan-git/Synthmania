@@ -7,26 +7,16 @@
 #include <stdexcept>
 #include <vector>
 
-struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
-
-    bool isComplete() {
-        return graphicsFamily.has_value() && presentFamily.has_value();
-    }
-};
-
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
-                                     VkSurfaceKHR surface);
+#include "Device.hpp"
 
 class CommandPool {
    public:
-    CommandPool(VkPhysicalDevice physicalDevice, VkDevice* device,
+    CommandPool(VkPhysicalDevice physicalDevice, Device* device,
                 VkSurfaceKHR toSupport);
     VkCommandPool* getPool();
     ~CommandPool();
 
    private:
-    VkDevice* device;
+    Device* device;
     VkCommandPool* pool;
 };

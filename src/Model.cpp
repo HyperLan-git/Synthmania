@@ -16,17 +16,17 @@ std::array<VIADesc, 3> getAttributeDescriptions() {
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
     attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-    attributeDescriptions[0].offset = offsetof(Vertex, pos);
+    attributeDescriptions[0].offset = offsetof(Vertex, Vertex::pos);
 
     attributeDescriptions[1].binding = 0;
     attributeDescriptions[1].location = 1;
     attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-    attributeDescriptions[1].offset = offsetof(Vertex, color);
+    attributeDescriptions[1].offset = offsetof(Vertex, Vertex::color);
 
     attributeDescriptions[2].binding = 0;
     attributeDescriptions[2].location = 2;
     attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-    attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+    attributeDescriptions[2].offset = offsetof(Vertex, Vertex::texCoord);
 
     return attributeDescriptions;
 }
@@ -41,7 +41,7 @@ Model::Model(const std::vector<Vertex> vdata,
 }
 
 Buffer* Model::toVertexBuffer(VkPhysicalDevice* physicalDevice,
-                              VkDevice* device) {
+                              Device* device) {
     VkDeviceSize bufferSize = sizeof(vdata[0]) * vdata.size();
 
     Buffer* vertexBuffer = new Buffer(physicalDevice, device, bufferSize,
@@ -50,16 +50,18 @@ Buffer* Model::toVertexBuffer(VkPhysicalDevice* physicalDevice,
                                           VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* data;
-    vkMapMemory(*device, *(vertexBuffer->getMemory()->getMemory()), 0,
-                bufferSize, 0, &data);
+    vkMapMemory(*(device->getDevice()),
+                *(vertexBuffer->getMemory()->getMemory()), 0, bufferSize, 0,
+                &data);
     memcpy(data, vdata.data(), (size_t)bufferSize);
-    vkUnmapMemory(*device, *(vertexBuffer->getMemory()->getMemory()));
+    vkUnmapMemory(*(device->getDevice()),
+                  *(vertexBuffer->getMemory()->getMemory()));
 
     return vertexBuffer;
 }
 
 Buffer* Model::toIndicesBuffer(VkPhysicalDevice* physicalDevice,
-                               VkDevice* device) {
+                               Device* device) {
     VkDeviceSize bufferSize = sizeof(idata[0]) * idata.size();
 
     Buffer* indicesBuffer = new Buffer(
@@ -68,9 +70,11 @@ Buffer* Model::toIndicesBuffer(VkPhysicalDevice* physicalDevice,
             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* data;
-    vkMapMemory(*device, *(indicesBuffer->getMemory()->getMemory()), 0,
-                bufferSize, 0, &data);
+    vkMapMemory(*(device->getDevice()),
+                *(indicesBuffer->getMemory()->getMemory()), 0, bufferSize, 0,
+                &data);
     memcpy(data, idata.data(), (size_t)bufferSize);
-    vkUnmapMemory(*device, *(indicesBuffer->getMemory()->getMemory()));
+    vkUnmapMemory(*(device->getDevice()),
+                  *(indicesBuffer->getMemory()->getMemory()));
     return indicesBuffer;
 }

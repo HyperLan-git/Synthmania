@@ -9,7 +9,7 @@ class Memory;
 
 class Memory {
    public:
-    Memory(VkPhysicalDevice* physicalDevice, VkDevice* device,
+    Memory(VkPhysicalDevice* physicalDevice, Device* device,
            VkMemoryRequirements memRequirements,
            VkMemoryPropertyFlags properties);
 
@@ -18,6 +18,6 @@ class Memory {
     ~Memory();
 
    private:
-    VkDevice* device;
+    Device* device;
     VkDeviceMemory* memory;
 };

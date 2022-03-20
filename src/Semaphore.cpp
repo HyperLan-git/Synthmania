@@ -1,13 +1,13 @@
 #include "Semaphore.hpp"
 
-Semaphore::Semaphore(VkDevice *device) {
+Semaphore::Semaphore(Device *device) {
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
     semaphore = new VkSemaphore();
 
-    if (vkCreateSemaphore(*device, &semaphoreInfo, nullptr, semaphore) !=
-        VK_SUCCESS) {
+    if (vkCreateSemaphore(*(device->getDevice()), &semaphoreInfo, nullptr,
+                          semaphore) != VK_SUCCESS) {
         throw std::runtime_error("failed to create semaphore!");
     }
     this->device = device;
@@ -16,6 +16,6 @@ Semaphore::Semaphore(VkDevice *device) {
 VkSemaphore *Semaphore::getSemaphore() { return semaphore; }
 
 Semaphore::~Semaphore() {
-    vkDestroySemaphore(*device, *semaphore, nullptr);
+    vkDestroySemaphore(*(device->getDevice()), *semaphore, nullptr);
     delete semaphore;
 }

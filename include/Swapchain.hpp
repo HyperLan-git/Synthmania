@@ -18,8 +18,8 @@ class Swapchain;
 
 class Swapchain {
    public:
-    Swapchain(VkDevice *device, VkPhysicalDevice *physicalDevice,
-              Window *window, Shader *vertShader, Shader *fragShader,
+    Swapchain(Device *device, VkPhysicalDevice *physicalDevice, Window *window,
+              Shader *vertShader, Shader *fragShader,
               ShaderDescriptorSetLayout *shaderDescriptors,
               VkSurfaceKHR surface);
 
@@ -32,7 +32,7 @@ class Swapchain {
     ~Swapchain();
 
    private:
-    VkDevice *device;
+    Device *device;
     VkPhysicalDevice *physicalDevice;
     VkSwapchainKHR *swapchain;
     VkFormat imageFormat;

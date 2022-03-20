@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Buffer.hpp"
+#include "Device.hpp"
 
 typedef struct VkVertexInputAttributeDescription VIADesc;
 
@@ -32,8 +33,8 @@ class Model {
    public:
     Model(const std::vector<Vertex> vdata, const std::vector<uint16_t> idata);
 
-    Buffer* toVertexBuffer(VkPhysicalDevice* physicalDevice, VkDevice* device);
-    Buffer* toIndicesBuffer(VkPhysicalDevice* physicalDevice, VkDevice* device);
+    Buffer* toVertexBuffer(VkPhysicalDevice* physicalDevice, Device* device);
+    Buffer* toIndicesBuffer(VkPhysicalDevice* physicalDevice, Device* device);
 
    private:
     std::vector<struct Vertex> vdata;

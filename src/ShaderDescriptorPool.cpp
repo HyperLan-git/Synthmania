@@ -1,6 +1,6 @@
 #include "ShaderDescriptorPool.hpp"
 
-ShaderDescriptorPool::ShaderDescriptorPool(VkDevice *device,
+ShaderDescriptorPool::ShaderDescriptorPool(Device *device,
                                            VkDescriptorType *types,
                                            uint32_t count) {
     this->device = device;
@@ -17,8 +17,8 @@ ShaderDescriptorPool::ShaderDescriptorPool(VkDevice *device,
 
     pool = new VkDescriptorPool();
 
-    if (vkCreateDescriptorPool(*device, &poolInfo, nullptr, pool) !=
-        VK_SUCCESS) {
+    if (vkCreateDescriptorPool(*(device->getDevice()), &poolInfo, nullptr,
+                               pool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool!");
     }
 }
@@ -26,6 +26,6 @@ ShaderDescriptorPool::ShaderDescriptorPool(VkDevice *device,
 VkDescriptorPool *ShaderDescriptorPool::getPool() { return pool; }
 
 ShaderDescriptorPool::~ShaderDescriptorPool() {
-    vkDestroyDescriptorPool(*device, *pool, nullptr);
+    vkDestroyDescriptorPool(*(device->getDevice()), *pool, nullptr);
     delete pool;
 }

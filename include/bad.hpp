@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -27,6 +28,7 @@
 #include "Buffer.hpp"
 #include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
+#include "Device.hpp"
 #include "Fence.hpp"
 #include "Framebuffer.hpp"
 #include "Image.hpp"
@@ -96,10 +98,7 @@ class HelloTriangleApplication {
     VkSurfaceKHR surface;
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-    VkDevice device;
-
-    VkQueue graphicsQueue;
-    VkQueue presentQueue;
+    Device* device;
 
     Swapchain* swapchain;
 
@@ -188,7 +187,6 @@ class HelloTriangleApplication {
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
     bool isDeviceSuitable(VkPhysicalDevice device);
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     std::vector<const char*> getRequiredExtensions();
     bool checkValidationLayerSupport();
 };
