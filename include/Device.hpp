@@ -6,7 +6,9 @@ class Device;
 #include <GLFW/glfw3.h>
 
 #include <functional>
+#include <map>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <vector>
 
@@ -28,11 +30,12 @@ class Device {
            std::vector<FamilyPredicate> familyPredicates,
            const std::vector<const char *> validationLayers);
     VkDevice *getDevice();
-    Queue *getQueue(int queueID);
+    Queue *getQueue(int id);
     void wait();
     ~Device();
 
    private:
     VkDevice *device;
     std::vector<Queue *> queues;
+    std::map<int, int> queuesID;
 };

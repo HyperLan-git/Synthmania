@@ -13,15 +13,17 @@ std::vector<uint32_t> findQueueFamilies(
                                              queueFamilies.data());
 
     uint32_t j = 0;
-    for (uint32_t i = 0; i < queueFamilies.size(); i++) {
+    uint32_t i = 0;
+    for (i = 0; i < queueFamilies.size(); i++) {
         const VkQueueFamilyProperties &queueFamily = queueFamilies[i];
         if (familyPredicates[j](device, queueFamily, i)) {
             result.push_back(i);
-            if (result.size() >= familyPredicates.size()) return result;
             j++;
+            if (j >= familyPredicates.size()) return result;
             i = -1;
         }
     }
+    if (i >= queueFamilies.size()) result.clear();
 
     return result;
 }
@@ -32,10 +34,21 @@ Device::Device(VkPhysicalDevice *physicalDevice,
     this->queues = {};
     this->device = new VkDevice();
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::vector<uint32_t> uniqueQueueFamilies =
+    std::vector<uint32_t> queueFamilies =
         findQueueFamilies(*physicalDevice, familyPredicates);
+    std::set<uint32_t> uniqueQueueFamilies = {};
 
     float queuePriority = 1.0f;
+    for (int i = 0; i < queueFamilies.size(); i++) {
+        auto result = uniqueQueueFamilies.emplace(queueFamilies[i]);
+        if (result.second) {
+            int j = 0;
+            for (auto it = uniqueQueueFamilies.begin(); *it != *(result.first);
+                 it++)
+                j++;
+            queuesID[i] = j;
+        }
+    }
     for (uint32_t queueFamily : uniqueQueueFamilies) {
         VkDeviceQueueCreateInfo queueCreateInfo{};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -127,7 +140,7 @@ Device::Device(VkPhysicalDevice *physicalDevice,
 
 VkDevice *Device::getDevice() { return device; }
 
-Queue *Device::getQueue(int queueID) { return this->queues[queueID]; }
+Queue *Device::getQueue(int id) { return this->queues[queuesID[id]]; }
 
 void Device::wait() { vkDeviceWaitIdle(*device); }
 

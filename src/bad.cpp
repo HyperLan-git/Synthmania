@@ -228,7 +228,6 @@ void HelloTriangleApplication::pickPhysicalDevice() {
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
     for (const auto& device : devices) {
-        std::cout << "device : " << device << std::endl;
         if (isDeviceSuitable(device)) {
             physicalDevice = device;
             break;
@@ -572,7 +571,7 @@ bool HelloTriangleApplication::isDeviceSuitable(VkPhysicalDevice device) {
     VkPhysicalDeviceFeatures supportedFeatures;
     vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-    return families.size() == 2 && extensionsSupported && swapChainAdequate &&
+    return families.size() != 2 && extensionsSupported && swapChainAdequate &&
            supportedFeatures.samplerAnisotropy;
 }
 
