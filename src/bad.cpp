@@ -171,8 +171,7 @@ void HelloTriangleApplication::createInstance() {
         createInfo.ppEnabledLayerNames = validationLayers.data();
 
         populateDebugMessengerCreateInfo(debugCreateInfo);
-        createInfo.pNext =
-            (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
+        createInfo.pNext = &debugCreateInfo;
     } else {
         createInfo.enabledLayerCount = 0;
 
@@ -571,8 +570,8 @@ bool HelloTriangleApplication::isDeviceSuitable(VkPhysicalDevice device) {
     VkPhysicalDeviceFeatures supportedFeatures;
     vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-    return families.size() != 2 && extensionsSupported && swapChainAdequate &&
-           supportedFeatures.samplerAnisotropy;
+    return families.size() == familyPredicates.size() && extensionsSupported &&
+           swapChainAdequate && supportedFeatures.samplerAnisotropy;
 }
 
 bool HelloTriangleApplication::checkDeviceExtensionSupport(
