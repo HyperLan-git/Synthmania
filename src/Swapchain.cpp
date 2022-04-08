@@ -3,9 +3,9 @@
 Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
                      Window *window, Shader *vertShader, Shader *fragShader,
                      ShaderDescriptorSetLayout *shaderDescriptors,
-                     VkSurfaceKHR surface) {
+                     VkSurfaceKHR *surface) {
     SwapchainSupportDetails swapchainSupport =
-        querySwapchainSupport(*physicalDevice, surface);
+        querySwapchainSupport(*physicalDevice, *surface);
 
     this->device = device;
     this->extent = chooseSwapExtent(swapchainSupport.capabilities, window);
@@ -25,7 +25,7 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = surface;
+    createInfo.surface = *surface;
 
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = surfaceFormat.format;
@@ -83,8 +83,12 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
                                                       fragShader->toPipeline()};
+    VkPushConstantRange range;
+    range.offset = 0;
+    range.size = sizeof(float);
+    range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-    pipelineLayout = new PipelineLayout(device, shaderDescriptors);
+    pipelineLayout = new PipelineLayout(device, shaderDescriptors, &range);
 
     graphicsPipeline = new Pipeline(device, pipelineLayout, renderPass,
                                     shaderStages, 2, extent);

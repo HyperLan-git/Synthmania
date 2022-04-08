@@ -119,6 +119,14 @@ void CommandBuffer::draw(uint32_t count) {
     vkCmdDrawIndexed(*buffer, count, 1, 0, 0, 0);
 }
 
+void CommandBuffer::pushConstants(Pipeline *pipeline,
+                                  VkShaderStageFlags shaderStage,
+                                  uint32_t offset, const void *data,
+                                  uint32_t size) {
+    vkCmdPushConstants(*buffer, *(pipeline->getLayout()->getLayout()),
+                       shaderStage, offset, size, data);
+}
+
 void CommandBuffer::endRenderPass() { vkCmdEndRenderPass(*buffer); }
 
 void CommandBuffer::setImageLayout(Image *image, VkImageLayout oldLayout,

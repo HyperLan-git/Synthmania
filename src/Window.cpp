@@ -31,10 +31,11 @@ void Window::getFramebufferSize(uint32_t *width, uint32_t *height) {
     *height = y;
 }
 
-VkResult Window::createSurface(VkInstance instance,
+VkResult Window::createSurface(Instance *instance,
                                const VkAllocationCallbacks *allocator,
                                VkSurfaceKHR *surface) {
-    return glfwCreateWindowSurface(instance, this->window, allocator, surface);
+    return glfwCreateWindowSurface(*(instance->getInstance()), this->window,
+                                   allocator, surface);
 }
 
 void Window::setResized(bool resized) { this->resized = resized; }

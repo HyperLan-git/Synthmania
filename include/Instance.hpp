@@ -5,15 +5,39 @@ class Instance;
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <cstring>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
+
+#include "Window.hpp"
+
+VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 
 class Instance {
    public:
     Instance(const char* name, uint32_t version, const char* engineName,
              uint32_t engineVersion, uint32_t apiVersion,
-             std::vector<uint32_t> extensions,
-             std::vector<uint32_t> validation_layers);
+             const std::vector<const char*> extensions);
+    Instance(const char* name, uint32_t version, const char* engineName,
+             uint32_t engineVersion, uint32_t apiVersion,
+             const std::vector<const char*> extensions,
+             const std::vector<const char*> validationLayers);
+
+    VkSurfaceKHR* createSurface(Window* window);
+    void destroySurface(VkSurfaceKHR* surface);
+
+    VkInstance* getInstance();
+
+    ~Instance();
+
+    bool checkValidationLayerSupport(
+        const std::vector<const char*> validationLayers);
 
    private:
+    VkInstance* instance;
+    VkDebugUtilsMessengerEXT* debugMessenger;
 };

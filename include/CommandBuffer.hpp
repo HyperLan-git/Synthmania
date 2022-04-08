@@ -44,6 +44,8 @@ class CommandBuffer {
     void bindIndexBuffer(Buffer *indexBuffer);
     void bindDescriptorSet(Pipeline *pipeline,
                            const ShaderDescriptorSet *descriptorSet);
+    void pushConstants(Pipeline *pipeline, VkShaderStageFlags shaderStage,
+                       uint32_t offset, const void *data, uint32_t size);
     void draw(uint32_t count);
 
     void submit(Queue *queue, Semaphore *waitSemaphore,

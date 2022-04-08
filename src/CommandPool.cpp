@@ -1,7 +1,6 @@
 #include "CommandPool.hpp"
 
-CommandPool::CommandPool(VkPhysicalDevice physicalDevice, Device* device,
-                         VkSurfaceKHR toSupport) {
+CommandPool::CommandPool(VkPhysicalDevice physicalDevice, Device* device) {
     pool = new VkCommandPool();
     this->device = device;
 

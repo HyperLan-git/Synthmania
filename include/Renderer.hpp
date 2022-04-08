@@ -1,13 +1,8 @@
+#pragma once
 //#define NDEBUG
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <algorithm>
@@ -18,6 +13,11 @@
 #include <cstring>
 #include <fstream>
 #include <functional>
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -33,6 +33,7 @@
 #include "Framebuffer.hpp"
 #include "Image.hpp"
 #include "ImageView.hpp"
+#include "Instance.hpp"
 #include "Memory.hpp"
 #include "Model.hpp"
 #include "Pipeline.hpp"
@@ -46,9 +47,6 @@
 #include "TextureSampler.hpp"
 #include "Utils.hpp"
 #include "Window.hpp"
-
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -73,29 +71,19 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    VkDebugUtilsMessengerEXT debugMessenger,
                                    const VkAllocationCallbacks* pAllocator);
 
-const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
-
-const std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-
-    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-    {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}};
-
-class HelloTriangleApplication {
+class Renderer {
    public:
-    void run();
+    Renderer(Window* window);
+
+    void render();
+
+    ~Renderer();
 
    private:
     Window* window;
 
-    VkInstance instance;
-    VkDebugUtilsMessengerEXT debugMessenger;
-    VkSurfaceKHR surface;
+    Instance* instance;
+    VkSurfaceKHR* surface;
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     Device* device;
@@ -116,6 +104,7 @@ class HelloTriangleApplication {
     Model* model;
 
     std::vector<Buffer*> uniformBuffers;
+    std::vector<Buffer*> constantUniformBuffers;
 
     ShaderDescriptorPool* pool;
     std::vector<ShaderDescriptorSet*> descriptorSets;
@@ -133,18 +122,10 @@ class HelloTriangleApplication {
 
     void mainLoop();
 
-    void cleanup();
-
     void recreateSwapChain();
 
     void createInstance();
 
-    void populateDebugMessengerCreateInfo(
-        VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-
-    void setupDebugMessenger();
-
-    void createSurface();
     void pickPhysicalDevice();
 
     void createLogicalDevice();
@@ -158,13 +139,10 @@ class HelloTriangleApplication {
     void createDescriptorSetLayout();
 
     void createGraphicsPipeline();
-    void createCommandPool();
 
     bool hasStencilComponent(VkFormat format);
 
-    void createTextureImage();
-
-    void createTextureImageView();
+    Image* createTextureImage(const char* path);
 
     void createTextureSampler();
 
@@ -190,8 +168,3 @@ class HelloTriangleApplication {
     std::vector<const char*> getRequiredExtensions();
     bool checkValidationLayerSupport();
 };
-
-VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);

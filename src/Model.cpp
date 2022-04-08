@@ -1,3 +1,4 @@
+#define TINYOBJLOADER_IMPLEMENTATION
 #include "Model.hpp"
 typedef struct VkVertexInputAttributeDescription VIADesc;
 
@@ -31,6 +32,21 @@ std::array<VIADesc, 3> getAttributeDescriptions() {
     return attributeDescriptions;
 }
 
+bool Vertex::operator==(const Vertex& other) const {
+    return pos == other.pos && color == other.color &&
+           texCoord == other.texCoord;
+}
+
+// When You
+size_t std::hash<Vertex>::operator()(Vertex const& vertex) const {
+    return (((int)(vertex.pos.x * 182480327) ^ (int)(vertex.pos.y * 94574341) ^
+             (int)(vertex.pos.z * 58295969)) >>
+            1) ^
+           (((int)(vertex.texCoord.x * 53185423) ^
+             (int)(vertex.texCoord.y * 37247279))
+            << 1);
+}
+
 Model::Model(const std::vector<Vertex> vdata,
              const std::vector<uint16_t> idata) {
     this->vdata = std::vector<Vertex>(vdata.size());
@@ -38,6 +54,42 @@ Model::Model(const std::vector<Vertex> vdata,
     for (int i = 0; i < vdata.size(); i++) this->vdata[i] = vdata[i];
 
     for (int i = 0; i < idata.size(); i++) this->idata[i] = idata[i];
+}
+
+Model::Model(const char* obj) {
+    this->vdata = std::vector<Vertex>();
+    this->idata = std::vector<uint16_t>();
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, obj)) {
+        throw std::runtime_error(warn + err);
+    }
+    std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+
+    for (const auto& shape : shapes) {
+        for (const auto& index : shape.mesh.indices) {
+            Vertex vertex{};
+
+            vertex.pos = {attrib.vertices[3 * index.vertex_index + 0],
+                          attrib.vertices[3 * index.vertex_index + 1],
+                          attrib.vertices[3 * index.vertex_index + 2]};
+
+            vertex.texCoord = {
+                attrib.texcoords[2 * index.texcoord_index + 0],
+                1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
+
+            vertex.color = {1.0f, 1.0f, 1.0f};
+            if (uniqueVertices.count(vertex) == 0) {
+                uniqueVertices[vertex] = static_cast<uint32_t>(vdata.size());
+                vdata.push_back(vertex);
+            }
+
+            idata.push_back(uniqueVertices[vertex]);
+        }
+    }
 }
 
 Buffer* Model::toVertexBuffer(VkPhysicalDevice* physicalDevice,
@@ -78,3 +130,6 @@ Buffer* Model::toIndicesBuffer(VkPhysicalDevice* physicalDevice,
                   *(indicesBuffer->getMemory()->getMemory()));
     return indicesBuffer;
 }
+std::vector<struct Vertex> Model::getVertexes() { return vdata; }
+
+std::vector<uint16_t> Model::getIndexes() { return idata; }

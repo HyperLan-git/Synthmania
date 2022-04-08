@@ -12,7 +12,8 @@ class PipelineLayout;
 
 class PipelineLayout {
    public:
-    PipelineLayout(Device* device, ShaderDescriptorSetLayout* shaderLayout);
+    PipelineLayout(Device* device, ShaderDescriptorSetLayout* shaderLayout,
+                   VkPushConstantRange* constantRange);
     VkPipelineLayout* getLayout();
     ~PipelineLayout();
 

@@ -5,6 +5,8 @@ class Window;
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "Instance.hpp"
+
 class Window {
    public:
     Window(const uint32_t width, const uint32_t height, const char *title);
@@ -17,7 +19,7 @@ class Window {
 
     void getFramebufferSize(uint32_t *width, uint32_t *height);
 
-    VkResult createSurface(VkInstance instance,
+    VkResult createSurface(Instance *instance,
                            const VkAllocationCallbacks *allocator,
                            VkSurfaceKHR *surface);
 

@@ -13,8 +13,14 @@ layout(location = 2) in vec2 inTexCoord;
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
+layout( push_constant ) uniform PushConstants { float flatness; } constants;
+
 void main() {
-    vec4 v = ubo.proj * ubo.view * ubo.model * vec4(inPosition.x, inPosition.y,  0, 1.0);
+    vec4 v;
+    if (constants.flatness > 0.99)
+        v = ubo.proj * ubo.view * ubo.model * vec4(inPosition.x, inPosition.y, inPosition.z * 0.01, 1.0);
+    else
+        v = ubo.proj * ubo.view * ubo.model * vec4(inPosition.x, inPosition.y, inPosition.z * (1 - constants.flatness), 1.0);
     gl_Position = v;
     fragColor = inColor;
     fragTexCoord = inTexCoord;

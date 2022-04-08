@@ -1,7 +1,7 @@
 CFLAGS = -std=c++17 -O2
-LDFLAGS = -idirafter include -idirafter stb -lglfw -lvulkan -ldl -lpthread -lX11 -lXrandr
+LDFLAGS = -I include -I stb -I obj -lglfw -lvulkan -ldl -lpthread -lX11 -lXrandr
 
-SRC=$(wildcard src/*.cpp)
+SRC=$(wildcard src/*.cpp) $(wildcard src/**/*.cpp)
 
 VulkanTest: shader
 	g++ $(CFLAGS) -o bin/VulkanTest $(SRC) $(LDFLAGS)

@@ -11,8 +11,7 @@
 
 class CommandPool {
    public:
-    CommandPool(VkPhysicalDevice physicalDevice, Device* device,
-                VkSurfaceKHR toSupport);
+    CommandPool(VkPhysicalDevice physicalDevice, Device* device);
     VkCommandPool* getPool();
     ~CommandPool();
 
