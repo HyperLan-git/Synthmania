@@ -2,7 +2,8 @@
 
 PipelineLayout::PipelineLayout(Device* device,
                                ShaderDescriptorSetLayout* shaderLayout,
-                               VkPushConstantRange* constantRange) {
+                               uint32_t constantRangeCount,
+                               VkPushConstantRange* constantRanges) {
     this->device = device;
     this->layout = new VkPipelineLayout();
 
@@ -10,8 +11,8 @@ PipelineLayout::PipelineLayout(Device* device,
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = shaderLayout->getLayout();
-    pipelineLayoutInfo.pushConstantRangeCount = 1;
-    pipelineLayoutInfo.pPushConstantRanges = constantRange;
+    pipelineLayoutInfo.pushConstantRangeCount = constantRangeCount;
+    pipelineLayoutInfo.pPushConstantRanges = constantRanges;
 
     if (vkCreatePipelineLayout(*(device->getDevice()), &pipelineLayoutInfo,
                                nullptr, layout) != VK_SUCCESS) {

@@ -21,7 +21,8 @@ class Swapchain {
     Swapchain(Device *device, VkPhysicalDevice *physicalDevice, Window *window,
               Shader *vertShader, Shader *fragShader,
               ShaderDescriptorSetLayout *shaderDescriptors,
-              VkSurfaceKHR *surface);
+              VkSurfaceKHR *surface, VkPushConstantRange *ranges,
+              uint32_t rangeCount);
 
     RenderPass *getRenderPass();
     std::vector<Framebuffer *> getFramebuffers();

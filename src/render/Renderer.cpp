@@ -166,8 +166,13 @@ void Renderer::createSwapchain() {
 
     Shader* vertShader = new Shader("main", device, vertShaderCode, true);
     Shader* fragShader = new Shader("main", device, fragShaderCode, false);
+    VkPushConstantRange* range = new VkPushConstantRange();
+    range->offset = 0;
+    range->size = sizeof(EntityData);
+    range->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     swapchain = new Swapchain(device, &physicalDevice, window, vertShader,
-                              fragShader, shaderLayout, surface);
+                              fragShader, shaderLayout, surface, range, 1);
+    delete range;
     delete vertShader;
     delete fragShader;
 }
@@ -367,22 +372,10 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->bindDescriptorSet(swapchain->getPipeline(),
                                      descriptorSets[currentFrame]);
 
-    // commandBuffer->bindVertexBuffers(vertexBuffer, 1);
-
-    // commandBuffer->bindIndexBuffer(indexBuffer);
-
-    // float* flatness = new float();
-    //*flatness = (cos(time_from_start) + 1) / 2;
-    // commandBuffer->pushConstants(swapchain->getPipeline(),
-    //                              VK_SHADER_STAGE_VERTEX_BIT, 0, flatness,
-    //                              sizeof(float));
-
-    // commandBuffer->draw(model->getIndexes().size());
-    // delete flatness;
-
     Model* lastModel = nullptr;
     Image* lastTexture = nullptr;
     for (Entity* e : entities) {
+        e->update(time_from_start);
         Model* model = e->getModel();
         Image* texture = e->getTexture();
         if (lastModel != model) {
@@ -413,6 +406,8 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->end();
 }
 
+#include <stdlib.h>
+
 void Renderer::drawEntity(Entity* entity, CommandBuffer* commandBuffer) {
     Model* model = entity->getModel();
 
@@ -422,6 +417,7 @@ void Renderer::drawEntity(Entity* entity, CommandBuffer* commandBuffer) {
                                  data->size);
 
     commandBuffer->draw(model->getIndexes().size());
+    free(data->data);
     delete data;
 }
 
@@ -435,9 +431,8 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
             .count();
     float x = cos(time_from_start * 2 / 3) / 2,
           y = sin(time_from_start * 5 / 3) / 2;  // Lissajous :)
-    x = 0;
-    y = 0;
 
+    x = y = 0;
     UniformBufferObject ubo{};
     ubo.model = glm::mat4(1.0f);
     ubo.view = glm::lookAt(glm::vec3(x, y, 1.0f), glm::vec3(x, y, 0.0f),

@@ -13,7 +13,8 @@ class PipelineLayout;
 class PipelineLayout {
    public:
     PipelineLayout(Device* device, ShaderDescriptorSetLayout* shaderLayout,
-                   VkPushConstantRange* constantRange);
+                   uint32_t constantRangeCount,
+                   VkPushConstantRange* constantRanges);
     VkPipelineLayout* getLayout();
     ~PipelineLayout();
 

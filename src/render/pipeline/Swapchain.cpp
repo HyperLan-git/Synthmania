@@ -3,7 +3,8 @@
 Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
                      Window *window, Shader *vertShader, Shader *fragShader,
                      ShaderDescriptorSetLayout *shaderDescriptors,
-                     VkSurfaceKHR *surface) {
+                     VkSurfaceKHR *surface, VkPushConstantRange *ranges,
+                     uint32_t rangeCount) {
     SwapchainSupportDetails swapchainSupport =
         querySwapchainSupport(*physicalDevice, *surface);
 
@@ -83,12 +84,9 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
                                                       fragShader->toPipeline()};
-    VkPushConstantRange range;
-    range.offset = 0;
-    range.size = sizeof(float);
-    range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-    pipelineLayout = new PipelineLayout(device, shaderDescriptors, &range);
+    pipelineLayout =
+        new PipelineLayout(device, shaderDescriptors, rangeCount, ranges);
 
     graphicsPipeline = new Pipeline(device, pipelineLayout, renderPass,
                                     shaderStages, 2, extent);
