@@ -42,16 +42,22 @@ struct UniformBufferObject {
 
 class Model {
    public:
-    Model(const std::vector<Vertex> vdata, const std::vector<uint16_t> idata);
-    Model(const char* obj);
+    Model(const std::vector<Vertex> vdata, const std::vector<uint16_t> idata,
+          VkPhysicalDevice* physicalDevice, Device* device);
+    Model(const char* obj, VkPhysicalDevice* physicalDevice, Device* device);
 
-    Buffer* toVertexBuffer(VkPhysicalDevice* physicalDevice, Device* device);
-    Buffer* toIndicesBuffer(VkPhysicalDevice* physicalDevice, Device* device);
+    Buffer* toVertexBuffer();
+    Buffer* toIndicesBuffer();
 
     std::vector<struct Vertex> getVertexes();
     std::vector<uint16_t> getIndexes();
 
+    ~Model();
+
    private:
     std::vector<struct Vertex> vdata;
     std::vector<uint16_t> idata;
+    Buffer *vertexBuffer, *indexBuffer;
+    void createVertexBuffer(VkPhysicalDevice* physicalDevice, Device* device);
+    void createIndexBuffer(VkPhysicalDevice* physicalDevice, Device* device);
 };

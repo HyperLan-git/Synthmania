@@ -33,11 +33,13 @@ Image::Image(VkPhysicalDevice* physicalDevice, Device* device, uint32_t width,
 
     vkBindImageMemory(*(device->getDevice()), *image, *(memory->getMemory()),
                       0);
+    this->extent = {width, height, 1};
 }
 
 std::vector<Image*> createImagesForSwapchain(Device* device,
                                              VkSwapchainKHR swapchain,
-                                             uint32_t* imageCount) {
+                                             uint32_t* imageCount,
+                                             VkExtent2D extent) {
     std::vector<Image*> swapChainImages;
     vkGetSwapchainImagesKHR(*(device->getDevice()), swapchain, imageCount,
                             nullptr);
@@ -45,19 +47,22 @@ std::vector<Image*> createImagesForSwapchain(Device* device,
     vkGetSwapchainImagesKHR(*(device->getDevice()), swapchain, imageCount,
                             images);
     for (int i = 0; i < *imageCount; i++)
-        swapChainImages.push_back(new Image(device, images + i));
+        swapChainImages.push_back(new Image(device, images + i, extent));
     return swapChainImages;
 }
 
-Image::Image(Device* device, VkImage* image) {
+Image::Image(Device* device, VkImage* image, VkExtent2D extent) {
     this->device = device;
     this->image = image;
     this->memory = nullptr;  // TODO find a way to get associated memory
+    this->extent = {extent.width, extent.height, 1};
 }
 
 VkImage* Image::getImage() { return image; }
 
 Memory* Image::getMemory() { return memory; }
+
+VkExtent3D Image::getExtent() { return extent; }
 
 Image::~Image() {
     vkDestroyImage(*(device->getDevice()), *image, nullptr);

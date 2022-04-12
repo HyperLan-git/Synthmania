@@ -57,7 +57,7 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
 
     imageFormat = surfaceFormat.format;
 
-    images = createImagesForSwapchain(device, *swapchain, &imageCount);
+    images = createImagesForSwapchain(device, *swapchain, &imageCount, extent);
 
     for (uint32_t i = 0; i < images.size(); i++) {
         imageViews.push_back(new ImageView(device, images[i], imageFormat,

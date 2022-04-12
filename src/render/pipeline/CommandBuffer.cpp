@@ -147,22 +147,47 @@ void CommandBuffer::setImageLayout(Image *image, VkImageLayout oldLayout,
     VkPipelineStageFlags sourceStage;
     VkPipelineStageFlags destinationStage;
 
-    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED &&
-        newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
-               newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-        sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    } else {
-        throw std::invalid_argument("unsupported layout transition!");
+    switch (oldLayout) {
+        case VK_IMAGE_LAYOUT_UNDEFINED:
+            barrier.srcAccessMask = 0;
+            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            sourceStage = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
+                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            break;
+        default:
+            throw std::invalid_argument("unsupported layout transition!");
+    }
+    switch (newLayout) {
+        case VK_IMAGE_LAYOUT_UNDEFINED:
+            barrier.dstAccessMask = 0;
+            destinationStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            destinationStage = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
+                               VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            break;
+        default:
+            throw std::invalid_argument("unsupported layout transition!");
     }
     vkCmdPipelineBarrier(*buffer, sourceStage, destinationStage, 0, 0, nullptr,
                          0, nullptr, 1, &barrier);
@@ -192,6 +217,23 @@ void CommandBuffer::copyBufferRegion(Buffer *src, Buffer *dest,
     copyRegion.size = size;
     vkCmdCopyBuffer(*buffer, *(src->getBuffer()), *(dest->getBuffer()), 1,
                     &copyRegion);
+}
+
+void CommandBuffer::copyImage(Image *src, VkImageLayout srcImageLayout,
+                              Image *dst, VkImageLayout dstImageLayout) {
+    VkImageCopy regions;
+    regions.srcOffset = regions.dstOffset = {0, 0, 0};
+    regions.extent = src->getExtent();
+    regions.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    regions.srcSubresource.mipLevel = 0;
+    regions.srcSubresource.baseArrayLayer = 0;
+    regions.srcSubresource.layerCount = 1;
+    regions.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    regions.dstSubresource.mipLevel = 0;
+    regions.dstSubresource.baseArrayLayer = 0;
+    regions.dstSubresource.layerCount = 1;
+    vkCmdCopyImage(*buffer, *(src->getImage()), srcImageLayout,
+                   *(dst->getImage()), dstImageLayout, 1, &regions);
 }
 
 CommandBuffer::~CommandBuffer() {

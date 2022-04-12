@@ -7,7 +7,6 @@ Renderer::Renderer(Window* window) {
 }
 
 void Renderer::initVulkan() {
-    model = new Model("resources/room.obj");
     /*new Model({{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
                {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
                {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
@@ -24,13 +23,20 @@ void Renderer::initVulkan() {
     createLogicalDevice();
     createSwapchain();
     commandPool = new CommandPool(physicalDevice, device);
-    textureImage = createTextureImage("resources/viking_room.png");
+    Model* model = new Model("resources/room.obj", &physicalDevice, device);
+    Image* img = createTextureImage("resources/viking_room.png");
+    models.push_back(model);
+    textures.push_back(img);
+    Entity* e = new Entity(model, img, "Bob");
+    entities.push_back(e);
+    textureImage =
+        createSamplerImage(img->getExtent().width, img->getExtent().height);
     textureImageView =
         new ImageView(device, textureImage, VK_FORMAT_R8G8B8A8_SRGB,
                       VK_IMAGE_ASPECT_COLOR_BIT);
     textureSampler = new TextureSampler(&physicalDevice, device);
-    createVertexBuffer();
-    createIndexBuffer();
+    createVertexBuffer(model->toVertexBuffer()->getSize());
+    createIndexBuffer(model->toIndicesBuffer()->getSize());
     createUniformBuffers();
     VkDescriptorType types[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                 VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
@@ -44,15 +50,6 @@ void Renderer::initVulkan() {
         renderFinishedSemaphores.push_back(new Semaphore(device));
         inFlightFences.push_back(new Fence(device));
     }
-}
-
-void Renderer::mainLoop() {
-    while (!window->shouldClose()) {
-        glfwPollEvents();
-        drawFrame();
-    }
-
-    vkDeviceWaitIdle(*(device->getDevice()));
 }
 
 void Renderer::render() { drawFrame(); }
@@ -80,6 +77,10 @@ Renderer::~Renderer() {
 
     delete vertexBuffer;
 
+    for (Entity* e : entities) delete e;
+    for (Model* m : models) delete m;
+    for (Image* i : textures) delete i;
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete renderFinishedSemaphores[i];
         delete imageAvailableSemaphores[i];
@@ -105,6 +106,7 @@ void Renderer::recreateSwapChain() {
     device->wait();
 
     delete swapchain;
+    delete shaderLayout;
 
     createSwapchain();
 }
@@ -156,10 +158,7 @@ void Renderer::createSwapchain() {
     textureSampler.descriptorCount = 1;
     textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     textureSampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    VkDescriptorSetLayoutBinding bindings[] = {
-        ubo,
-        textureSampler,
-    };
+    VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     shaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
     auto vertShaderCode = readFile("bin/vert.spv");
@@ -201,6 +200,21 @@ bool Renderer::hasStencilComponent(VkFormat format) {
            format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
+Image* Renderer::createSamplerImage(int width, int height) {
+    VkDeviceSize imageSize = width * height * 4;
+
+    Image* image =
+        new Image(&physicalDevice, device, width, height,
+                  VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    return image;
+}
+
 Image* Renderer::createTextureImage(const char* path) {
     int texWidth, texHeight, texChannels;
     stbi_uc* pixels =
@@ -226,25 +240,21 @@ Image* Renderer::createTextureImage(const char* path) {
 
     stbi_image_free(pixels);
 
-    Image* image =
-        new Image(&physicalDevice, device, texWidth, texHeight,
-                  VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
-                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    Image* image = new Image(
+        &physicalDevice, device, texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     copyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth),
                       static_cast<uint32_t>(texHeight));
     transitionImageLayout(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
     delete stagingBuffer;
     return image;
-}
-
-void Renderer::createTextureSampler() {
-    textureSampler = new TextureSampler(&physicalDevice, device);
 }
 
 void Renderer::transitionImageLayout(Image* image, VkImageLayout oldLayout,
@@ -271,30 +281,30 @@ void Renderer::copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
     delete commandBuffer;
 }
 
-void Renderer::createVertexBuffer() {
-    Buffer* temp = model->toVertexBuffer(&physicalDevice, device);
+void Renderer::copyImage(Image* src, VkImageLayout srcLayout, Image* dst,
+                         VkImageLayout dstLayout) {
+    CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
+    commandBuffer->begin();
 
-    vertexBuffer = new Buffer(
-        &physicalDevice, device, temp->getSize(),
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    commandBuffer->copyImage(src, srcLayout, dst, dstLayout);
 
-    temp->copyTo(vertexBuffer, device->getQueue(0), commandPool);
-
-    delete temp;
+    commandBuffer->end();
+    commandBuffer->submit(device->getQueue(0));
+    delete commandBuffer;
 }
 
-void Renderer::createIndexBuffer() {
-    Buffer* temp = model->toIndicesBuffer(&physicalDevice, device);
+void Renderer::createVertexBuffer(VkDeviceSize size) {
+    vertexBuffer = new Buffer(
+        &physicalDevice, device, size,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+}
 
+void Renderer::createIndexBuffer(VkDeviceSize size) {
     indexBuffer = new Buffer(
-        &physicalDevice, device, temp->getSize(),
+        &physicalDevice, device, size,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-    temp->copyTo(indexBuffer, device->getQueue(0), commandPool);
-
-    delete temp;
 }
 
 void Renderer::createUniformBuffers() {
@@ -337,6 +347,7 @@ void Renderer::createDescriptorSets() {
         delete bufferInfo;
     }
 }
+
 float time_from_start = 0;
 
 void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
@@ -353,23 +364,65 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
 
     commandBuffer->bindPipeline(swapchain->getPipeline());
 
-    commandBuffer->bindVertexBuffers(vertexBuffer, 1);
-
-    commandBuffer->bindIndexBuffer(indexBuffer);
-
     commandBuffer->bindDescriptorSet(swapchain->getPipeline(),
                                      descriptorSets[currentFrame]);
 
-    float flatness = (cos(time_from_start) + 1) / 2;
-    commandBuffer->pushConstants(swapchain->getPipeline(),
-                                 VK_SHADER_STAGE_VERTEX_BIT, 0, &flatness,
-                                 sizeof(float));
+    // commandBuffer->bindVertexBuffers(vertexBuffer, 1);
 
-    commandBuffer->draw(model->getIndexes().size());
+    // commandBuffer->bindIndexBuffer(indexBuffer);
+
+    // float* flatness = new float();
+    //*flatness = (cos(time_from_start) + 1) / 2;
+    // commandBuffer->pushConstants(swapchain->getPipeline(),
+    //                              VK_SHADER_STAGE_VERTEX_BIT, 0, flatness,
+    //                              sizeof(float));
+
+    // commandBuffer->draw(model->getIndexes().size());
+    // delete flatness;
+
+    Model* lastModel = nullptr;
+    Image* lastTexture = nullptr;
+    for (Entity* e : entities) {
+        Model* model = e->getModel();
+        Image* texture = e->getTexture();
+        if (lastModel != model) {
+            model->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue(0),
+                                            commandPool);
+            model->toIndicesBuffer()->copyTo(indexBuffer, device->getQueue(0),
+                                             commandPool);
+            commandBuffer->bindVertexBuffers(vertexBuffer, 1);
+            commandBuffer->bindIndexBuffer(indexBuffer);
+        }
+        if (lastTexture != texture) {
+            transitionImageLayout(textureImage,
+                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            copyImage(texture, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                      textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            transitionImageLayout(textureImage,
+                                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+        drawEntity(e, commandBuffer);
+        lastModel = model;
+        lastTexture = texture;
+    }
 
     commandBuffer->endRenderPass();
 
     commandBuffer->end();
+}
+
+void Renderer::drawEntity(Entity* entity, CommandBuffer* commandBuffer) {
+    Model* model = entity->getModel();
+
+    ShaderData* data = entity->getShaderData();
+    commandBuffer->pushConstants(swapchain->getPipeline(),
+                                 VK_SHADER_STAGE_VERTEX_BIT, 0, data->data,
+                                 data->size);
+
+    commandBuffer->draw(model->getIndexes().size());
+    delete data;
 }
 
 void Renderer::updateUniformBuffer(uint32_t currentImage) {
@@ -383,14 +436,14 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     float x = cos(time_from_start * 2 / 3) / 2,
           y = sin(time_from_start * 5 / 3) / 2;  // Lissajous :)
     x = 0;
-    y = 1;
+    y = 0;
 
     UniformBufferObject ubo{};
     ubo.model = glm::mat4(1.0f);
-    ubo.view = glm::lookAt(glm::vec3(x, y, 1.0f), glm::vec3(x, y - 1, 0.0f),
+    ubo.view = glm::lookAt(glm::vec3(x, y, 1.0f), glm::vec3(x, y, 0.0f),
                            glm::vec3(0.0f, -1.0f, 0.0f));
     ubo.proj = glm::perspective(
-        glm::radians(45.0f),
+        glm::radians(45.0f),  // MASTER FOV
         swapchain->getExtent().width / (float)swapchain->getExtent().height,
         0.1f, 10.0f);
     ubo.proj[1][1] *= -1;  // Invert y axis cause I like my y axis positive up

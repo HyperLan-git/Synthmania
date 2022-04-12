@@ -1,5 +1,6 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "Model.hpp"
+
 typedef struct VkVertexInputAttributeDescription VIADesc;
 
 VkVertexInputBindingDescription getBindingDescription() {
@@ -47,16 +48,19 @@ size_t std::hash<Vertex>::operator()(Vertex const& vertex) const {
             << 1);
 }
 
-Model::Model(const std::vector<Vertex> vdata,
-             const std::vector<uint16_t> idata) {
+Model::Model(const std::vector<Vertex> vdata, const std::vector<uint16_t> idata,
+             VkPhysicalDevice* physicalDevice, Device* device) {
     this->vdata = std::vector<Vertex>(vdata.size());
     this->idata = std::vector<uint16_t>(idata.size());
     for (int i = 0; i < vdata.size(); i++) this->vdata[i] = vdata[i];
 
     for (int i = 0; i < idata.size(); i++) this->idata[i] = idata[i];
+    createVertexBuffer(physicalDevice, device);
+    createIndexBuffer(physicalDevice, device);
 }
 
-Model::Model(const char* obj) {
+Model::Model(const char* obj, VkPhysicalDevice* physicalDevice,
+             Device* device) {
     this->vdata = std::vector<Vertex>();
     this->idata = std::vector<uint16_t>();
     tinyobj::attrib_t attrib;
@@ -90,16 +94,22 @@ Model::Model(const char* obj) {
             idata.push_back(uniqueVertices[vertex]);
         }
     }
+    createVertexBuffer(physicalDevice, device);
+    createIndexBuffer(physicalDevice, device);
 }
 
-Buffer* Model::toVertexBuffer(VkPhysicalDevice* physicalDevice,
-                              Device* device) {
+Buffer* Model::toVertexBuffer() { return vertexBuffer; }
+
+Buffer* Model::toIndicesBuffer() { return indexBuffer; }
+
+void Model::createVertexBuffer(VkPhysicalDevice* physicalDevice,
+                               Device* device) {
     VkDeviceSize bufferSize = sizeof(vdata[0]) * vdata.size();
 
-    Buffer* vertexBuffer = new Buffer(physicalDevice, device, bufferSize,
-                                      VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    vertexBuffer = new Buffer(physicalDevice, device, bufferSize,
+                              VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* data;
     vkMapMemory(*(device->getDevice()),
@@ -108,28 +118,31 @@ Buffer* Model::toVertexBuffer(VkPhysicalDevice* physicalDevice,
     memcpy(data, vdata.data(), (size_t)bufferSize);
     vkUnmapMemory(*(device->getDevice()),
                   *(vertexBuffer->getMemory()->getMemory()));
-
-    return vertexBuffer;
 }
 
-Buffer* Model::toIndicesBuffer(VkPhysicalDevice* physicalDevice,
-                               Device* device) {
+void Model::createIndexBuffer(VkPhysicalDevice* physicalDevice,
+                              Device* device) {
     VkDeviceSize bufferSize = sizeof(idata[0]) * idata.size();
 
-    Buffer* indicesBuffer = new Buffer(
-        physicalDevice, device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    indexBuffer = new Buffer(physicalDevice, device, bufferSize,
+                             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* data;
     vkMapMemory(*(device->getDevice()),
-                *(indicesBuffer->getMemory()->getMemory()), 0, bufferSize, 0,
+                *(indexBuffer->getMemory()->getMemory()), 0, bufferSize, 0,
                 &data);
     memcpy(data, idata.data(), (size_t)bufferSize);
     vkUnmapMemory(*(device->getDevice()),
-                  *(indicesBuffer->getMemory()->getMemory()));
-    return indicesBuffer;
+                  *(indexBuffer->getMemory()->getMemory()));
 }
+
 std::vector<struct Vertex> Model::getVertexes() { return vdata; }
 
 std::vector<uint16_t> Model::getIndexes() { return idata; }
+
+Model::~Model() {
+    delete vertexBuffer;
+    delete indexBuffer;
+}

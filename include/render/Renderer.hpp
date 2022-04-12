@@ -29,6 +29,7 @@
 #include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
 #include "Device.hpp"
+#include "Entity.hpp"
 #include "Fence.hpp"
 #include "Framebuffer.hpp"
 #include "Image.hpp"
@@ -90,7 +91,7 @@ class Renderer {
 
     Swapchain* swapchain;
 
-    ShaderDescriptorSetLayout* shaderLayout;
+    ShaderDescriptorSetLayout* shaderLayout = nullptr;
 
     CommandPool* commandPool;
 
@@ -100,8 +101,6 @@ class Renderer {
 
     Buffer* vertexBuffer;
     Buffer* indexBuffer;
-
-    Model* model;
 
     std::vector<Buffer*> uniformBuffers;
     std::vector<Buffer*> constantUniformBuffers;
@@ -116,12 +115,13 @@ class Renderer {
     std::vector<Fence*> inFlightFences;
     uint32_t currentFrame = 0;
 
+    std::vector<Entity*> entities;
+    std::vector<Model*> models;
+    std::vector<Image*> textures;
+
     void initWindow();
 
     void initVulkan();
-
-    void mainLoop();
-
     void recreateSwapChain();
 
     void createInstance();
@@ -143,21 +143,23 @@ class Renderer {
     bool hasStencilComponent(VkFormat format);
 
     Image* createTextureImage(const char* path);
-
-    void createTextureSampler();
+    Image* createSamplerImage(int width, int height);
 
     void transitionImageLayout(Image* image, VkImageLayout oldLayout,
                                VkImageLayout newLayout);
     void copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
                            uint32_t height);
-    void createVertexBuffer();
-    void createIndexBuffer();
+    void copyImage(Image* src, VkImageLayout srcLayout, Image* dst,
+                   VkImageLayout dstLayout);
+    void createVertexBuffer(VkDeviceSize size);
+    void createIndexBuffer(VkDeviceSize size);
     void createUniformBuffers();
     void createDescriptorSets();
 
     void recordCommandBuffer(CommandBuffer* commandBuffer, uint32_t imageIndex);
     void updateUniformBuffer(uint32_t currentImage);
     void drawFrame();
+    void drawEntity(Entity* entity, CommandBuffer* commandBuffer);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
         const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(
