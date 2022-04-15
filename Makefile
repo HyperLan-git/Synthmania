@@ -1,7 +1,7 @@
-IDIRS=$(addprefix -I ,$(wildcard include/**/) $(wildcard include/render/**/)) -I stb -I obj -I libremidi/include/libremidi
+IDIRS=$(addprefix -I ,$(wildcard include/**/) $(wildcard include/render/**/)) -I stb -I obj -I libremidi/include/
 
 CFLAGS = -std=c++17 -O2
-LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lX11 -lXrandr
+LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lX11 -lXrandr
 
 SRC=$(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard src/render/**/*.cpp)
 
@@ -14,6 +14,7 @@ test: VulkanTest
 	./bin/VulkanTest
 
 shader:
+	glslc shader/gui.vert -o bin/vert_gui.spv
 	glslc shader/def.vert -o bin/vert.spv
 	glslc shader/def.frag -o bin/frag.spv
 

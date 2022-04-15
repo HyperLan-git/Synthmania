@@ -19,15 +19,11 @@ class Swapchain;
 class Swapchain {
    public:
     Swapchain(Device *device, VkPhysicalDevice *physicalDevice, Window *window,
-              Shader *vertShader, Shader *fragShader,
-              ShaderDescriptorSetLayout *shaderDescriptors,
-              VkSurfaceKHR *surface, VkPushConstantRange *ranges,
-              uint32_t rangeCount);
+              VkSurfaceKHR *surface);
 
     RenderPass *getRenderPass();
     std::vector<Framebuffer *> getFramebuffers();
     VkExtent2D getExtent();
-    Pipeline *getPipeline();
     VkSwapchainKHR *getSwapchain();
 
     ~Swapchain();
@@ -47,7 +43,4 @@ class Swapchain {
     ImageView *depthImageView;
 
     RenderPass *renderPass;
-
-    PipelineLayout *pipelineLayout;
-    Pipeline *graphicsPipeline;
 };

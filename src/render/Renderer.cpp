@@ -1,6 +1,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "Renderer.hpp"
 
+#include <stdlib.h>
+
 Renderer::Renderer(Window* window) {
     this->window = window;
     initVulkan();
@@ -21,19 +23,35 @@ void Renderer::initVulkan() {
     surface = instance->createSurface(window);
     pickPhysicalDevice();
     createLogicalDevice();
-    createSwapchain();
+    swapchain = new Swapchain(device, &physicalDevice, window, surface);
+    createGraphicsPipeline();
+    createGuiPipeline();
     commandPool = new CommandPool(physicalDevice, device);
+    guiModel = new Model({{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
+                          {{0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
+                          {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}},
+                          {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}}},
+                         {3, 0, 2, 0, 1, 2}, &physicalDevice, device);
     Model* model = new Model("resources/room.obj", &physicalDevice, device);
-    Image* img = createTextureImage("resources/viking_room.png");
+    Image *img = createTextureImage("resources/viking_room.png"),
+          *partition = createTextureImage("resources/partition.png");
     models.push_back(model);
     textures.push_back(img);
+    textures.push_back(partition);
     Entity* e = new Entity(model, img, "Bob");
     entities.push_back(e);
+    Gui* g = new Gui(partition, "partition");
+    guis.push_back(g);
     textureImage =
         createSamplerImage(img->getExtent().width, img->getExtent().height);
     textureImageView =
         new ImageView(device, textureImage, VK_FORMAT_R8G8B8A8_SRGB,
                       VK_IMAGE_ASPECT_COLOR_BIT);
+    guiImage =
+        createSamplerImage(img->getExtent().width, img->getExtent().height);
+    guiImageView = new ImageView(device, guiImage, VK_FORMAT_R8G8B8A8_SRGB,
+                                 VK_IMAGE_ASPECT_COLOR_BIT);
+    guiSampler = new TextureSampler(&physicalDevice, device);
     textureSampler = new TextureSampler(&physicalDevice, device);
     createVertexBuffer(model->toVertexBuffer()->getSize());
     createIndexBuffer(model->toIndicesBuffer()->getSize());
@@ -41,6 +59,7 @@ void Renderer::initVulkan() {
     VkDescriptorType types[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                 VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
     pool = new ShaderDescriptorPool(device, types, MAX_FRAMES_IN_FLIGHT);
+    guiPool = new ShaderDescriptorPool(device, types, MAX_FRAMES_IN_FLIGHT);
     createDescriptorSets();
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -55,29 +74,42 @@ void Renderer::initVulkan() {
 void Renderer::render() { drawFrame(); }
 
 Renderer::~Renderer() {
-    vkDeviceWaitIdle(*(device->getDevice()));
+    device->wait();
 
     delete swapchain;
+    delete graphicsPipelineLayout;
+    delete graphicsPipeline;
+    delete guiPipelineLayout;
+    delete guiPipeline;
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete constantUniformBuffers[i];
         delete uniformBuffers[i];
+        delete guiConstantUniformBuffers[i];
+        delete guiUniformBuffers[i];
     }
 
     delete pool;
+    delete guiPool;
 
     delete textureSampler;
     delete textureImageView;
-
     delete textureImage;
+    delete guiSampler;
+    delete guiImageView;
+    delete guiImage;
 
     delete shaderLayout;
+    delete guiShaderLayout;
 
     delete indexBuffer;
 
     delete vertexBuffer;
 
+    delete guiModel;
+
     for (Entity* e : entities) delete e;
+    for (Gui* g : guis) delete g;
     for (Model* m : models) delete m;
     for (Image* i : textures) delete i;
 
@@ -95,7 +127,7 @@ Renderer::~Renderer() {
     delete instance;
 }
 
-void Renderer::recreateSwapChain() {
+void Renderer::recreateSwapchain() {
     uint32_t width = 0, height = 0;
     window->getFramebufferSize(&width, &height);
     while (width == 0 || height == 0) {
@@ -106,9 +138,17 @@ void Renderer::recreateSwapChain() {
     device->wait();
 
     delete swapchain;
-    delete shaderLayout;
+    delete graphicsPipeline;
+    delete graphicsPipelineLayout;
+    delete guiPipeline;
+    delete guiPipelineLayout;
 
-    createSwapchain();
+    delete shaderLayout;
+    delete guiShaderLayout;
+
+    swapchain = new Swapchain(device, &physicalDevice, window, surface);
+    createGraphicsPipeline();
+    createGuiPipeline();
 }
 
 void Renderer::createInstance() {
@@ -148,7 +188,7 @@ void Renderer::pickPhysicalDevice() {
     }
 }
 
-void Renderer::createSwapchain() {
+void Renderer::createGraphicsPipeline() {
     VkDescriptorSetLayoutBinding ubo, textureSampler;
     ubo.binding = 0;
     ubo.descriptorCount = 1;
@@ -170,8 +210,51 @@ void Renderer::createSwapchain() {
     range->offset = 0;
     range->size = sizeof(EntityData);
     range->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    swapchain = new Swapchain(device, &physicalDevice, window, vertShader,
-                              fragShader, shaderLayout, surface, range, 1);
+
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
+                                                      fragShader->toPipeline()};
+
+    graphicsPipelineLayout = new PipelineLayout(device, shaderLayout, 1, range);
+
+    graphicsPipeline =
+        new Pipeline(device, graphicsPipelineLayout, swapchain->getRenderPass(),
+                     shaderStages, 2, swapchain->getExtent());
+    delete range;
+    delete vertShader;
+    delete fragShader;
+}
+
+void Renderer::createGuiPipeline() {
+    VkDescriptorSetLayoutBinding ubo, textureSampler;
+    ubo.binding = 0;
+    ubo.descriptorCount = 1;
+    ubo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    ubo.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    textureSampler.binding = 1;
+    textureSampler.descriptorCount = 1;
+    textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    textureSampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
+    guiShaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
+
+    auto vertShaderCode = readFile("bin/vert_gui.spv");
+    auto fragShaderCode = readFile("bin/frag.spv");
+
+    Shader* vertShader = new Shader("main", device, vertShaderCode, true);
+    Shader* fragShader = new Shader("main", device, fragShaderCode, false);
+    VkPushConstantRange* range = new VkPushConstantRange();
+    range->offset = 0;
+    range->size = sizeof(GuiData);
+    range->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
+                                                      fragShader->toPipeline()};
+
+    guiPipelineLayout = new PipelineLayout(device, guiShaderLayout, 1, range);
+
+    guiPipeline =
+        new Pipeline(device, guiPipelineLayout, swapchain->getRenderPass(),
+                     shaderStages, 2, swapchain->getExtent());
     delete range;
     delete vertShader;
     delete fragShader;
@@ -313,8 +396,7 @@ void Renderer::createIndexBuffer(VkDeviceSize size) {
 }
 
 void Renderer::createUniformBuffers() {
-    VkDeviceSize bufferSize = sizeof(UniformBufferObject),
-                 constantsSize = sizeof(float);
+    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         uniformBuffers.push_back(
@@ -323,7 +405,17 @@ void Renderer::createUniformBuffers() {
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
         constantUniformBuffers.push_back(
-            new Buffer(&physicalDevice, device, constantsSize,
+            new Buffer(&physicalDevice, device, sizeof(EntityData),
+                       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                           VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+        guiUniformBuffers.push_back(
+            new Buffer(&physicalDevice, device, bufferSize,
+                       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                           VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+        guiConstantUniformBuffers.push_back(
+            new Buffer(&physicalDevice, device, sizeof(GuiData),
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
@@ -350,6 +442,23 @@ void Renderer::createDescriptorSets() {
 
         delete imageInfo;
         delete bufferInfo;
+
+        guiDescriptorSets.push_back(
+            new ShaderDescriptorSet(device, guiPool, guiShaderLayout));
+        bufferInfo = createBufferInfo(guiUniformBuffers[i]);
+
+        imageInfo = createImageInfo(guiImageView, guiSampler);
+
+        guiDescriptorSets[i]->updateAccess(
+            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 0,
+            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo, nullptr);
+
+        guiDescriptorSets[i]->updateAccess(
+            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
+            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nullptr, imageInfo);
+
+        delete imageInfo;
+        delete bufferInfo;
     }
 }
 
@@ -361,43 +470,72 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->begin();
 
     std::vector<VkClearValue> clearValues = {VkClearValue(), VkClearValue()};
-    clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    clearValues[0].color = {{1.0f, 0.0f, 0.0f, 1.0f}};
     clearValues[1].depthStencil = {1.0f, 0};
 
     commandBuffer->beginRenderPass(swapchain, imageIndex, clearValues.data(),
                                    2);
 
-    commandBuffer->bindPipeline(swapchain->getPipeline());
-
-    commandBuffer->bindDescriptorSet(swapchain->getPipeline(),
-                                     descriptorSets[currentFrame]);
-
     Model* lastModel = nullptr;
     Image* lastTexture = nullptr;
-    for (Entity* e : entities) {
-        e->update(time_from_start);
-        Model* model = e->getModel();
-        Image* texture = e->getTexture();
-        if (lastModel != model) {
-            model->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue(0),
-                                            commandPool);
-            model->toIndicesBuffer()->copyTo(indexBuffer, device->getQueue(0),
-                                             commandPool);
-            commandBuffer->bindVertexBuffers(vertexBuffer, 1);
-            commandBuffer->bindIndexBuffer(indexBuffer);
+    if (!entities.empty()) {
+        commandBuffer->bindPipeline(graphicsPipeline);
+
+        commandBuffer->bindDescriptorSet(graphicsPipeline,
+                                         descriptorSets[currentFrame]);
+        for (Entity* e : entities) {
+            e->update(time_from_start);
+            Model* model = e->getModel();
+            Image* texture = e->getTexture();
+            if (lastModel != model) {
+                model->toVertexBuffer()->copyTo(
+                    vertexBuffer, device->getQueue(0), commandPool);
+                model->toIndicesBuffer()->copyTo(
+                    indexBuffer, device->getQueue(0), commandPool);
+                commandBuffer->bindVertexBuffers(vertexBuffer, 1);
+                commandBuffer->bindIndexBuffer(indexBuffer);
+            }
+            if (lastTexture != texture) {
+                transitionImageLayout(textureImage,
+                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                copyImage(texture, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                          textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                transitionImageLayout(textureImage,
+                                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            }
+            drawEntity(e, commandBuffer);
+            lastModel = model;
+            lastTexture = texture;
         }
+    }
+
+    commandBuffer->bindPipeline(guiPipeline);
+
+    commandBuffer->bindDescriptorSet(guiPipeline,
+                                     guiDescriptorSets[currentFrame]);
+
+    guiModel->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue(0),
+                                       commandPool);
+    guiModel->toIndicesBuffer()->copyTo(indexBuffer, device->getQueue(0),
+                                        commandPool);
+    commandBuffer->bindVertexBuffers(vertexBuffer, 1);
+    commandBuffer->bindIndexBuffer(indexBuffer);
+    for (Gui* g : guis) {
+        g->update(time_from_start);
+        Image* texture = g->getTexture();
         if (lastTexture != texture) {
-            transitionImageLayout(textureImage,
+            transitionImageLayout(guiImage,
                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            copyImage(texture, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                      textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            transitionImageLayout(textureImage,
+            copyImage(texture, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, guiImage,
+                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            transitionImageLayout(guiImage,
                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
-        drawEntity(e, commandBuffer);
-        lastModel = model;
+        drawGui(g, commandBuffer);
         lastTexture = texture;
     }
 
@@ -406,15 +544,24 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->end();
 }
 
-#include <stdlib.h>
-
 void Renderer::drawEntity(Entity* entity, CommandBuffer* commandBuffer) {
     Model* model = entity->getModel();
 
     ShaderData* data = entity->getShaderData();
-    commandBuffer->pushConstants(swapchain->getPipeline(),
-                                 VK_SHADER_STAGE_VERTEX_BIT, 0, data->data,
-                                 data->size);
+    commandBuffer->pushConstants(graphicsPipeline, VK_SHADER_STAGE_VERTEX_BIT,
+                                 0, data->data, data->size);
+
+    commandBuffer->draw(model->getIndexes().size());
+    free(data->data);
+    delete data;
+}
+
+void Renderer::drawGui(Gui* gui, CommandBuffer* commandBuffer) {
+    Model* model = guiModel;
+
+    ShaderData* data = gui->getShaderData();
+    commandBuffer->pushConstants(guiPipeline, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                                 data->data, data->size);
 
     commandBuffer->draw(model->getIndexes().size());
     free(data->data);
@@ -435,21 +582,37 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     x = y = 0;
     UniformBufferObject ubo{};
     ubo.model = glm::mat4(1.0f);
-    ubo.view = glm::lookAt(glm::vec3(x, y, 1.0f), glm::vec3(x, y, 0.0f),
+    ubo.view = glm::lookAt(glm::vec3(x, y + 1, 1.0f), glm::vec3(x, y, 0.0f),
                            glm::vec3(0.0f, -1.0f, 0.0f));
     ubo.proj = glm::perspective(
-        glm::radians(45.0f),  // MASTER FOV
+        glm::radians(90.0f),  // MASTER FOV
         swapchain->getExtent().width / (float)swapchain->getExtent().height,
         0.1f, 10.0f);
     ubo.proj[1][1] *= -1;  // Invert y axis cause I like my y axis positive up
 
-    void* data = NULL;
+    void *data = NULL, *data2 = NULL;
     vkMapMemory(*(device->getDevice()),
                 *(uniformBuffers[currentImage]->getMemory()->getMemory()), 0,
                 sizeof(ubo), 0, &data);
     memcpy(data, &ubo, sizeof(ubo));
     vkUnmapMemory(*(device->getDevice()),
                   *(uniformBuffers[currentImage]->getMemory()->getMemory()));
+
+    ubo.model = glm::mat4(1.0f);
+    ubo.view = glm::lookAt(glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0.0f),
+                           glm::vec3(0.0f, -1.0f, 0.0f));
+    ubo.proj = glm::perspective(
+        glm::radians(157.4f),
+        swapchain->getExtent().width / (float)swapchain->getExtent().height,
+        0.1f, 0.3f);
+    ubo.proj[1][1] *= -1;
+
+    vkMapMemory(*(device->getDevice()),
+                *(guiUniformBuffers[currentImage]->getMemory()->getMemory()), 0,
+                sizeof(ubo), 0, &data2);
+    memcpy(data2, &ubo, sizeof(ubo));
+    vkUnmapMemory(*(device->getDevice()),
+                  *(guiUniformBuffers[currentImage]->getMemory()->getMemory()));
 }
 
 void Renderer::drawFrame() {
@@ -462,7 +625,7 @@ void Renderer::drawFrame() {
         VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        recreateSwapChain();
+        recreateSwapchain();
         return;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
@@ -497,7 +660,7 @@ void Renderer::drawFrame() {
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
         window->hasResized()) {
         window->setResized(false);
-        recreateSwapChain();
+        recreateSwapchain();
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");
     }

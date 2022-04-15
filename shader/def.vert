@@ -7,11 +7,9 @@ layout(binding = 0) uniform UniformBufferObject {
 } ubo;
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
-layout(location = 2) in vec2 inTexCoord;
+layout(location = 1) in vec2 inTexCoord;
 
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec2 fragTexCoord;
+layout(location = 0) out vec2 fragTexCoord;
 
 layout(push_constant) uniform PushConstants {
     vec3 position;
@@ -35,12 +33,13 @@ void main() {
         size = constants.size;
     vec4 rot = constants.rotation,
         rot2 = vec4(-rot.xyz, rot.w);
-    v = vec4(inPosition.x * size.x, inPosition.y * size.y, inPosition.z * size.z, 0.0);
+    v = vec4(inPosition.x, inPosition.y, inPosition.z, 0.0);
+    size = vec3(0.1, 0, 0);
+    v.xyz *= size;
     v = quat_mult(quat_mult(rot, v), rot2);
     v.xyz += pos;
     v.w = 1;
     v = ubo.proj * ubo.view * ubo.model * v;
     gl_Position = v;
-    fragColor = inColor;
     fragTexCoord = inTexCoord;
 }

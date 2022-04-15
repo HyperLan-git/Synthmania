@@ -19,13 +19,12 @@ class Model;
 
 typedef struct VkVertexInputAttributeDescription VIADesc;
 
-std::array<VIADesc, 3> getAttributeDescriptions();
+std::array<VIADesc, 2> getAttributeDescriptions();
 
 VkVertexInputBindingDescription getBindingDescription();
 
 struct Vertex {
     glm::vec3 pos;
-    glm::vec3 color;
     glm::vec2 texCoord;
     bool operator==(const Vertex& other) const;
 };

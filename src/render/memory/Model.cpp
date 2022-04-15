@@ -12,8 +12,8 @@ VkVertexInputBindingDescription getBindingDescription() {
     return bindingDescription;
 }
 
-std::array<VIADesc, 3> getAttributeDescriptions() {
-    std::array<VIADesc, 3> attributeDescriptions{};
+std::array<VIADesc, 2> getAttributeDescriptions() {
+    std::array<VIADesc, 2> attributeDescriptions{};
 
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
@@ -22,20 +22,14 @@ std::array<VIADesc, 3> getAttributeDescriptions() {
 
     attributeDescriptions[1].binding = 0;
     attributeDescriptions[1].location = 1;
-    attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-    attributeDescriptions[1].offset = offsetof(Vertex, Vertex::color);
-
-    attributeDescriptions[2].binding = 0;
-    attributeDescriptions[2].location = 2;
-    attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-    attributeDescriptions[2].offset = offsetof(Vertex, Vertex::texCoord);
+    attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[1].offset = offsetof(Vertex, Vertex::texCoord);
 
     return attributeDescriptions;
 }
 
 bool Vertex::operator==(const Vertex& other) const {
-    return pos == other.pos && color == other.color &&
-           texCoord == other.texCoord;
+    return pos == other.pos && texCoord == other.texCoord;
 }
 
 // When You
@@ -85,7 +79,6 @@ Model::Model(const char* obj, VkPhysicalDevice* physicalDevice,
                 attrib.texcoords[2 * index.texcoord_index + 0],
                 1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
 
-            vertex.color = {1.0f, 1.0f, 1.0f};
             if (uniqueVertices.count(vertex) == 0) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(vdata.size());
                 vdata.push_back(vertex);

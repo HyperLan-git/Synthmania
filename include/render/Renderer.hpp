@@ -32,6 +32,7 @@
 #include "Entity.hpp"
 #include "Fence.hpp"
 #include "Framebuffer.hpp"
+#include "Gui.hpp"
 #include "Image.hpp"
 #include "ImageView.hpp"
 #include "Instance.hpp"
@@ -92,21 +93,35 @@ class Renderer {
     Swapchain* swapchain;
 
     ShaderDescriptorSetLayout* shaderLayout = nullptr;
+    ShaderDescriptorSetLayout* guiShaderLayout = nullptr;
 
     CommandPool* commandPool;
 
     Image* textureImage;
     ImageView* textureImageView;
     TextureSampler* textureSampler;
+    Image* guiImage;
+    ImageView* guiImageView;
+    TextureSampler* guiSampler;
 
     Buffer* vertexBuffer;
     Buffer* indexBuffer;
 
+    PipelineLayout* graphicsPipelineLayout;
+    Pipeline* graphicsPipeline;
+
+    PipelineLayout* guiPipelineLayout;
+    Pipeline* guiPipeline;
+
     std::vector<Buffer*> uniformBuffers;
+    std::vector<Buffer*> guiUniformBuffers;
+    std::vector<Buffer*> guiConstantUniformBuffers;
     std::vector<Buffer*> constantUniformBuffers;
 
     ShaderDescriptorPool* pool;
+    ShaderDescriptorPool* guiPool;
     std::vector<ShaderDescriptorSet*> descriptorSets;
+    std::vector<ShaderDescriptorSet*> guiDescriptorSets;
 
     std::vector<CommandBuffer*> commandBuffers;
 
@@ -116,21 +131,22 @@ class Renderer {
     uint32_t currentFrame = 0;
 
     std::vector<Entity*> entities;
+    std::vector<Gui*> guis;
     std::vector<Model*> models;
     std::vector<Image*> textures;
+
+    Model* guiModel;
 
     void initWindow();
 
     void initVulkan();
-    void recreateSwapChain();
+    void recreateSwapchain();
 
     void createInstance();
 
     void pickPhysicalDevice();
 
     void createLogicalDevice();
-
-    void createSwapchain();
 
     void createImageViews();
 
@@ -139,6 +155,7 @@ class Renderer {
     void createDescriptorSetLayout();
 
     void createGraphicsPipeline();
+    void createGuiPipeline();
 
     bool hasStencilComponent(VkFormat format);
 
@@ -160,6 +177,7 @@ class Renderer {
     void updateUniformBuffer(uint32_t currentImage);
     void drawFrame();
     void drawEntity(Entity* entity, CommandBuffer* commandBuffer);
+    void drawGui(Gui* gui, CommandBuffer* commandBuffer);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
         const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(

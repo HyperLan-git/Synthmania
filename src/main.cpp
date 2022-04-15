@@ -4,12 +4,14 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "MidiHandler.hpp"
 #include "Renderer.hpp"
 #include "Window.hpp"
 
 int main(void) {
     try {
-        Window *window = new Window(800, 600, "Vulkan");
+        MidiHandler *handler = new MidiHandler();
+        Window *window = new Window(800, 600, "Synthmania");
         Renderer *renderer = new Renderer(window);
 
         while (!window->shouldClose()) {
@@ -17,8 +19,9 @@ int main(void) {
             renderer->render();
         }
 
-        delete renderer;
+        delete handler;
 
+        delete renderer;
         delete window;
 
         glfwTerminate();

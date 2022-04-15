@@ -214,6 +214,7 @@ void CommandBuffer::copyBufferToImage(Buffer *srcBuffer, Image *image,
 void CommandBuffer::copyBufferRegion(Buffer *src, Buffer *dest,
                                      VkDeviceSize size) {
     VkBufferCopy copyRegion{};
+    copyRegion.srcOffset = copyRegion.dstOffset = 0;
     copyRegion.size = size;
     vkCmdCopyBuffer(*buffer, *(src->getBuffer()), *(dest->getBuffer()), 1,
                     &copyRegion);

@@ -1,10 +1,7 @@
 #include "Swapchain.hpp"
 
 Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
-                     Window *window, Shader *vertShader, Shader *fragShader,
-                     ShaderDescriptorSetLayout *shaderDescriptors,
-                     VkSurfaceKHR *surface, VkPushConstantRange *ranges,
-                     uint32_t rangeCount) {
+                     Window *window, VkSurfaceKHR *surface) {
     SwapchainSupportDetails swapchainSupport =
         querySwapchainSupport(*physicalDevice, *surface);
 
@@ -81,15 +78,6 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
         framebuffers.push_back(
             new Framebuffer(device, renderPass, extent, attachments));
     }
-
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
-                                                      fragShader->toPipeline()};
-
-    pipelineLayout =
-        new PipelineLayout(device, shaderDescriptors, rangeCount, ranges);
-
-    graphicsPipeline = new Pipeline(device, pipelineLayout, renderPass,
-                                    shaderStages, 2, extent);
 }
 
 RenderPass *Swapchain::getRenderPass() { return renderPass; }
@@ -97,8 +85,6 @@ RenderPass *Swapchain::getRenderPass() { return renderPass; }
 std::vector<Framebuffer *> Swapchain::getFramebuffers() { return framebuffers; }
 
 VkExtent2D Swapchain::getExtent() { return extent; }
-
-Pipeline *Swapchain::getPipeline() { return graphicsPipeline; }
 
 VkSwapchainKHR *Swapchain::getSwapchain() { return swapchain; }
 
@@ -110,8 +96,6 @@ Swapchain::~Swapchain() {
         delete framebuffer;
     }
 
-    delete graphicsPipeline;
-    delete pipelineLayout;
     delete renderPass;
 
     for (auto imageView : imageViews) {
