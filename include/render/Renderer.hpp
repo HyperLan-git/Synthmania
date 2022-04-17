@@ -95,13 +95,12 @@ class Renderer {
     ShaderDescriptorSetLayout* shaderLayout = nullptr;
     ShaderDescriptorSetLayout* guiShaderLayout = nullptr;
 
+    std::vector<ShaderDescriptorSet*> descriptorSets;
+    std::vector<ShaderDescriptorSet*> guiDescriptorSets;
+
     CommandPool* commandPool;
 
-    Image* textureImage;
-    ImageView* textureImageView;
     TextureSampler* textureSampler;
-    Image* guiImage;
-    ImageView* guiImageView;
     TextureSampler* guiSampler;
 
     Buffer* vertexBuffer;
@@ -115,13 +114,11 @@ class Renderer {
 
     std::vector<Buffer*> uniformBuffers;
     std::vector<Buffer*> guiUniformBuffers;
-    std::vector<Buffer*> guiConstantUniformBuffers;
     std::vector<Buffer*> constantUniformBuffers;
+    std::vector<Buffer*> guiConstantUniformBuffers;
 
     ShaderDescriptorPool* pool;
     ShaderDescriptorPool* guiPool;
-    std::vector<ShaderDescriptorSet*> descriptorSets;
-    std::vector<ShaderDescriptorSet*> guiDescriptorSets;
 
     std::vector<CommandBuffer*> commandBuffers;
 
@@ -133,7 +130,8 @@ class Renderer {
     std::vector<Entity*> entities;
     std::vector<Gui*> guis;
     std::vector<Model*> models;
-    std::vector<Image*> textures;
+    std::vector<ImageView*> textures;
+    std::vector<ShaderDescriptorSet*> textureAccessors;
 
     Model* guiModel;
 
@@ -161,6 +159,14 @@ class Renderer {
 
     Image* createTextureImage(const char* path);
     Image* createSamplerImage(int width, int height);
+
+    ImageView* readTexture(const char* path);
+
+    void addTexture(Image* texture);
+
+    void updateDescriptorSet(ShaderDescriptorSet* descriptor,
+                             ImageView* texture, TextureSampler* sampler,
+                             Buffer* uniformBuffer);
 
     void transitionImageLayout(Image* image, VkImageLayout oldLayout,
                                VkImageLayout newLayout);

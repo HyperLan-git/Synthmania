@@ -3,6 +3,7 @@
 ImageView::ImageView(Device *device, Image *image, VkFormat format,
                      VkImageAspectFlags aspectFlags) {
     this->device = device;
+    this->image = image;
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewInfo.image = *(image->getImage());
@@ -22,6 +23,8 @@ ImageView::ImageView(Device *device, Image *image, VkFormat format,
 }
 
 VkImageView *ImageView::getView() { return view; }
+
+Image *ImageView::getImage() { return image; }
 
 ImageView::~ImageView() {
     vkDestroyImageView(*(device->getDevice()), *view, nullptr);

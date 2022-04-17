@@ -9,20 +9,22 @@
 #include "Model.hpp"
 
 struct GuiData {
-    alignas(8) glm::vec2 pos;
+    alignas(16) glm::vec3 pos;
     alignas(4) float rot;
     alignas(8) glm::vec2 size;
 };
 
 class Gui {
    public:
-    Gui(Image* texture, const char* name);
+    Gui(ImageView* texture, const char* name);
 
-    Image* getTexture() const;
+    ImageView* getTexture() const;
     const char* getName() const;
-    glm::vec2 getPosition() const;
+    glm::vec3 getPosition() const;
     float getRotation() const;
     glm::vec2 getSize() const;
+
+    void setPosition(glm::vec3 pos);
 
     virtual bool update(float time);
 
@@ -31,9 +33,9 @@ class Gui {
     ~Gui();
 
    protected:
-    Image* texture;
-    glm::vec2 position = {0, 0};
+    ImageView* texture;
+    glm::vec3 position = {0, 0, 0};
     float rotation = 0;
-    glm::vec2 size = {1, 1};  // Entire screen
+    glm::vec2 size = {1, 1};
     const char* name;
 };

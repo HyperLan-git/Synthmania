@@ -33,33 +33,34 @@ void Renderer::initVulkan() {
                           {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}}},
                          {3, 0, 2, 0, 1, 2}, &physicalDevice, device);
     Model* model = new Model("resources/room.obj", &physicalDevice, device);
-    Image *img = createTextureImage("resources/viking_room.png"),
-          *partition = createTextureImage("resources/partition.png");
+    ImageView *img = readTexture("resources/viking_room.png"),
+              *partition = readTexture("resources/partition.png"),
+              *sol = readTexture("resources/how_to_draw.png");
     models.push_back(model);
     textures.push_back(img);
     textures.push_back(partition);
+    textures.push_back(sol);
     Entity* e = new Entity(model, img, "Bob");
     entities.push_back(e);
-    Gui* g = new Gui(partition, "partition");
-    guis.push_back(g);
-    textureImage =
-        createSamplerImage(img->getExtent().width, img->getExtent().height);
-    textureImageView =
-        new ImageView(device, textureImage, VK_FORMAT_R8G8B8A8_SRGB,
-                      VK_IMAGE_ASPECT_COLOR_BIT);
-    guiImage =
-        createSamplerImage(img->getExtent().width, img->getExtent().height);
-    guiImageView = new ImageView(device, guiImage, VK_FORMAT_R8G8B8A8_SRGB,
-                                 VK_IMAGE_ASPECT_COLOR_BIT);
+    guis.push_back(new Gui(sol, "key"));
+    guis.push_back(new Gui(partition, "partition"));
+    guis[0]->setPosition({0.5f, 0, -0.01f});
+    guis[1]->setPosition({0, 0, -0.02f});
     guiSampler = new TextureSampler(&physicalDevice, device);
     textureSampler = new TextureSampler(&physicalDevice, device);
     createVertexBuffer(model->toVertexBuffer()->getSize());
     createIndexBuffer(model->toIndicesBuffer()->getSize());
     createUniformBuffers();
-    VkDescriptorType types[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
-    pool = new ShaderDescriptorPool(device, types, MAX_FRAMES_IN_FLIGHT);
-    guiPool = new ShaderDescriptorPool(device, types, MAX_FRAMES_IN_FLIGHT);
+    uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * textures.size();
+    std::vector<VkDescriptorType> types(type_sz);
+    for (size_t i = 0; i < textures.size(); i++) {
+        types[2 * i] = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        types[2 * i + 1] = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    }
+    VkDescriptorType* tp = types.data();
+
+    pool = new ShaderDescriptorPool(device, tp, type_sz);
+    guiPool = new ShaderDescriptorPool(device, tp, type_sz);
     createDescriptorSets();
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -82,7 +83,7 @@ Renderer::~Renderer() {
     delete guiPipelineLayout;
     delete guiPipeline;
 
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < uniformBuffers.size(); i++) {
         delete constantUniformBuffers[i];
         delete uniformBuffers[i];
         delete guiConstantUniformBuffers[i];
@@ -93,11 +94,7 @@ Renderer::~Renderer() {
     delete guiPool;
 
     delete textureSampler;
-    delete textureImageView;
-    delete textureImage;
     delete guiSampler;
-    delete guiImageView;
-    delete guiImage;
 
     delete shaderLayout;
     delete guiShaderLayout;
@@ -111,7 +108,10 @@ Renderer::~Renderer() {
     for (Entity* e : entities) delete e;
     for (Gui* g : guis) delete g;
     for (Model* m : models) delete m;
-    for (Image* i : textures) delete i;
+    for (ImageView* i : textures) {
+        delete i->getImage();
+        delete i;
+    }
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete renderFinishedSemaphores[i];
@@ -288,6 +288,11 @@ bool Renderer::hasStencilComponent(VkFormat format) {
            format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
+void Renderer::addTexture(Image* texture) {
+    this->textures.push_back(new ImageView(
+        device, texture, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT));
+}
+
 Image* Renderer::createSamplerImage(int width, int height) {
     VkDeviceSize imageSize = width * height * 4;
 
@@ -301,6 +306,13 @@ Image* Renderer::createSamplerImage(int width, int height) {
                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     return image;
+}
+
+ImageView* Renderer::readTexture(const char* path) {
+    Image* tex = createTextureImage(path);
+
+    return new ImageView(device, tex, VK_FORMAT_R8G8B8A8_SRGB,
+                         VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 Image* Renderer::createTextureImage(const char* path) {
@@ -328,18 +340,19 @@ Image* Renderer::createTextureImage(const char* path) {
 
     stbi_image_free(pixels);
 
-    Image* image = new Image(
-        &physicalDevice, device, texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB,
-        VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    Image* image = new Image(&physicalDevice, device, texWidth, texHeight,
+                             VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+                             VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                                 VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                                 VK_IMAGE_USAGE_SAMPLED_BIT,
+                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     copyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth),
                       static_cast<uint32_t>(texHeight));
     transitionImageLayout(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     delete stagingBuffer;
     return image;
@@ -422,43 +435,42 @@ void Renderer::createUniformBuffers() {
     }
 }
 
+void Renderer::updateDescriptorSet(ShaderDescriptorSet* descriptor,
+                                   ImageView* texture, TextureSampler* sampler,
+                                   Buffer* uniformBuffer) {
+    VkDescriptorBufferInfo* bufferInfo = createBufferInfo(uniformBuffer);
+
+    VkDescriptorImageInfo* imageInfo = createImageInfo(texture, sampler);
+
+    descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 0,
+                             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo,
+                             nullptr);
+
+    descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
+                             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nullptr,
+                             imageInfo);
+
+    delete imageInfo;
+    delete bufferInfo;
+}
+
 void Renderer::createDescriptorSets() {
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        descriptorSets.push_back(
-            new ShaderDescriptorSet(device, pool, shaderLayout));
-        VkDescriptorBufferInfo* bufferInfo =
-            createBufferInfo(uniformBuffers[i]);
+    size_t j = 0;
+    for (ImageView* img : textures) {
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            descriptorSets.push_back(
+                new ShaderDescriptorSet(device, pool, shaderLayout));
 
-        VkDescriptorImageInfo* imageInfo =
-            createImageInfo(textureImageView, textureSampler);
+            guiDescriptorSets.push_back(
+                new ShaderDescriptorSet(device, guiPool, guiShaderLayout));
 
-        descriptorSets[i]->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                                        0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                        bufferInfo, nullptr);
-
-        descriptorSets[i]->updateAccess(
-            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nullptr, imageInfo);
-
-        delete imageInfo;
-        delete bufferInfo;
-
-        guiDescriptorSets.push_back(
-            new ShaderDescriptorSet(device, guiPool, guiShaderLayout));
-        bufferInfo = createBufferInfo(guiUniformBuffers[i]);
-
-        imageInfo = createImageInfo(guiImageView, guiSampler);
-
-        guiDescriptorSets[i]->updateAccess(
-            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 0,
-            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo, nullptr);
-
-        guiDescriptorSets[i]->updateAccess(
-            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nullptr, imageInfo);
-
-        delete imageInfo;
-        delete bufferInfo;
+            // God this is so cursed why
+            updateDescriptorSet(descriptorSets[j + i], img, textureSampler,
+                                uniformBuffers[i]);
+            updateDescriptorSet(guiDescriptorSets[j + i], img, guiSampler,
+                                guiUniformBuffers[i]);
+        }
+        j += 2;
     }
 }
 
@@ -477,7 +489,7 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
                                    2);
 
     Model* lastModel = nullptr;
-    Image* lastTexture = nullptr;
+    ImageView* lastTexture = nullptr;
     if (!entities.empty()) {
         commandBuffer->bindPipeline(graphicsPipeline);
 
@@ -486,7 +498,7 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
         for (Entity* e : entities) {
             e->update(time_from_start);
             Model* model = e->getModel();
-            Image* texture = e->getTexture();
+            ImageView* texture = e->getTexture();
             if (lastModel != model) {
                 model->toVertexBuffer()->copyTo(
                     vertexBuffer, device->getQueue(0), commandPool);
@@ -496,14 +508,12 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
                 commandBuffer->bindIndexBuffer(indexBuffer);
             }
             if (lastTexture != texture) {
-                transitionImageLayout(textureImage,
-                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-                copyImage(texture, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                          textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-                transitionImageLayout(textureImage,
-                                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                size_t idx = 0;
+                for (idx = 0; idx < textures.size(); idx++) {
+                    if (textures[idx] == texture) break;
+                }
+                commandBuffer->bindDescriptorSet(
+                    graphicsPipeline, descriptorSets[idx * 2 + currentFrame]);
             }
             drawEntity(e, commandBuffer);
             lastModel = model;
@@ -513,27 +523,25 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
 
     commandBuffer->bindPipeline(guiPipeline);
 
-    commandBuffer->bindDescriptorSet(guiPipeline,
-                                     guiDescriptorSets[currentFrame]);
-
     guiModel->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue(0),
                                        commandPool);
     guiModel->toIndicesBuffer()->copyTo(indexBuffer, device->getQueue(0),
                                         commandPool);
     commandBuffer->bindVertexBuffers(vertexBuffer, 1);
     commandBuffer->bindIndexBuffer(indexBuffer);
+
+    commandBuffer->bindDescriptorSet(guiPipeline,
+                                     guiDescriptorSets[currentFrame]);
     for (Gui* g : guis) {
         g->update(time_from_start);
-        Image* texture = g->getTexture();
+        ImageView* texture = g->getTexture();
         if (lastTexture != texture) {
-            transitionImageLayout(guiImage,
-                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            copyImage(texture, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, guiImage,
-                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            transitionImageLayout(guiImage,
-                                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            size_t idx = 0;
+            for (idx = 0; idx < textures.size(); idx++) {
+                if (textures[idx] == texture) break;
+            }
+            commandBuffer->bindDescriptorSet(
+                guiPipeline, guiDescriptorSets[idx * 2 + currentFrame]);
         }
         drawGui(g, commandBuffer);
         lastTexture = texture;

@@ -20,10 +20,10 @@ struct EntityData {
 
 class Entity {
    public:
-    Entity(Model* model, Image* texture, const char* name);
+    Entity(Model* model, ImageView* texture, const char* name);
 
     Model* getModel() const;
-    Image* getTexture() const;
+    ImageView* getTexture() const;
     const char* getName() const;
     glm::vec3 getPosition() const;
     glm::vec4 getRotation() const;
@@ -37,7 +37,7 @@ class Entity {
 
    protected:
     Model* model;
-    Image* texture;
+    ImageView* texture;
     glm::vec3 position = {0, 0, 0};
     glm::vec4 rotation = {0, 0, 0, 1};  // Quaternions my beloved :heart:
     glm::vec3 size = {1, 1, 1};

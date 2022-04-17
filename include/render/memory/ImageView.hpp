@@ -14,9 +14,11 @@ class ImageView {
     ImageView(Device *device, Image *image, VkFormat format,
               VkImageAspectFlags aspectFlags);
     VkImageView *getView();
+    Image *getImage();
     ~ImageView();
 
    private:
     Device *device;
     VkImageView *view;
+    Image *image;
 };
