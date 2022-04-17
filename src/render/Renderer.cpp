@@ -42,10 +42,15 @@ void Renderer::initVulkan() {
     textures.push_back(sol);
     Entity* e = new Entity(model, img, "Bob");
     entities.push_back(e);
-    guis.push_back(new Gui(sol, "key"));
     guis.push_back(new Gui(partition, "partition"));
-    guis[0]->setPosition({0.5f, 0, -0.01f});
-    guis[1]->setPosition({0, 0, -0.02f});
+    guis.push_back(new Gui(sol, "key"));
+    guis.push_back(new Gui(sol, "key"));
+    guis[0]->setPosition({0, 0, -0.02f});
+    guis[0]->setSize({10, 1});
+    guis[1]->setPosition({0.7f, 0.1f, -0.01f});
+    guis[1]->setSize({0.75f, 0.75f});
+    guis[2]->setPosition({0.3f, 0.1f, 0});
+    guis[2]->setSize({0.75f, 0.75f});
     guiSampler = new TextureSampler(&physicalDevice, device);
     textureSampler = new TextureSampler(&physicalDevice, device);
     createVertexBuffer(model->toVertexBuffer()->getSize());
@@ -482,7 +487,7 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->begin();
 
     std::vector<VkClearValue> clearValues = {VkClearValue(), VkClearValue()};
-    clearValues[0].color = {{1.0f, 0.0f, 0.0f, 1.0f}};
+    clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
     clearValues[1].depthStencil = {1.0f, 0};
 
     commandBuffer->beginRenderPass(swapchain, imageIndex, clearValues.data(),

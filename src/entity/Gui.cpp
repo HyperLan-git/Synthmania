@@ -12,6 +12,7 @@ float Gui::getRotation() const { return (rotation - ((int)rotation / (M_PI))); }
 glm::vec2 Gui::getSize() const { return size; }
 
 void Gui::setPosition(glm::vec3 pos) { this->position = pos; }
+void Gui::setSize(glm::vec2 size) { this->size = size; }
 
 bool Gui::update(float time) { return false; }
 

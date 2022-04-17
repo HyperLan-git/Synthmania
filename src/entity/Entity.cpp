@@ -1,6 +1,7 @@
 #include "Entity.hpp"
 
 #include <math.h>
+#include <stdlib.h>
 
 Entity::Entity(Model* model, ImageView* texture, const char* name) {
     this->model = model;
@@ -17,7 +18,6 @@ glm::vec3 Entity::getSize() const { return this->size; }
 
 const char* Entity::getName() const { return this->name; }
 
-#include <stdlib.h>
 ShaderData* Entity::getShaderData() const {
     ShaderData* data = new ShaderData();
     EntityData* edata = (EntityData*)malloc(sizeof(EntityData));

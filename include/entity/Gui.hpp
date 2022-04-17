@@ -25,6 +25,7 @@ class Gui {
     glm::vec2 getSize() const;
 
     void setPosition(glm::vec3 pos);
+    void setSize(glm::vec2 size);
 
     virtual bool update(float time);
 
