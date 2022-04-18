@@ -1,7 +1,7 @@
 #include "ImageView.hpp"
 
 ImageView::ImageView(Device *device, Image *image, VkFormat format,
-                     VkImageAspectFlags aspectFlags) {
+                     VkImageAspectFlags aspectFlags, const char *name) {
     this->device = device;
     this->image = image;
     VkImageViewCreateInfo viewInfo{};
@@ -20,11 +20,14 @@ ImageView::ImageView(Device *device, Image *image, VkFormat format,
         VK_SUCCESS) {
         throw std::runtime_error("failed to create texture image view!");
     }
+    this->name = name;
 }
 
 VkImageView *ImageView::getView() { return view; }
 
 Image *ImageView::getImage() { return image; }
+
+const char *ImageView::getName() { return name; }
 
 ImageView::~ImageView() {
     vkDestroyImageView(*(device->getDevice()), *view, nullptr);

@@ -13,6 +13,7 @@
 
 #include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
+#include "ImageView.hpp"
 #include "Window.hpp"
 
 struct SwapchainSupportDetails {
@@ -41,3 +42,5 @@ VkPresentModeKHR chooseSwapPresentMode(
 
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
                             Window* window);
+
+ImageView* getTextureByName(std::vector<ImageView*> textures, const char* name);

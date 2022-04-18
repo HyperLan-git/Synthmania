@@ -9,16 +9,6 @@ Renderer::Renderer(Window* window) {
 }
 
 void Renderer::initVulkan() {
-    /*new Model({{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-               {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-               {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-               {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-
-               {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-               {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-               {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-               {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}},
-              {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4});*/
     createInstance();
     surface = instance->createSurface(window);
     pickPhysicalDevice();
@@ -27,30 +17,31 @@ void Renderer::initVulkan() {
     createGraphicsPipeline();
     createGuiPipeline();
     commandPool = new CommandPool(physicalDevice, device);
-    guiModel = new Model({{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
-                          {{0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
-                          {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}},
-                          {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}}},
+    guiModel = new Model({{{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
+                          {{0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
+                          {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}},
+                          {{-0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}}},
                          {3, 0, 2, 0, 1, 2}, &physicalDevice, device);
     Model* model = new Model("resources/room.obj", &physicalDevice, device);
-    ImageView *img = readTexture("resources/viking_room.png"),
-              *partition = readTexture("resources/partition.png"),
-              *sol = readTexture("resources/how_to_draw.png");
     models.push_back(model);
-    textures.push_back(img);
-    textures.push_back(partition);
-    textures.push_back(sol);
-    Entity* e = new Entity(model, img, "Bob");
+    textures.push_back(readTexture("resources/viking_room.png", "room"));
+    textures.push_back(readTexture("resources/partition.png", "partition"));
+    textures.push_back(readTexture("resources/how_to_draw.png", "sol_key"));
+    textures.push_back(readTexture("resources/racism.png", "note_4th"));
+    textures.push_back(readTexture("resources/no_racist.png",
+                                   "note_2th"));  // hehehe get infuriated pls
+    textures.push_back(readTexture("resources/racism2.png", "note_1"));
+    Entity* e = new Entity(model, getTextureByName(textures, "room"), "Bob");
     entities.push_back(e);
-    guis.push_back(new Gui(partition, "partition"));
-    guis.push_back(new Gui(sol, "key"));
-    guis.push_back(new Gui(sol, "key"));
-    guis[0]->setPosition({0, 0, -0.02f});
-    guis[0]->setSize({10, 1});
-    guis[1]->setPosition({0.7f, 0.1f, -0.01f});
-    guis[1]->setSize({0.75f, 0.75f});
-    guis[2]->setPosition({0.3f, 0.1f, 0});
-    guis[2]->setSize({0.75f, 0.75f});
+    addGui(new Gui(getTextureByName(textures, "partition"), "bg"));
+    addGui(new Gui(getTextureByName(textures, "partition"), "partition"));
+    addGui(new Gui(getTextureByName(textures, "sol_key"), "key"));
+    addGui(new Note("the first of many, the chosen C", 69420, 60, 0.25f,
+                    textures));
+    guis[0]->setSize({10, 30});
+    guis[1]->setSize({10, 1});
+    guis[2]->setPosition({-1.5f, 0.1f});
+    guis[2]->setSize({0.8f, 0.8f});
     guiSampler = new TextureSampler(&physicalDevice, device);
     textureSampler = new TextureSampler(&physicalDevice, device);
     createVertexBuffer(model->toVertexBuffer()->getSize());
@@ -229,6 +220,15 @@ void Renderer::createGraphicsPipeline() {
     delete fragShader;
 }
 
+void Renderer::addGui(Gui* gui) {
+    if (guis.empty()) {
+        gui->setZ(0.9999f);
+    } else {
+        gui->setZ((*--guis.end())->getPosition().z - 0.0001f);
+    }
+    this->guis.push_back(gui);
+}
+
 void Renderer::createGuiPipeline() {
     VkDescriptorSetLayoutBinding ubo, textureSampler;
     ubo.binding = 0;
@@ -293,9 +293,10 @@ bool Renderer::hasStencilComponent(VkFormat format) {
            format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
-void Renderer::addTexture(Image* texture) {
-    this->textures.push_back(new ImageView(
-        device, texture, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT));
+void Renderer::addTexture(Image* texture, const char* name) {
+    this->textures.push_back(new ImageView(device, texture,
+                                           VK_FORMAT_R8G8B8A8_SRGB,
+                                           VK_IMAGE_ASPECT_COLOR_BIT, name));
 }
 
 Image* Renderer::createSamplerImage(int width, int height) {
@@ -313,11 +314,11 @@ Image* Renderer::createSamplerImage(int width, int height) {
     return image;
 }
 
-ImageView* Renderer::readTexture(const char* path) {
+ImageView* Renderer::readTexture(const char* path, const char* name) {
     Image* tex = createTextureImage(path);
 
     return new ImageView(device, tex, VK_FORMAT_R8G8B8A8_SRGB,
-                         VK_IMAGE_ASPECT_COLOR_BIT);
+                         VK_IMAGE_ASPECT_COLOR_BIT, name);
 }
 
 Image* Renderer::createTextureImage(const char* path) {
@@ -500,8 +501,9 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
 
         commandBuffer->bindDescriptorSet(graphicsPipeline,
                                          descriptorSets[currentFrame]);
+        std::vector<Entity*> toDestroy;
         for (Entity* e : entities) {
-            e->update(time_from_start);
+            if (e->update(time_from_start)) toDestroy.push_back(e);
             Model* model = e->getModel();
             ImageView* texture = e->getTexture();
             if (lastModel != model) {
@@ -524,6 +526,14 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
             lastModel = model;
             lastTexture = texture;
         }
+
+        for (Entity* e : toDestroy)
+            for (std::vector<Entity*>::iterator iter = entities.begin();
+                 iter != entities.end(); iter++)
+                if (e == *iter) {
+                    delete e;
+                    entities.erase(iter);
+                }
     }
 
     commandBuffer->bindPipeline(guiPipeline);
@@ -537,8 +547,9 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
 
     commandBuffer->bindDescriptorSet(guiPipeline,
                                      guiDescriptorSets[currentFrame]);
+    std::vector<Gui*> toDestroy;
     for (Gui* g : guis) {
-        g->update(time_from_start);
+        if (g->update(time_from_start)) toDestroy.push_back(g);
         ImageView* texture = g->getTexture();
         if (lastTexture != texture) {
             size_t idx = 0;
@@ -551,6 +562,13 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
         drawGui(g, commandBuffer);
         lastTexture = texture;
     }
+    for (Gui* g : toDestroy)
+        for (std::vector<Gui*>::iterator iter = guis.begin();
+             iter != guis.end(); iter++)
+            if (g == *iter) {
+                delete g;
+                guis.erase(iter);
+            }
 
     commandBuffer->endRenderPass();
 
@@ -593,14 +611,14 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
           y = sin(time_from_start * 5 / 3) / 2;  // Lissajous :)
 
     x = y = 0;
+    float ratio =
+        swapchain->getExtent().width / (float)swapchain->getExtent().height;
     UniformBufferObject ubo{};
     ubo.model = glm::mat4(1.0f);
     ubo.view = glm::lookAt(glm::vec3(x, y + 1, 1.0f), glm::vec3(x, y, 0.0f),
                            glm::vec3(0.0f, -1.0f, 0.0f));
-    ubo.proj = glm::perspective(
-        glm::radians(90.0f),  // MASTER FOV
-        swapchain->getExtent().width / (float)swapchain->getExtent().height,
-        0.1f, 10.0f);
+    ubo.proj = glm::perspective(glm::radians(90.0f),  // MASTER FOV
+                                ratio, 0.1f, 10.0f);
     ubo.proj[1][1] *= -1;  // Invert y axis cause I like my y axis positive up
 
     void *data = NULL, *data2 = NULL;
@@ -611,14 +629,9 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     vkUnmapMemory(*(device->getDevice()),
                   *(uniformBuffers[currentImage]->getMemory()->getMemory()));
 
-    ubo.model = glm::mat4(1.0f);
-    ubo.view = glm::lookAt(glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0.0f),
-                           glm::vec3(0.0f, -1.0f, 0.0f));
-    ubo.proj = glm::perspective(
-        glm::radians(157.4f),
-        swapchain->getExtent().width / (float)swapchain->getExtent().height,
-        0.1f, 0.3f);
-    ubo.proj[1][1] *= -1;
+    ubo.model = glm::mat4(1.f);
+    ubo.view = glm::mat4(1.f);
+    ubo.proj = glm::orthoLH_ZO<float>(-ratio, ratio, -1, 1, 0.f, 1.f);
 
     vkMapMemory(*(device->getDevice()),
                 *(guiUniformBuffers[currentImage]->getMemory()->getMemory()), 0,

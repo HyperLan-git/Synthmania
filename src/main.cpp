@@ -12,7 +12,7 @@
 int main(void) {
     try {
         MidiHandler *handler = new MidiHandler();
-        Window *window = new Window(800, 600, "Synthmania");
+        Window *window = new Window(1920, 1080, "Synthmania");
         Renderer *renderer = new Renderer(window);
 
         while (!window->shouldClose()) {

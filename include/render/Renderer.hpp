@@ -38,6 +38,7 @@
 #include "Instance.hpp"
 #include "Memory.hpp"
 #include "Model.hpp"
+#include "Note.hpp"
 #include "Pipeline.hpp"
 #include "PipelineLayout.hpp"
 #include "RenderPass.hpp"
@@ -155,14 +156,16 @@ class Renderer {
     void createGraphicsPipeline();
     void createGuiPipeline();
 
+    void addGui(Gui* gui);
+
     bool hasStencilComponent(VkFormat format);
 
     Image* createTextureImage(const char* path);
     Image* createSamplerImage(int width, int height);
 
-    ImageView* readTexture(const char* path);
+    ImageView* readTexture(const char* path, const char* name);
 
-    void addTexture(Image* texture);
+    void addTexture(Image* texture, const char* name);
 
     void updateDescriptorSet(ShaderDescriptorSet* descriptor,
                              ImageView* texture, TextureSampler* sampler,

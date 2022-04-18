@@ -24,7 +24,8 @@ class Gui {
     float getRotation() const;
     glm::vec2 getSize() const;
 
-    void setPosition(glm::vec3 pos);
+    void setPosition(glm::vec2 pos);
+    void setZ(float z);
     void setSize(glm::vec2 size);
 
     virtual bool update(float time);

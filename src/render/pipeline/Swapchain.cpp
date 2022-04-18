@@ -59,7 +59,8 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
 
     for (uint32_t i = 0; i < images.size(); i++) {
         imageViews.push_back(new ImageView(device, images[i], imageFormat,
-                                           VK_IMAGE_ASPECT_COLOR_BIT));
+                                           VK_IMAGE_ASPECT_COLOR_BIT,
+                                           "swapimage"));
     }
 
     VkFormat depthFormat = findDepthFormat(*physicalDevice);
@@ -69,7 +70,7 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
                            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     depthImageView = new ImageView(device, depthImage, depthFormat,
-                                   VK_IMAGE_ASPECT_DEPTH_BIT);
+                                   VK_IMAGE_ASPECT_DEPTH_BIT, "depthimage");
 
     renderPass = new RenderPass(physicalDevice, device, imageFormat);
 
