@@ -36,8 +36,7 @@ void Renderer::initVulkan() {
     addGui(new Gui(getTextureByName(textures, "partition"), "bg"));
     addGui(new Gui(getTextureByName(textures, "partition"), "partition"));
     addGui(new Gui(getTextureByName(textures, "sol_key"), "key"));
-    addGui(new Note("the first of many, the chosen C", 69420, 60, 0.25f,
-                    textures));
+    addGui(new Note("the first of many, the chosen C", 3, 60, 0.25f, textures));
     guis[0]->setSize({10, 30});
     guis[1]->setSize({10, 1});
     guis[2]->setPosition({-1.5f, 0.1f});
@@ -530,9 +529,10 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
         for (Entity* e : toDestroy)
             for (std::vector<Entity*>::iterator iter = entities.begin();
                  iter != entities.end(); iter++)
-                if (e == *iter) {
-                    delete e;
+                if (g == *iter) {
                     entities.erase(iter);
+                    delete g;
+                    break;
                 }
     }
 
@@ -548,7 +548,8 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->bindDescriptorSet(guiPipeline,
                                      guiDescriptorSets[currentFrame]);
     std::vector<Gui*> toDestroy;
-    for (Gui* g : guis) {
+    for (auto iter = guis.begin(); iter != guis.end(); iter++) {
+        Gui* g = *iter;
         if (g->update(time_from_start)) toDestroy.push_back(g);
         ImageView* texture = g->getTexture();
         if (lastTexture != texture) {
@@ -566,8 +567,9 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
         for (std::vector<Gui*>::iterator iter = guis.begin();
              iter != guis.end(); iter++)
             if (g == *iter) {
-                delete g;
                 guis.erase(iter);
+                delete g;
+                break;
             }
 
     commandBuffer->endRenderPass();
