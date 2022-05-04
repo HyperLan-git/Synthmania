@@ -1,5 +1,5 @@
 #pragma once
-//#define NDEBUG
+#define NDEBUG
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -80,6 +80,9 @@ class Renderer {
 
     void render();
 
+    void addGui(Gui* gui);
+    std::vector<ImageView*> getTextures();
+
     ~Renderer();
 
    private:
@@ -155,8 +158,6 @@ class Renderer {
 
     void createGraphicsPipeline();
     void createGuiPipeline();
-
-    void addGui(Gui* gui);
 
     bool hasStencilComponent(VkFormat format);
 

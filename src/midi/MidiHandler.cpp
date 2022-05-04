@@ -3,9 +3,16 @@
 const char *notes[] = {"Do",  "Do#", "Re",   "Re#", "Mi",  "Fa",
                        "Fa#", "Sol", "Sol#", "La",  "La#", "Si"};
 
+size_t std::hash<libremidi::message>::operator()(
+    libremidi::message const &message) const {
+    return ((message.bytes[0] << 7) | (message.bytes[1] << 6) |
+            (message.bytes[2] << 5) | (message.bytes[2] << 4)) ^
+           (int)(666556507 * message.timestamp);
+}
+
 MidiHandler::MidiHandler() {
     start_time = micros();
-    libremidi::midi_out out;
+    /*libremidi::midi_out out;
     for (int i = 0, N = out.get_port_count(); i < N; i++) {
         // Information on port number i
         std::string name = out.get_port_name(i);
@@ -31,7 +38,7 @@ MidiHandler::MidiHandler() {
     midi.set_callback([this](const libremidi::message &message) {
         // int bit = message[0] >> 7; // Should always be 1
         int type = (message[0] >> 4) - 8;
-        int channel = (message[0]) - (type << 4) - 128;
+        int channel = (message[0]) & 0xF;
         Message m;
         if (message.is_note_on_or_off()) {
             int note = message[1];
@@ -54,7 +61,87 @@ MidiHandler::MidiHandler() {
             m.timestamp = micros() - this->start_time;
             this->messages.push(m);
         }
-    });
+    });*/
+}
+
+std::vector<MidiNote> MidiHandler::readMidi(const char *path) {
+    std::ifstream file(path, std::ios::binary);
+
+    std::vector<uint8_t> bytes;
+    bytes.assign(std::istreambuf_iterator<char>(file),
+                 std::istreambuf_iterator<char>());
+
+    // Initialize our reader object
+    libremidi::reader r;
+
+    // Parse
+    libremidi::reader::parse_result result = r.parse(bytes);
+    std::vector<MidiNote> notes;
+
+    // If parsing succeeded, use the parsed data
+    if (result == libremidi::reader::invalid) return notes;
+    // Pitch wheel : 0x2000 = 8192 = +-0 semitones 0x0 = -2 semitones
+    // and 0x3FFF = +2 semitones
+    std::vector<MidiNote> currentNotes;
+    for (auto &track : r.tracks) {
+        uint64_t t = 0;
+        for (auto &event : track) {
+            libremidi::message message = event.m;
+            uint64_t dt = event.tick * 1000000 / r.ticksPerBeat / 4 * 120 /
+                          r.startingTempo;
+            switch (message.get_message_type()) {
+                case libremidi::message_type::NOTE_ON:
+                    for (auto iter = currentNotes.begin();
+                         iter != currentNotes.end(); iter++) {
+                        if ((*iter).note == message.bytes[1] &&
+                            (t >= (*iter).timestamp)) {
+                            uint64_t length = t - (*iter).timestamp;
+                            (*iter).length = length;
+                            notes.push_back(*iter);
+                            currentNotes.erase(iter);
+                            break;
+                        }
+                    }
+                    if (message[2] != 0) {
+                        currentNotes.push_back(
+                            {t, 0, message.bytes[1],
+                             message.bytes[2]});  // velocity == 0 => note off
+                    }
+                    break;
+                case libremidi::message_type::NOTE_OFF:
+                    for (auto iter = currentNotes.begin();
+                         iter != currentNotes.end(); iter++) {
+                        if ((*iter).note == message.bytes[1] &&
+                            (t > (*iter).timestamp)) {
+                            uint64_t length = t - (*iter).timestamp;
+                            (*iter).length = length;
+                            notes.push_back(*iter);
+                            currentNotes.erase(iter);
+                            break;
+                        }
+                    }
+                    break;
+                case libremidi::message_type::PITCH_BEND:
+                    break;
+                case libremidi::message_type::CONTROL_CHANGE:
+                    break;
+                case libremidi::message_type::PROGRAM_CHANGE:
+                    break;
+                case libremidi::message_type::SYSTEM_RESET:
+                    break;
+                default:
+                    std::cout << "msg=" << (int)message.get_message_type()
+                              << std::endl;
+                    break;
+            }
+            t += dt;
+        }
+        currentNotes.clear();
+    }
+
+    file.close();
+
+    return notes;
 }
 
 bool MidiHandler::hasMessage() { return !messages.empty(); }

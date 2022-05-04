@@ -16,6 +16,10 @@ enum Key { SOL, FA };
 ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
                              float duration, Key currentKey);
 
+int getDifferenceFromC4(u_char pitch);
+
+glm::vec2 getSizeAndLocForNote(float duration);
+
 class Note : public Gui {
    public:
     Note(const char* name, float time, u_char pitch, float duration,

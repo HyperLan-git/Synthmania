@@ -27,6 +27,7 @@ void Renderer::initVulkan() {
     textures.push_back(readTexture("resources/viking_room.png", "room"));
     textures.push_back(readTexture("resources/partition.png", "partition"));
     textures.push_back(readTexture("resources/how_to_draw.png", "sol_key"));
+    textures.push_back(readTexture("resources/taptap.png", "note_8th"));
     textures.push_back(readTexture("resources/racism.png", "note_4th"));
     textures.push_back(readTexture("resources/no_racist.png",
                                    "note_2th"));  // hehehe get infuriated pls
@@ -36,7 +37,11 @@ void Renderer::initVulkan() {
     addGui(new Gui(getTextureByName(textures, "partition"), "bg"));
     addGui(new Gui(getTextureByName(textures, "partition"), "partition"));
     addGui(new Gui(getTextureByName(textures, "sol_key"), "key"));
-    addGui(new Note("the first of many, the chosen C", 3, 60, 0.25f, textures));
+    /*addGui(new Note("the first of many, the chosen C", 4, 60, 0.5f,
+    textures)); addGui(new Note("E, the second", 4, 64, 0.5f, textures));
+    addGui(new Note("G, the third", 4.3333f, 67, 0.5f, textures));
+    addGui(new Note("D5, the sussy imposter", 4.6666f, 74, 0.5f, textures));
+    addGui(new Note("E5, the nice crewmate", 5.f, 76, 1.f, textures));*/
     guis[0]->setSize({10, 30});
     guis[1]->setSize({10, 1});
     guis[2]->setPosition({-1.5f, 0.1f});
@@ -66,6 +71,7 @@ void Renderer::initVulkan() {
         inFlightFences.push_back(new Fence(device));
     }
 }
+std::vector<ImageView*> Renderer::getTextures() { return textures; }
 
 void Renderer::render() { drawFrame(); }
 
@@ -184,7 +190,7 @@ void Renderer::pickPhysicalDevice() {
 }
 
 void Renderer::createGraphicsPipeline() {
-    VkDescriptorSetLayoutBinding ubo, textureSampler;
+    VkDescriptorSetLayoutBinding ubo, textureSampler, color;
     ubo.binding = 0;
     ubo.descriptorCount = 1;
     ubo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -193,6 +199,10 @@ void Renderer::createGraphicsPipeline() {
     textureSampler.descriptorCount = 1;
     textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     textureSampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    color.binding = 2;
+    color.descriptorCount = 1;
+    color.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    color.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     shaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
@@ -529,9 +539,9 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
         for (Entity* e : toDestroy)
             for (std::vector<Entity*>::iterator iter = entities.begin();
                  iter != entities.end(); iter++)
-                if (g == *iter) {
+                if (e == *iter) {
                     entities.erase(iter);
-                    delete g;
+                    delete e;
                     break;
                 }
     }

@@ -4,6 +4,7 @@ CFLAGS = -std=c++17 -O2
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lX11 -lXrandr
 
 SRC=$(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard src/render/**/*.cpp)
+MIDISRC=$(wildcard src/midi/*.cpp) test/miditest.cpp
 
 VulkanTest: shader
 	g++ $(CFLAGS) -o bin/VulkanTest $(SRC) $(LDFLAGS)
@@ -12,6 +13,9 @@ VulkanTest: shader
 
 test: VulkanTest
 	./bin/VulkanTest
+
+midi:
+	g++ $(CFLAGS) -o bin/MidiTest $(MIDISRC) $(LDFLAGS)
 
 shader:
 	glslc shader/gui.vert -o bin/vert_gui.spv

@@ -34,7 +34,7 @@ void main() {
     vec4 rot = constants.rotation,
         rot2 = vec4(-rot.xyz, rot.w);
     v = vec4(inPosition.x, inPosition.y, inPosition.z, 0.0);
-    size = vec3(0.1, 0, 0);
+    size = vec3(1, 0, 0);
     v.xyz *= size;
     v = quat_mult(quat_mult(rot, v), rot2);
     v.xyz += pos;
