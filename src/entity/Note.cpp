@@ -24,7 +24,7 @@ ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
                    "th";  // Yeah secondth deal with it
     else
         texName += std::to_string((int)initial);
-    std::cout << duration << " " << texName << std::endl;
+    // std::cout << duration << " " << texName << std::endl;
 
     return getTextureByName(textures, texName.c_str());
 }
@@ -46,7 +46,6 @@ Note::Note(const char* name, float time, u_char pitch, float duration,
            std::vector<ImageView*> textures)
     : Gui(getTextureForNote(textures, pitch, duration, Key::SOL), name) {
     this->time = time;
-    std::cout << time << std::endl;
     glm::vec2 temp = getSizeAndLocForNote(duration);
     this->position.y = temp.x - 0.083f * getDifferenceFromC4(pitch);
     this->size = {temp.y, temp.y};

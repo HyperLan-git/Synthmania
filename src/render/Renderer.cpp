@@ -26,6 +26,8 @@ void Renderer::initVulkan() {
     models.push_back(model);
     textures.push_back(readTexture("resources/viking_room.png", "room"));
     textures.push_back(readTexture("resources/partition.png", "partition"));
+    textures.push_back(
+        readTexture("resources/judgement.png", "judgement_line"));
     textures.push_back(readTexture("resources/how_to_draw.png", "sol_key"));
     textures.push_back(readTexture("resources/taptap.png", "note_8th"));
     textures.push_back(readTexture("resources/racism.png", "note_4th"));
@@ -71,6 +73,7 @@ void Renderer::initVulkan() {
         inFlightFences.push_back(new Fence(device));
     }
 }
+
 std::vector<ImageView*> Renderer::getTextures() { return textures; }
 
 void Renderer::render() { drawFrame(); }

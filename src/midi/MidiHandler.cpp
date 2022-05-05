@@ -64,7 +64,7 @@ MidiHandler::MidiHandler() {
     });*/
 }
 
-std::vector<MidiNote> MidiHandler::readMidi(const char *path) {
+TrackPartition MidiHandler::readMidi(const char *path) {
     std::ifstream file(path, std::ios::binary);
 
     std::vector<uint8_t> bytes;
@@ -78,8 +78,9 @@ std::vector<MidiNote> MidiHandler::readMidi(const char *path) {
     libremidi::reader::parse_result result = r.parse(bytes);
     std::vector<MidiNote> notes;
 
+    uint64_t MPQ = 125000;
     // If parsing succeeded, use the parsed data
-    if (result == libremidi::reader::invalid) return notes;
+    if (result == libremidi::reader::invalid) return TrackPartition{MPQ, notes};
     // Pitch wheel : 0x2000 = 8192 = +-0 semitones 0x0 = -2 semitones
     // and 0x3FFF = +2 semitones
     std::vector<MidiNote> currentNotes;
@@ -141,7 +142,7 @@ std::vector<MidiNote> MidiHandler::readMidi(const char *path) {
 
     file.close();
 
-    return notes;
+    return TrackPartition{MPQ, notes};
 }
 
 bool MidiHandler::hasMessage() { return !messages.empty(); }

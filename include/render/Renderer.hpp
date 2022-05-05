@@ -36,6 +36,7 @@
 #include "Image.hpp"
 #include "ImageView.hpp"
 #include "Instance.hpp"
+#include "Judgement.hpp"
 #include "Memory.hpp"
 #include "Model.hpp"
 #include "Note.hpp"

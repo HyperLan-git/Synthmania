@@ -1,4 +1,12 @@
 #define GLFW_INCLUDE_VULKAN
+#define STBI_NO_BMP
+#define STBI_NO_PSD
+#define STBI_NO_TGA
+#define STBI_NO_GIF
+#define STBI_NO_HDR
+#define STBI_NO_PIC
+#define STBI_NO_PNM
+
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
 
@@ -17,11 +25,19 @@ int main(int argc, char **argv) {
         const char *path = "resources/bruh.MID";
         if (argc > 1) path = argv[1];
         auto result = handler->readMidi(path);
-        for (MidiNote note : result) {
-            renderer->addGui(new Note("E", note.timestamp / 1000000.f,
-                                      note.note, 0.25f,
-                                      renderer->getTextures()));
+        for (MidiNote note : result.notes) {
+            char name[255] = "Note_";
+            strcat(name, std::to_string(std::hash<MidiNote>()(note)).c_str());
+            Note *n = new Note(name, note.timestamp / 1000000.f, note.note,
+                               0.25f, renderer->getTextures());
+            std::cout << n->getName() << "\n";
+            renderer->addGui(n);
         }
+        Judgement *bar =
+            new Judgement("judgement", renderer->getTextures(), result);
+        bar->setPosition({-1.4f, 0.f});
+        bar->setSize({0.25f, 1.f});
+        renderer->addGui(bar);
         while (!window->shouldClose()) {
             glfwPollEvents();
             renderer->render();

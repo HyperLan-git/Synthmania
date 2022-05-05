@@ -3,6 +3,9 @@ IDIRS=$(addprefix -I ,$(wildcard include/**/) $(wildcard include/render/**/)) -I
 CFLAGS = -std=c++17 -O2
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lX11 -lXrandr
 
+OBJDIR=bin/obj
+OBJ=libremidi/include/libremidi/*.cpp stb/stb_image.h
+
 SRC=$(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard src/render/**/*.cpp)
 MIDISRC=$(wildcard src/midi/*.cpp) test/miditest.cpp
 

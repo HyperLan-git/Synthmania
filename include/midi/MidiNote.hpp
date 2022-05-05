@@ -3,14 +3,18 @@
 #include <sys/types.h>
 
 #include <cstdint>
-
-struct MidiNote;
+#include <vector>
 
 struct MidiNote {
     uint64_t timestamp;
     uint64_t length;
     u_char note;
     u_char velocity;
+};
+
+struct TrackPartition {
+    uint64_t MPQ;
+    std::vector<MidiNote> notes;
 };
 
 template <>

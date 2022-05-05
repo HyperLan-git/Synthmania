@@ -35,11 +35,11 @@ class MidiHandler {
     MidiHandler();
     bool hasMessage();
     Message getMessage();
-    std::vector<MidiNote> readMidi(const char* path);
+    TrackPartition readMidi(const char* path);
     ~MidiHandler();
 
    private:
-    boost::lockfree::queue<Message> messages{10};
+    boost::lockfree::queue<Message> messages{100};
     uint64_t start_time;
 };
 
