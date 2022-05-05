@@ -1,7 +1,7 @@
-IDIRS=$(addprefix -I ,$(wildcard include/**/) $(wildcard include/render/**/)) -I stb -I obj -I libremidi/include/ -I openal-soft/include
+IDIRS=$(addprefix -I ,$(wildcard include/**/) $(wildcard include/render/**/)) -I stb -I obj -I libremidi/include/
 
 CFLAGS = -std=c++17 -O2
-LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lX11 -lXrandr
+LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lX11 -lXrandr
 
 OBJDIR=bin/obj
 OBJ=libremidi/include/libremidi/*.cpp stb/stb_image.h
