@@ -88,8 +88,9 @@ TrackPartition MidiHandler::readMidi(const char *path) {
         uint64_t t = 0;
         for (auto &event : track) {
             libremidi::message message = event.m;
-            uint64_t dt = event.tick * 1000000 / r.ticksPerBeat / 4 * 120 /
-                          r.startingTempo;
+            uint64_t dt =
+                event.tick * 1000000 / r.ticksPerBeat * 60 / r.startingTempo;
+            t += dt;
             switch (message.get_message_type()) {
                 case libremidi::message_type::NOTE_ON:
                     for (auto iter = currentNotes.begin();
@@ -135,7 +136,6 @@ TrackPartition MidiHandler::readMidi(const char *path) {
                               << std::endl;
                     break;
             }
-            t += dt;
         }
         currentNotes.clear();
     }
