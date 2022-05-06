@@ -157,7 +157,7 @@ void Renderer::recreateSwapchain() {
 
 void Renderer::createInstance() {
     uint32_t ver = VK_MAKE_VERSION(1, 0, 0);
-    const char *appName = "Hello Triangle", *engineName = "No Engine";
+    const char *appName = "Synthmania", *engineName = "No Engine";
     if (enableValidationLayers)
         instance =
             new Instance(appName, ver, engineName, ver, VK_API_VERSION_1_0,

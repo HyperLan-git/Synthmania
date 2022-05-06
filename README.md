@@ -7,7 +7,7 @@ I also plan on composing electronic music (my favorite artist is probably camell
 # Installation
 You will need to install :
 - Vulkan and GLFW
-- OpenAL
+- OpenAL with ALUT
 - libremidi (just clone the repo in here)
 - glslc
 

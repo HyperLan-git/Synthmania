@@ -1,13 +1,37 @@
 #pragma once
+
+class AudioHandler;
+
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alut.h>
 
+#include <cstring>
+#include <iostream>
+#include <map>
 #include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "AudioBuffer.hpp"
+#include "AudioSource.hpp"
+
+std::vector<std::string> getDevices();
 
 class AudioHandler {
    public:
     AudioHandler();
+    AudioHandler(const ALCchar* device);
+
+    void addSound(std::string name, AudioBuffer* sound);
+    AudioSource* playSound(std::string name);
+
+    bool update();
+
+    ~AudioHandler();
 
    private:
     ALCdevice* device = nullptr;
+    std::vector<AudioSource*> sources;
+    std::map<std::string, AudioBuffer*> sounds;
 };
