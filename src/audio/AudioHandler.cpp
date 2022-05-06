@@ -50,7 +50,6 @@ AudioSource* AudioHandler::playSound(std::string name) {
 bool AudioHandler::update() {
     for (auto iter = sources.begin(); iter != sources.end(); iter++) {
         ALenum state = (*iter)->getState();
-        std::cout << state << "\n" << (state == AL_STOPPED) << std::endl;
         if (state == AL_STOPPED) {
             delete *iter;
             iter = sources.erase(iter);
