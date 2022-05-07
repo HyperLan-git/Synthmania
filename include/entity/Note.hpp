@@ -18,6 +18,8 @@ ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
 
 int getDifferenceFromC4(u_char pitch);
 
+bool isFromCMajor(u_char pitch);
+
 glm::vec2 getSizeAndLocForNote(float duration);
 
 class Note : public Gui {

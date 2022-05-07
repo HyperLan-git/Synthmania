@@ -21,6 +21,10 @@ void Gui::setSize(glm::vec2 size) { this->size = size; }
 
 bool Gui::update(float time) { return false; }
 
+bool Gui::isDestroyed() { return this->destroyed; }
+
+void Gui::setDestroyed() { this->destroyed = true; }
+
 ShaderData* Gui::getShaderData() const {
     ShaderData* data = new ShaderData();
     GuiData* edata = (GuiData*)malloc(sizeof(GuiData));

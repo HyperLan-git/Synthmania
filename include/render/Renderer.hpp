@@ -40,6 +40,7 @@
 #include "Memory.hpp"
 #include "Model.hpp"
 #include "Note.hpp"
+#include "ParentedGui.hpp"
 #include "Pipeline.hpp"
 #include "PipelineLayout.hpp"
 #include "RenderPass.hpp"

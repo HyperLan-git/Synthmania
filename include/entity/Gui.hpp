@@ -28,6 +28,9 @@ class Gui {
     void setZ(float z);
     void setSize(glm::vec2 size);
 
+    void setDestroyed();
+    bool isDestroyed();
+
     virtual bool update(float time);
 
     virtual ShaderData* getShaderData() const;
@@ -40,4 +43,5 @@ class Gui {
     float rotation = 0;
     glm::vec2 size = {1, 1};
     const char* name;
+    bool destroyed = false;
 };

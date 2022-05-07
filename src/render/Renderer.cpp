@@ -34,6 +34,7 @@ void Renderer::initVulkan() {
     textures.push_back(readTexture("resources/no_racist.png",
                                    "note_2th"));  // hehehe get infuriated pls
     textures.push_back(readTexture("resources/racism2.png", "note_1"));
+    textures.push_back(readTexture("resources/hashtag.png", "sharp"));
     Entity* e = new Entity(model, getTextureByName(textures, "room"), "Bob");
     entities.push_back(e);
     addGui(new Gui(getTextureByName(textures, "partition"), "bg"));
@@ -560,10 +561,15 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
 
     commandBuffer->bindDescriptorSet(guiPipeline,
                                      guiDescriptorSets[currentFrame]);
+    // Oopsie I just realized I did update in renderer oopsie doopsie woopsie
+    // (oops)
     std::vector<Gui*> toDestroy;
     for (auto iter = guis.begin(); iter != guis.end(); iter++) {
         Gui* g = *iter;
-        if (g->update(time_from_start)) toDestroy.push_back(g);
+        if (g->update(time_from_start)) {
+            g->setDestroyed();
+            toDestroy.push_back(g);
+        }
         ImageView* texture = g->getTexture();
         if (lastTexture != texture) {
             size_t idx = 0;

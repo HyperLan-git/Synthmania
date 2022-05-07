@@ -6,13 +6,13 @@
 #define STBI_NO_HDR
 #define STBI_NO_PIC
 #define STBI_NO_PNM
-
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
 
 #include <iostream>
 #include <stdexcept>
 
+#include "AudioHandler.hpp"
 #include "MidiHandler.hpp"
 #include "Renderer.hpp"
 #include "Window.hpp"
@@ -25,13 +25,25 @@ int main(int argc, char **argv) {
         const char *path = "resources/bruh.MID";
         if (argc > 1) path = argv[1];
         auto result = handler->readMidi(path);
+        AudioHandler *audio = new AudioHandler();
         for (MidiNote note : result.notes) {
             char name[255] = "Note_";
-            strcat(name, std::to_string(std::hash<MidiNote>()(note)).c_str());
+            const char *hash =
+                std::to_string(std::hash<MidiNote>()(note)).c_str();
+            strcat(name, hash);
             Note *n = new Note(name, note.timestamp / 1000000.f, note.note,
                                0.25f, renderer->getTextures());
-            std::cout << n->getName() << "\n";
             renderer->addGui(n);
+            if (!isFromCMajor(note.note)) {
+                strcpy(name, "Sharp_");
+                strcat(name, hash);
+                ParentedGui *sharp = new ParentedGui(
+                    getTextureByName(renderer->getTextures(), "sharp"), name,
+                    n);
+                sharp->setPosition({-0.25, 0.15});
+                sharp->setSize({0.25, 0.25});
+                renderer->addGui(sharp);
+            }
         }
         Judgement *bar =
             new Judgement("judgement", renderer->getTextures(), result);
@@ -41,7 +53,10 @@ int main(int argc, char **argv) {
         while (!window->shouldClose()) {
             glfwPollEvents();
             renderer->render();
+            audio->update();
         }
+
+        delete audio;
 
         delete handler;
 

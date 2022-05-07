@@ -13,7 +13,12 @@ int getDifferenceFromC4(u_char pitch) {
     if (key > 9) result--;
     return result;
 }
-#include <iostream>
+
+bool isFromCMajor(u_char pitch) {
+    u_char key = pitch % 12;
+    return !(key == 1 || key == 3 || key == 6 || key == 8 || key == 10);
+}
+
 ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
                              float duration, Key currentKey) {
     float initial = 1;
