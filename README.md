@@ -10,6 +10,8 @@ You will need to install :
 - OpenAL with ALUT
 - libremidi (just clone the repo in here)
 - glslc
+- boost
+Imma keep the latest versions of those and make sure project compiles with
 
 # Compilation
 I have no clue what I'm doing but I thought it would be a good idea to make headers organized in a file system.

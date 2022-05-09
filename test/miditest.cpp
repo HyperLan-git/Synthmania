@@ -1,7 +1,7 @@
 #include "MidiHandler.hpp"
 
 int main(int argc, char** argv) {
-    const char* path = "resources/bruh.MID";
+    const char* path = "resources/songs/examplesong/bruh.MID";
     if (argc > 1) path = argv[1];
     MidiHandler handler;
     auto result = handler.readMidi(path);

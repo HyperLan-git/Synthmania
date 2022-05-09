@@ -22,19 +22,25 @@ void Renderer::initVulkan() {
                           {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}},
                           {{-0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}}},
                          {3, 0, 2, 0, 1, 2}, &physicalDevice, device);
-    Model* model = new Model("resources/room.obj", &physicalDevice, device);
+    Model* model =
+        new Model("resources/models/room.obj", &physicalDevice, device);
     models.push_back(model);
-    textures.push_back(readTexture("resources/viking_room.png", "room"));
-    textures.push_back(readTexture("resources/partition.png", "partition"));
     textures.push_back(
-        readTexture("resources/judgement.png", "judgement_line"));
-    textures.push_back(readTexture("resources/how_to_draw.png", "sol_key"));
-    textures.push_back(readTexture("resources/taptap.png", "note_8th"));
-    textures.push_back(readTexture("resources/racism.png", "note_4th"));
-    textures.push_back(readTexture("resources/no_racist.png",
+        readTexture("resources/textures/viking_room.png", "room"));
+    textures.push_back(
+        readTexture("resources/textures/partition.png", "partition"));
+    textures.push_back(
+        readTexture("resources/textures/judgement.png", "judgement_line"));
+    textures.push_back(
+        readTexture("resources/textures/how_to_draw.png", "sol_key"));
+    textures.push_back(
+        readTexture("resources/textures/taptap.png", "note_8th"));
+    textures.push_back(
+        readTexture("resources/textures/racism.png", "note_4th"));
+    textures.push_back(readTexture("resources/textures/no_racist.png",
                                    "note_2th"));  // hehehe get infuriated pls
-    textures.push_back(readTexture("resources/racism2.png", "note_1"));
-    textures.push_back(readTexture("resources/hashtag.png", "sharp"));
+    textures.push_back(readTexture("resources/textures/racism2.png", "note_1"));
+    textures.push_back(readTexture("resources/textures/hashtag.png", "sharp"));
     Entity* e = new Entity(model, getTextureByName(textures, "room"), "Bob");
     entities.push_back(e);
     addGui(new Gui(getTextureByName(textures, "partition"), "bg"));

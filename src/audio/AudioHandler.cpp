@@ -28,7 +28,7 @@ AudioHandler::AudioHandler(const ALCchar* device) {
     if (!alutInitWithoutContext(NULL, NULL))
         throw std::runtime_error("Couldn't init ALUT !");
 
-    AudioBuffer* buffer = new AudioBuffer("resources/YEAHBABY.wav");
+    AudioBuffer* buffer = new AudioBuffer("resources/sounds/YEAHBABY.wav");
 
     addSound("penguinz0", buffer);
     playSound("penguinz0");

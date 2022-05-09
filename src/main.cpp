@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
         MidiHandler *handler = new MidiHandler();
         Window *window = new Window(1920, 1080, "Synthmania");
         Renderer *renderer = new Renderer(window);
-        const char *path = "resources/bruh.MID";
+        const char *path = "resources/songs/examplesong/bruh.MID";
         if (argc > 1) path = argv[1];
         auto result = handler->readMidi(path);
         AudioHandler *audio = new AudioHandler();
@@ -31,8 +31,9 @@ int main(int argc, char **argv) {
             const char *hash =
                 std::to_string(std::hash<MidiNote>()(note)).c_str();
             strcat(name, hash);
-            Note *n = new Note(name, note.timestamp / 1000000.f, note.note,
-                               0.25f, renderer->getTextures());
+            Note *n = new Note(name, 3 + note.timestamp / 1000000.f, note.note,
+                               note.length / result.MPQ / 8.0,
+                               renderer->getTextures());
             renderer->addGui(n);
             if (!isFromCMajor(note.note)) {
                 strcpy(name, "Sharp_");
@@ -49,7 +50,7 @@ int main(int argc, char **argv) {
             new Judgement("judgement", renderer->getTextures(), result);
         bar->setPosition({-1.4f, 0.f});
         bar->setSize({0.25f, 1.f});
-        renderer->addGui(bar);
+        // renderer->addGui(bar);
         while (!window->shouldClose()) {
             glfwPollEvents();
             renderer->render();
