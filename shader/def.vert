@@ -10,6 +10,7 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
 
 layout(location = 0) out vec2 fragTexCoord;
+layout(location = 1) out vec4 color;
 
 layout(push_constant) uniform PushConstants {
     vec3 position;
@@ -29,6 +30,7 @@ vec4 quat_mult(vec4 q1, vec4 q2)
 
 void main() {
     vec4 v;
+    color = vec4(1, 1, 1, 1);
     vec3 pos = constants.position,
         size = constants.size;
     vec4 rot = constants.rotation,

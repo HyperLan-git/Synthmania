@@ -32,6 +32,7 @@ ShaderData* Judgement::getShaderData() const {
     edata->pos = position;
     edata->rot = rotation;
     edata->size = size;
+    edata->color = color;
     data->data = edata;
     data->size = sizeof(GuiData);
     return data;

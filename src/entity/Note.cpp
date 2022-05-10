@@ -39,6 +39,7 @@ glm::vec2 getSizeAndLocForNote(float duration) {
     if (duration < 1.f) i = -(1.f) / duration;
     switch (i) {
         case -4:
+        case -2:
             return {0.36f, 0.53f};
         case 1:
             return {0.5f, 0.25f};
@@ -51,6 +52,7 @@ Note::Note(const char* name, float time, u_char pitch, float duration,
            std::vector<ImageView*> textures)
     : Gui(getTextureForNote(textures, pitch, duration, Key::SOL), name) {
     this->time = time;
+    this->kill_moment = time + HIT_WINDOW;
     glm::vec2 temp = getSizeAndLocForNote(duration);
     this->position.y = temp.x - 0.083f * getDifferenceFromC4(pitch);
     this->size = {temp.y, temp.y};
@@ -63,12 +65,28 @@ ShaderData* Note::getShaderData() const {
     edata->pos = position;
     edata->rot = rotation;
     edata->size = size;
+    edata->color = color;
     data->data = edata;
     data->size = sizeof(GuiData);
     return data;
 }
 
+void Note::setStatus(NoteStatus status) {
+    this->status = status;
+    if (status == HIT)
+        color = {0, 1, 0, 1};
+    else if (status == MISSED)
+        color = {1, 0, 0, 1};
+    else
+        color = {1, 1, 1, 1};
+}
+
 bool Note::update(float time) {
     this->position.x = (this->time - time) * 2 - 1.4f;
-    return time > this->time;
+    if (this->status == WAITING && (kill_moment) < time) setStatus(MISSED);
+
+    if (this->kill_moment < time)
+        this->color.a = 1 + (this->kill_moment - time) / DELETE_ANIM;
+
+    return kill_moment + DELETE_ANIM <= time;
 }

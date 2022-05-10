@@ -12,6 +12,7 @@ struct GuiData {
     alignas(16) glm::vec3 pos;
     alignas(4) float rot;
     alignas(8) glm::vec2 size;
+    alignas(16) glm::vec4 color;
 };
 
 class Gui {
@@ -23,6 +24,7 @@ class Gui {
     glm::vec3 getPosition() const;
     float getRotation() const;
     glm::vec2 getSize() const;
+    glm::vec4 getColor() const;
 
     void setPosition(glm::vec2 pos);
     void setZ(float z);
@@ -42,6 +44,7 @@ class Gui {
     glm::vec3 position = {0, 0, 0};
     float rotation = 0;
     glm::vec2 size = {1, 1};
+    glm::vec4 color = {1, 1, 1, 1};
     const char* name;
     bool destroyed = false;
 };

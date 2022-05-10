@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
             const char *hash =
                 std::to_string(std::hash<MidiNote>()(note)).c_str();
             strcat(name, hash);
-            Note *n = new Note(name, 3 + note.timestamp / 1000000.f, note.note,
+            Note *n = new Note(name, note.timestamp / 1000000.f, note.note,
                                note.length / result.MPQ / 8.0,
                                renderer->getTextures());
             renderer->addGui(n);
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
             new Judgement("judgement", renderer->getTextures(), result);
         bar->setPosition({-1.4f, 0.f});
         bar->setSize({0.25f, 1.f});
-        // renderer->addGui(bar);
+        renderer->addGui(bar);
         while (!window->shouldClose()) {
             glfwPollEvents();
             renderer->render();

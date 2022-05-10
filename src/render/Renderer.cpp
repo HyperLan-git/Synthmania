@@ -46,14 +46,9 @@ void Renderer::initVulkan() {
     addGui(new Gui(getTextureByName(textures, "partition"), "bg"));
     addGui(new Gui(getTextureByName(textures, "partition"), "partition"));
     addGui(new Gui(getTextureByName(textures, "sol_key"), "key"));
-    /*addGui(new Note("the first of many, the chosen C", 4, 60, 0.5f,
-    textures)); addGui(new Note("E, the second", 4, 64, 0.5f, textures));
-    addGui(new Note("G, the third", 4.3333f, 67, 0.5f, textures));
-    addGui(new Note("D5, the sussy imposter", 4.6666f, 74, 0.5f, textures));
-    addGui(new Note("E5, the nice crewmate", 5.f, 76, 1.f, textures));*/
     guis[0]->setSize({10, 30});
     guis[1]->setSize({10, 1});
-    guis[2]->setPosition({-1.5f, 0.1f});
+    guis[2]->setPosition({-1.7f, 0.1f});
     guis[2]->setSize({0.8f, 0.8f});
     guiSampler = new TextureSampler(&physicalDevice, device);
     textureSampler = new TextureSampler(&physicalDevice, device);

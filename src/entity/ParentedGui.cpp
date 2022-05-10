@@ -18,6 +18,7 @@ ShaderData* ParentedGui::getShaderData() const {
                   position.z - parent->getPosition().z);
     edata->rot = rotation + rot;
     edata->size = size;
+    edata->color = parent->getColor();
     data->data = edata;
     data->size = sizeof(GuiData);
     return data;

@@ -1,7 +1,8 @@
 {
-    "_comment": "diffs is an array of difficulties, audio is the audio file, offset is the audio offset relative to the midi, animation is the special script file or library (WIP)",
+    "_comment": "diffs is an array of difficulties, audio is the audio file, offset is the audio offset (micros) relative to the midi, animation is the special script file or library (WIP)",
     "diffs": [
         {
+            "_comment": "The name is the display name, midi is the midi file and track is the midi track",
             "name": "Normal",
             "midi": "bruh.MID",
             "track": 0

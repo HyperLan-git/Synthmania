@@ -10,6 +10,7 @@ const char* Gui::getName() const { return name; }
 glm::vec3 Gui::getPosition() const { return position; }
 float Gui::getRotation() const { return (rotation - ((int)rotation / (M_PI))); }
 glm::vec2 Gui::getSize() const { return size; }
+glm::vec4 Gui::getColor() const { return color; }
 
 void Gui::setPosition(glm::vec2 pos) {
     this->position = glm::vec3(pos.x, pos.y, position.z);
@@ -31,6 +32,7 @@ ShaderData* Gui::getShaderData() const {
     edata->pos = position;
     edata->rot = rotation;
     edata->size = size;
+    edata->color = color;
     data->data = edata;
     data->size = sizeof(GuiData);
     return data;

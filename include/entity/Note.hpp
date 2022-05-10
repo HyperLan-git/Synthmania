@@ -11,7 +11,12 @@ class Note;
 #include <map>
 #include <string>
 
+#define HIT_WINDOW 0.1
+#define DELETE_ANIM 0.1
+
 enum Key { SOL, FA };
+
+enum NoteStatus { WAITING, HIT, MISSED };
 
 ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
                              float duration, Key currentKey);
@@ -27,6 +32,8 @@ class Note : public Gui {
     Note(const char* name, float time, u_char pitch, float duration,
          std::vector<ImageView*> textures);
 
+    void setStatus(NoteStatus status);
+
     virtual bool update(float time);
 
     virtual ShaderData* getShaderData() const;
@@ -34,4 +41,6 @@ class Note : public Gui {
    private:
     float time;
     u_char pitch;
+    double kill_moment;
+    NoteStatus status = WAITING;
 };

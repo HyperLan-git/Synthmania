@@ -10,15 +10,18 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
 
 layout(location = 0) out vec2 fragTexCoord;
+layout(location = 1) out vec4 color;
 
 layout(push_constant) uniform PushConstants {
     vec3 position;
     float rotation;
     vec2 size;
+    vec4 color;
 } constants;
 
 void main() {
     vec4 v;
+    color = constants.color;
     vec3 pos = constants.position;
     vec2 size = constants.size;
     float rotation = constants.rotation;
