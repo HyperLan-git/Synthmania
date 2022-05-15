@@ -12,30 +12,20 @@ size_t std::hash<libremidi::message>::operator()(
 
 MidiHandler::MidiHandler() {
     start_time = micros();
-    /*libremidi::midi_out out;
-    for (int i = 0, N = out.get_port_count(); i < N; i++) {
-        // Information on port number i
-        std::string name = out.get_port_name(i);
-        std::cout << "out:" << name << std::endl;
-    }
-    libremidi::midi_in midi;
-    for (int i = 0, N = midi.get_port_count(); i < N; i++) {
-        // Information on port number i
-        std::string name = midi.get_port_name(i);
-        std::cout << "in:" << name << std::endl;
-    }
-    midi.open_port(0);
+    openPort(0);
+}
 
-    // Setup a callback for incoming messages.
-    // This should be done immediately after opening the port
-    // to avoid having incoming messages written to the
-    // queue instead of sent to the callback function.
+std::vector<std::string> MidiHandler::getMidiPorts() {
+    std::vector<std::string> result;
+    for (int i = 0, N = in.get_port_count(); i < N; i++) {
+        std::string name = in.get_port_name(i);
+        result.push_back(name);
+    }
+    return result;
+}
 
-    // Note that the callback will be invoked from a separate thread,
-    // it is up to you to protect your data structures afterwards.
-    // For instance if you are using a GUI toolkit, don't do GUI actions
-    // in that callback !
-    midi.set_callback([this](const libremidi::message &message) {
+void MidiHandler::openPort(uint port) {
+    in.set_callback([this](const libremidi::message &message) {
         // int bit = message[0] >> 7; // Should always be 1
         int type = (message[0] >> 4) - 8;
         int channel = (message[0]) & 0xF;
@@ -61,7 +51,14 @@ MidiHandler::MidiHandler() {
             m.timestamp = micros() - this->start_time;
             this->messages.push(m);
         }
-    });*/
+    });
+    in.open_port(port);
+}
+
+void MidiHandler::openPort(uint port,
+                           libremidi::midi_in::message_callback callback) {
+    in.set_callback(callback);
+    in.open_port(port);
 }
 
 TrackPartition MidiHandler::readMidi(const char *path) {
@@ -72,7 +69,7 @@ TrackPartition MidiHandler::readMidi(const char *path) {
                  std::istreambuf_iterator<char>());
 
     // Initialize our reader object
-    libremidi::reader r;
+    libremidi::reader r = libremidi::reader(false);
 
     // Parse
     libremidi::reader::parse_result result = r.parse(bytes);
@@ -85,19 +82,32 @@ TrackPartition MidiHandler::readMidi(const char *path) {
     // and 0x3FFF = +2 semitones
     std::vector<MidiNote> currentNotes;
     for (auto &track : r.tracks) {
-        uint64_t t = 0;
+        unsigned long long t = 0;
         for (auto &event : track) {
             libremidi::message message = event.m;
-            uint64_t dt =
-                event.tick * 1000000 / r.ticksPerBeat * 60 / r.startingTempo;
+            unsigned long long dt = event.tick;
+            dt = dt * 1000000 / r.ticksPerBeat * 60 * 120 / r.startingTempo /
+                 170;
+            if (event.tick == track[452].tick) {
+                std::cout << "message = " << std::hex << (int)track[452].m[0]
+                          << " " << (int)track[452].m[1] << " "
+                          << (int)track[452].m[2] << std::endl;
+                std::cout << "duration = " << dt << std::endl;
+            }
             t += dt;
             switch (message.get_message_type()) {
                 case libremidi::message_type::NOTE_ON:
                     for (auto iter = currentNotes.begin();
                          iter != currentNotes.end(); iter++) {
-                        if ((*iter).note == message.bytes[1] &&
-                            (t >= (*iter).timestamp)) {
+                        if ((*iter).note == message.bytes[1]) {
                             uint64_t length = t - (*iter).timestamp;
+                            if (length == 0) {
+                                std::cout << "f= " << message[0] << " "
+                                          << message[1] << " " << message[2]
+                                          << " " << message[3] << " "
+                                          << message[4] << " " << message[5]
+                                          << " ";
+                            }
                             (*iter).length = length;
                             notes.push_back(*iter);
                             currentNotes.erase(iter);
@@ -113,9 +123,15 @@ TrackPartition MidiHandler::readMidi(const char *path) {
                 case libremidi::message_type::NOTE_OFF:
                     for (auto iter = currentNotes.begin();
                          iter != currentNotes.end(); iter++) {
-                        if ((*iter).note == message.bytes[1] &&
-                            (t > (*iter).timestamp)) {
+                        if ((*iter).note == message.bytes[1]) {
                             uint64_t length = t - (*iter).timestamp;
+                            if (length == 0) {
+                                std::cout << "f= " << message[0] << " "
+                                          << message[1] << " " << message[2]
+                                          << " " << message[3] << " "
+                                          << message[4] << " " << message[5]
+                                          << " ";
+                            }
                             (*iter).length = length;
                             notes.push_back(*iter);
                             currentNotes.erase(iter);
@@ -126,14 +142,21 @@ TrackPartition MidiHandler::readMidi(const char *path) {
                 case libremidi::message_type::PITCH_BEND:
                     break;
                 case libremidi::message_type::CONTROL_CHANGE:
+                    std::cout << "msg=" << std::hex << (int)message[0] << " "
+                              << (int)message[1] << std::endl;
                     break;
                 case libremidi::message_type::PROGRAM_CHANGE:
+                    std::cout << "msg=" << std::hex << (int)message[0] << " "
+                              << (int)message[1] << std::endl;
                     break;
                 case libremidi::message_type::SYSTEM_RESET:
+                    std::cout << "msg=" << std::hex << (int)message[0] << " "
+                              << (int)message[1] << " " << (int)message[1]
+                              << std::endl;
                     break;
                 default:
-                    std::cout << "msg=" << (int)message.get_message_type()
-                              << std::endl;
+                    std::cout << "msg=" << std::hex << (int)message[0] << " "
+                              << (int)message[1] << std::endl;
                     break;
             }
         }
@@ -155,7 +178,7 @@ Message MidiHandler::getMessage() {
     return val;
 }
 
-MidiHandler::~MidiHandler() {}
+MidiHandler::~MidiHandler() { in.set_callback(NULL); }
 
 uint64_t micros() {
     uint64_t us =

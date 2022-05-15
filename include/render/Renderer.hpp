@@ -1,5 +1,10 @@
 #pragma once
+
+class Renderer;
+
 #define NDEBUG
+
+#include "Synthmania.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -78,16 +83,22 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
 
 class Renderer {
    public:
-    Renderer(Window* window);
+    Renderer(Synthmania* theGame, Window* window);
 
     void render();
 
-    void addGui(Gui* gui);
     std::vector<ImageView*> getTextures();
+
+    void setStartTime(double start);
+
+    VkPhysicalDevice* getPhysicalDevice();
+    Device* getDevice();
 
     ~Renderer();
 
    private:
+    Synthmania* game;
+
     Window* window;
 
     Instance* instance;
@@ -133,11 +144,13 @@ class Renderer {
     std::vector<Fence*> inFlightFences;
     uint32_t currentFrame = 0;
 
-    std::vector<Entity*> entities;
-    std::vector<Gui*> guis;
     std::vector<Model*> models;
     std::vector<ImageView*> textures;
     std::vector<ShaderDescriptorSet*> textureAccessors;
+
+    std::chrono::_V2::system_clock::time_point begTime =
+        std::chrono::high_resolution_clock::now();
+    double startTime = 0;
 
     Model* guiModel;
 

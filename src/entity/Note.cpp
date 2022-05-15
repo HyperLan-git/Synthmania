@@ -20,24 +20,27 @@ bool isFromCMajor(u_char pitch) {
 }
 
 ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
-                             float duration, Key currentKey) {
+                             double duration, Key currentKey) {
     float initial = 1;
     std::string texName = "note_";
     while (initial > duration) initial /= 2;
+    std::cout << duration << " " << (int)pitch << std::endl;
+    if (duration == 0) initial = 0.125f;
+
     if (initial < 1)
         texName += std::to_string((int)(1.0 / initial)) +
                    "th";  // Yeah secondth deal with it
     else
         texName += std::to_string((int)initial);
-    // std::cout << duration << " " << texName << std::endl;
 
     return getTextureByName(textures, texName.c_str());
 }
 
-glm::vec2 getSizeAndLocForNote(float duration) {
+glm::vec2 getSizeAndLocForNote(double duration) {
     int i = duration;
     if (duration < 1.f) i = -(1.f) / duration;
     switch (i) {
+        case -8:
         case -4:
         case -2:
             return {0.36f, 0.53f};
@@ -48,7 +51,7 @@ glm::vec2 getSizeAndLocForNote(float duration) {
     }
 }
 
-Note::Note(const char* name, float time, u_char pitch, float duration,
+Note::Note(const char* name, int64_t time, u_char pitch, double duration,
            std::vector<ImageView*> textures)
     : Gui(getTextureForNote(textures, pitch, duration, Key::SOL), name) {
     this->time = time;
@@ -73,20 +76,27 @@ ShaderData* Note::getShaderData() const {
 
 void Note::setStatus(NoteStatus status) {
     this->status = status;
+    if (status == WAITING) {
+        color = {1, 1, 1, 1};
+        return;
+    }
     if (status == HIT)
         color = {0, 1, 0, 1};
-    else if (status == MISSED)
-        color = {1, 0, 0, 1};
     else
-        color = {1, 1, 1, 1};
+        color = {1, 0, 0, 1};
 }
 
-bool Note::update(float time) {
-    this->position.x = (this->time - time) * 2 - 1.4f;
-    if (this->status == WAITING && (kill_moment) < time) setStatus(MISSED);
+int64_t Note::getTime() { return this->time; }
 
-    if (this->kill_moment < time)
-        this->color.a = 1 + (this->kill_moment - time) / DELETE_ANIM;
+u_char Note::getPitch() { return pitch; }
 
-    return kill_moment + DELETE_ANIM <= time;
+bool Note::update(int64_t time) {
+    this->position.x = (this->time - time) / 300000. - 1.4f;
+    if (this->status == WAITING && kill_moment < time) setStatus(MISSED);
+
+    if (this->kill_moment < time) {
+        this->color.a = 1. + (this->kill_moment - time) / (double)DELETE_ANIM;
+    }
+
+    return (int64_t)(kill_moment + DELETE_ANIM) <= time;
 }

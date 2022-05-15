@@ -18,7 +18,7 @@ class Judgement : public Gui {
     Judgement(const char* name, std::vector<ImageView*> textures,
               TrackPartition notes);
 
-    virtual bool update(float time);
+    virtual bool update(int64_t time);
 
     virtual ShaderData* getShaderData() const;
 

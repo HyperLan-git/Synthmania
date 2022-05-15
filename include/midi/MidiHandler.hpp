@@ -33,14 +33,22 @@ struct Message {
 class MidiHandler {
    public:
     MidiHandler();
+
     bool hasMessage();
     Message getMessage();
     TrackPartition readMidi(const char* path);
+
+    std::vector<std::string> getMidiPorts();
+    void openPort(uint port);
+    void openPort(uint port, libremidi::midi_in::message_callback callback);
+
     ~MidiHandler();
 
    private:
     boost::lockfree::queue<Message> messages{100};
     uint64_t start_time;
+    libremidi::midi_out out;
+    libremidi::midi_in in;
 };
 
 uint64_t micros();

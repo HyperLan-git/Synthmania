@@ -8,7 +8,7 @@ class ParentedGui : public Gui {
    public:
     ParentedGui(ImageView* texture, const char* name, Gui* parent);
 
-    virtual bool update(float time);
+    virtual bool update(int64_t time);
 
     virtual ShaderData* getShaderData() const;
 

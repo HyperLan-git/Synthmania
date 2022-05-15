@@ -5,7 +5,7 @@ ParentedGui::ParentedGui(ImageView* texture, const char* name, Gui* parent)
     this->parent = parent;
 }
 
-bool ParentedGui::update(float time) { return parent->isDestroyed(); }
+bool ParentedGui::update(int64_t time) { return parent->isDestroyed(); }
 
 ShaderData* ParentedGui::getShaderData() const {
     ShaderData* data = new ShaderData();

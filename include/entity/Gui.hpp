@@ -33,7 +33,7 @@ class Gui {
     void setDestroyed();
     bool isDestroyed();
 
-    virtual bool update(float time);
+    virtual bool update(int64_t time);
 
     virtual ShaderData* getShaderData() const;
 

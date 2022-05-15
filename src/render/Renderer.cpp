@@ -3,7 +3,8 @@
 
 #include <stdlib.h>
 
-Renderer::Renderer(Window* window) {
+Renderer::Renderer(Synthmania* game, Window* window) {
+    this->game = game;
     this->window = window;
     initVulkan();
 }
@@ -22,9 +23,6 @@ void Renderer::initVulkan() {
                           {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}},
                           {{-0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}}},
                          {3, 0, 2, 0, 1, 2}, &physicalDevice, device);
-    Model* model =
-        new Model("resources/models/room.obj", &physicalDevice, device);
-    models.push_back(model);
     textures.push_back(
         readTexture("resources/textures/viking_room.png", "room"));
     textures.push_back(
@@ -41,17 +39,11 @@ void Renderer::initVulkan() {
                                    "note_2th"));  // hehehe get infuriated pls
     textures.push_back(readTexture("resources/textures/racism2.png", "note_1"));
     textures.push_back(readTexture("resources/textures/hashtag.png", "sharp"));
-    Entity* e = new Entity(model, getTextureByName(textures, "room"), "Bob");
-    entities.push_back(e);
-    addGui(new Gui(getTextureByName(textures, "partition"), "bg"));
-    addGui(new Gui(getTextureByName(textures, "partition"), "partition"));
-    addGui(new Gui(getTextureByName(textures, "sol_key"), "key"));
-    guis[0]->setSize({10, 30});
-    guis[1]->setSize({10, 1});
-    guis[2]->setPosition({-1.7f, 0.1f});
-    guis[2]->setSize({0.8f, 0.8f});
     guiSampler = new TextureSampler(&physicalDevice, device);
     textureSampler = new TextureSampler(&physicalDevice, device);
+    Model* model =
+        new Model("resources/models/room.obj", &physicalDevice, device);
+    models.push_back(model);
     createVertexBuffer(model->toVertexBuffer()->getSize());
     createIndexBuffer(model->toIndicesBuffer()->getSize());
     createUniformBuffers();
@@ -75,6 +67,11 @@ void Renderer::initVulkan() {
         inFlightFences.push_back(new Fence(device));
     }
 }
+
+VkPhysicalDevice* Renderer::getPhysicalDevice() { return &physicalDevice; }
+Device* Renderer::getDevice() { return device; }
+
+void Renderer::setStartTime(double start) { this->startTime = start; }
 
 std::vector<ImageView*> Renderer::getTextures() { return textures; }
 
@@ -111,8 +108,6 @@ Renderer::~Renderer() {
 
     delete guiModel;
 
-    for (Entity* e : entities) delete e;
-    for (Gui* g : guis) delete g;
     for (Model* m : models) delete m;
     for (ImageView* i : textures) {
         delete i->getImage();
@@ -232,15 +227,6 @@ void Renderer::createGraphicsPipeline() {
     delete range;
     delete vertShader;
     delete fragShader;
-}
-
-void Renderer::addGui(Gui* gui) {
-    if (guis.empty()) {
-        gui->setZ(0.9999f);
-    } else {
-        gui->setZ((*--guis.end())->getPosition().z - 0.0001f);
-    }
-    this->guis.push_back(gui);
 }
 
 void Renderer::createGuiPipeline() {
@@ -494,8 +480,6 @@ void Renderer::createDescriptorSets() {
     }
 }
 
-float time_from_start = 0;
-
 void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
                                    uint32_t imageIndex) {
     commandBuffer->reset();
@@ -510,14 +494,13 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
 
     Model* lastModel = nullptr;
     ImageView* lastTexture = nullptr;
+    std::vector<Entity*> entities = game->getEntities();
     if (!entities.empty()) {
         commandBuffer->bindPipeline(graphicsPipeline);
 
         commandBuffer->bindDescriptorSet(graphicsPipeline,
                                          descriptorSets[currentFrame]);
-        std::vector<Entity*> toDestroy;
         for (Entity* e : entities) {
-            if (e->update(time_from_start)) toDestroy.push_back(e);
             Model* model = e->getModel();
             ImageView* texture = e->getTexture();
             if (lastModel != model) {
@@ -540,15 +523,6 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
             lastModel = model;
             lastTexture = texture;
         }
-
-        for (Entity* e : toDestroy)
-            for (std::vector<Entity*>::iterator iter = entities.begin();
-                 iter != entities.end(); iter++)
-                if (e == *iter) {
-                    entities.erase(iter);
-                    delete e;
-                    break;
-                }
     }
 
     commandBuffer->bindPipeline(guiPipeline);
@@ -562,20 +536,24 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
 
     commandBuffer->bindDescriptorSet(guiPipeline,
                                      guiDescriptorSets[currentFrame]);
-    // Oopsie I just realized I did update in renderer oopsie doopsie woopsie
-    // (oops)
-    std::vector<Gui*> toDestroy;
+
+    std::vector<Gui*> guis = game->getGuis();
     for (auto iter = guis.begin(); iter != guis.end(); iter++) {
         Gui* g = *iter;
-        if (g->update(time_from_start)) {
-            g->setDestroyed();
-            toDestroy.push_back(g);
-        }
         ImageView* texture = g->getTexture();
+        if (texture == NULL) {
+            throw std::runtime_error("No textures ???");
+        }
         if (lastTexture != texture) {
             size_t idx = 0;
             for (idx = 0; idx < textures.size(); idx++) {
                 if (textures[idx] == texture) break;
+            }
+            if (idx >= textures.size()) {
+                std::string err = "Texture ";
+                err.append(texture->getName());
+                err.append(" not found !");
+                throw std::runtime_error(err);
             }
             commandBuffer->bindDescriptorSet(
                 guiPipeline, guiDescriptorSets[idx * 2 + currentFrame]);
@@ -583,14 +561,6 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
         drawGui(g, commandBuffer);
         lastTexture = texture;
     }
-    for (Gui* g : toDestroy)
-        for (std::vector<Gui*>::iterator iter = guis.begin();
-             iter != guis.end(); iter++)
-            if (g == *iter) {
-                guis.erase(iter);
-                delete g;
-                break;
-            }
 
     commandBuffer->endRenderPass();
 
@@ -622,13 +592,7 @@ void Renderer::drawGui(Gui* gui, CommandBuffer* commandBuffer) {
 }
 
 void Renderer::updateUniformBuffer(uint32_t currentImage) {
-    static auto startTime = std::chrono::high_resolution_clock::now();
-
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    time_from_start =
-        std::chrono::duration<float, std::chrono::seconds::period>(currentTime -
-                                                                   startTime)
-            .count();
+    double time_from_start = game->getCurrentTimeMillis() / 1000000.;
     float x = cos(time_from_start * 2 / 3) / 2,
           y = sin(time_from_start * 5 / 3) / 2;  // Lissajous :)
 

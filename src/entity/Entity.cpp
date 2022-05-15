@@ -29,9 +29,10 @@ ShaderData* Entity::getShaderData() const {
     return data;
 }
 
-bool Entity::update(float time) {
-    this->rotation.z = sin(time);
-    this->rotation.w = cos(time);
+bool Entity::update(int64_t time) {
+    double t = time / 1000000.;
+    this->rotation.z = sin(t);
+    this->rotation.w = cos(t);
     this->rotation = glm::normalize(this->rotation);
     return false;
 }

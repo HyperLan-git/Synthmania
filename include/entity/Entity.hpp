@@ -29,7 +29,7 @@ class Entity {
     glm::vec4 getRotation() const;
     glm::vec3 getSize() const;
 
-    virtual bool update(float time);
+    virtual bool update(int64_t time);
 
     virtual ShaderData* getShaderData() const;
 

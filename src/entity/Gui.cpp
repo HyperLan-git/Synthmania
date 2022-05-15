@@ -20,7 +20,7 @@ void Gui::setZ(float z) { this->position.z = z; }
 
 void Gui::setSize(glm::vec2 size) { this->size = size; }
 
-bool Gui::update(float time) { return false; }
+bool Gui::update(int64_t time) { return false; }
 
 bool Gui::isDestroyed() { return this->destroyed; }
 
