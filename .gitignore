@@ -3,3 +3,5 @@ libremidi/
 openal-soft/
 resources/songs/*
 !resources/songs/examplesong
+**/*.o
+**/*.log

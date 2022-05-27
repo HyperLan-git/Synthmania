@@ -4,12 +4,6 @@ class Renderer;
 
 #define NDEBUG
 
-#include "Synthmania.hpp"
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <stb_image.h>
-
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -18,6 +12,9 @@ class Renderer;
 #include <cstring>
 #include <fstream>
 #include <functional>
+
+#include "Synthmania.hpp"
+#include "stb_image.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

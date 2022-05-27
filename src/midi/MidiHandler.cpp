@@ -88,12 +88,6 @@ TrackPartition MidiHandler::readMidi(const char *path) {
             unsigned long long dt = event.tick;
             dt = dt * 1000000 / r.ticksPerBeat * 60 * 120 / r.startingTempo /
                  170;
-            if (event.tick == track[452].tick) {
-                std::cout << "message = " << std::hex << (int)track[452].m[0]
-                          << " " << (int)track[452].m[1] << " "
-                          << (int)track[452].m[2] << std::endl;
-                std::cout << "duration = " << dt << std::endl;
-            }
             t += dt;
             switch (message.get_message_type()) {
                 case libremidi::message_type::NOTE_ON:

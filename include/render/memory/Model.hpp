@@ -4,9 +4,7 @@ struct Vertex;
 struct UniformBufferObject;
 class Model;
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <tiny_obj_loader.h>
+#include <vulkan/vulkan.h>
 
 #include <array>
 #include <cstring>
@@ -16,6 +14,7 @@ class Model;
 
 #include "Buffer.hpp"
 #include "Device.hpp"
+#include "tiny_obj_loader.h"
 
 typedef struct VkVertexInputAttributeDescription VIADesc;
 

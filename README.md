@@ -11,15 +11,15 @@ You will need to install :
 - libremidi (just clone the repo in here)
 - glslc
 - boost
-Imma keep the latest versions of those and make sure project compiles with
+Imma keep the latest versions of those and make sure project compiles with them.
 
 # Compilation
 I have no clue what I'm doing but I thought it would be a good idea to make headers organized in a file system.
 This means that you will have to -I every subfolder of include and the includes of every library used that is not immediately available to the compiler. You could also just put every header in the same folder and compile from there lol
 
-I'd like to setup object files so that I don't have to wait 30s that stbimage compiles.
+Object files are now setup this is so cool not having to wait 1 min each time I add a space in the source code.
 
 # Development
-I'll probably put some screenshots of what the game looks like for people who don't want to/know how to compile and try the thing for yourself. Or I'll actually do something right and code short scripts to detect your platform and install everything automatically.
+I'll probably put some screenshots of what the game looks like for people who don't want to/know how to compile and try the thing for themself. Or I'll actually do something right and code short scripts to detect your platform and install everything automatically.
 
 Nah that's too much work I'd rather remake Synthesia using 200h of spare time just to avoid paying 30€.

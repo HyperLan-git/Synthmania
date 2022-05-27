@@ -32,7 +32,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/VulkanTest",
+            "program": "${workspaceFolder}/bin/Synthmania",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

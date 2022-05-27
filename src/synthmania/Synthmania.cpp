@@ -1,13 +1,19 @@
 #include "Synthmania.hpp"
 
-Synthmania::Synthmania() {
+Synthmania::Synthmania(std::string song) {
+    std::string json = song;
+    json.append("/sdata.json");
+    Chart c = readChart(json.c_str());
+    Diff d = c.diffs[0];
     handler = new MidiHandler();
     window = new Window(1920, 1080, "Synthmania");
     renderer = new Renderer(this, window);
     std::vector<ImageView *> textures = renderer->getTextures();
     this->startTime = 2760000;
-    const char *path = "resources/songs/ETEA/ETEA.MID";
-    partition = handler->readMidi(path);
+    std::string path = song;
+    path.append("/");
+    path.append(d.midi);
+    partition = handler->readMidi(path.c_str());
     audio = new AudioHandler();
     // Entity *e = new Entity(model, getTextureByName(textures, "room"), "Bob");
     // entities.push_back(e);

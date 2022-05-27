@@ -2,7 +2,6 @@
 
 class Synthmania;
 
-#define GLFW_INCLUDE_VULKAN
 #define STBI_NO_BMP
 #define STBI_NO_PSD
 #define STBI_NO_TGA
@@ -10,7 +9,6 @@ class Synthmania;
 #define STBI_NO_HDR
 #define STBI_NO_PIC
 #define STBI_NO_PNM
-#include <GLFW/glfw3.h>
 #include <stdlib.h>
 
 #include <iostream>
@@ -19,6 +17,7 @@ class Synthmania;
 #include "AudioHandler.hpp"
 #include "Entity.hpp"
 #include "Gui.hpp"
+#include "JsonHandler.hpp"
 #include "MidiHandler.hpp"
 #include "Note.hpp"
 #include "Renderer.hpp"
@@ -26,7 +25,7 @@ class Synthmania;
 
 class Synthmania {
    public:
-    Synthmania();
+    Synthmania(std::string song);
 
     void run();
     void update();
