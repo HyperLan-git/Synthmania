@@ -13,8 +13,10 @@ void main() {
     c.r *= color.r;
     c.g *= color.g;
     c.b *= color.b;
-    if(c.r + c.g + c.b < 0.1 && color.rgb != vec3(1, 1, 1)) {
-        c.rgb = color.rgb;
+    if(color.rgb != vec3(1, 1, 1)) {
+        c.r = color.r * (1 - c.r);
+        c.g = color.g * (1 - c.g);
+        c.b = color.b * (1 - c.b);
     }
     c.a *= color.a;
     outColor = c;

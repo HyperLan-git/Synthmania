@@ -41,6 +41,9 @@ class AudioSource {
     bool isLooping();
     ALint getQueuedBuffers();
     ALint getProcessedBuffers();
+    ALint getFreq();
+
+    void setSampleOffset(ALfloat value);
 
     ~AudioSource();
 
@@ -48,6 +51,10 @@ class AudioSource {
     ALfloat getSourcef(ALenum param);
     glm::vec3 getSource3f(ALenum param);
     ALint getSourcei(ALenum param);
+
+    void setSourcef(ALenum param, ALfloat value);
+    void setSource3f(ALenum param, glm::vec3 value);
+    void setSourcei(ALenum param, ALint value);
 
     ALuint sourceID;
 };

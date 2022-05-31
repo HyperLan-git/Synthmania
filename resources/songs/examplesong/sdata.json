@@ -8,7 +8,10 @@
             "track": 0
         }
     ],
+    "name": "Test",
+    "artist": "HyperLan",
+    "charter": "HyperLan",
     "audio": "None",
-    "offset": 0,
+    "offset": 3000000,
     "animation": "None"
 }

@@ -42,6 +42,7 @@ ALint AudioSource::getQueuedBuffers() { return getSourcei(AL_BUFFERS_QUEUED); }
 ALint AudioSource::getProcessedBuffers() {
     return getSourcei(AL_BUFFERS_PROCESSED);
 }
+ALint AudioSource::getFreq() { return getSourcei(AL_FREQUENCY); }
 
 ALfloat AudioSource::getSourcef(ALenum param) {
     ALfloat result;
@@ -59,6 +60,22 @@ glm::vec3 AudioSource::getSource3f(ALenum param) {
     glm::vec3 result;
     alGetSource3f(sourceID, param, &result.x, &result.y, &result.z);
     return result;
+}
+
+void AudioSource::setSampleOffset(ALfloat value) {
+    setSourcef(AL_SAMPLE_OFFSET, value);
+}
+
+void AudioSource::setSourcef(ALenum param, ALfloat value) {
+    alSourcef(sourceID, param, value);
+}
+
+void AudioSource::setSource3f(ALenum param, glm::vec3 value) {
+    alSource3f(sourceID, param, value.x, value.y, value.z);
+}
+
+void AudioSource::setSourcei(ALenum param, ALint value) {
+    alSourcei(sourceID, param, value);
 }
 
 AudioSource::~AudioSource() { alDeleteSources(1, &sourceID); }

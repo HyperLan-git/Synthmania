@@ -26,12 +26,15 @@ class AudioHandler {
     void addSound(std::string name, AudioBuffer* sound);
     AudioSource* playSound(std::string name);
 
+    ALCint getSampleRate();
+
     bool update();
 
     ~AudioHandler();
 
    private:
     ALCdevice* device = nullptr;
+    int sampleRate;
     std::vector<AudioSource*> sources;
     std::map<std::string, AudioBuffer*> sounds;
 };

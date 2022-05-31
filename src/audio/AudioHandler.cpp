@@ -27,11 +27,7 @@ AudioHandler::AudioHandler(const ALCchar* device) {
         throw std::runtime_error("Couldn't bind context !");
     if (!alutInitWithoutContext(NULL, NULL))
         throw std::runtime_error("Couldn't init ALUT !");
-
-    AudioBuffer* buffer = new AudioBuffer("resources/songs/ETEA/ETEA.wav");
-
-    addSound("penguinz0", buffer);
-    playSound("penguinz0");
+    alcGetIntegerv(this->device, ALC_FREQUENCY, 1, &sampleRate);
 }
 
 AudioHandler::AudioHandler() : AudioHandler(NULL) {}
@@ -46,6 +42,8 @@ AudioSource* AudioHandler::playSound(std::string name) {
     result->play();
     return result;
 }
+
+ALCint AudioHandler::getSampleRate() { return sampleRate; }
 
 bool AudioHandler::update() {
     for (auto iter = sources.begin(); iter != sources.end(); iter++) {
