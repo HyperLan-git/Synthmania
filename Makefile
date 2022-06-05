@@ -1,4 +1,4 @@
-IDIRS=$(addprefix -I ,$(wildcard include/**/) $(wildcard include/render/**/)) -I libremidi/include/ -I stb -I obj
+IDIRS=$(addprefix -I ,$(wildcard include/**/) $(wildcard include/render/**/)) -I libremidi/include/ -I vst3sdk/base/source/ -I stb -I obj
 
 CFLAGS = -std=c++17 -O2
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -g

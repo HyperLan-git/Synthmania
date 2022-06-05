@@ -20,6 +20,7 @@ class Synthmania;
 #include "JsonHandler.hpp"
 #include "MidiHandler.hpp"
 #include "Note.hpp"
+#include "Precision.hpp"
 #include "Renderer.hpp"
 #include "Window.hpp"
 
@@ -32,6 +33,8 @@ class Synthmania {
 
     std::map<std::string, std::string> readTextures(std::string skin);
     std::map<std::string, std::string> getTextures();
+
+    Renderer *getRenderer();
 
     std::vector<Entity *> getEntities();
     std::vector<Gui *> getGuis();

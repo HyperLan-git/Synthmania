@@ -3,10 +3,20 @@
 class Precision;
 
 #include "Gui.hpp"
+#include "Note.hpp"
+
+#define LINGER_PRECISION 2000000
 
 class Precision : public Gui {
    public:
-    void onHit(uint64_t error);
+    Precision(ImageView* texture, const char* name, uint64_t time,
+              int64_t delta);
+
+    virtual bool update(int64_t time);
+
+    virtual ShaderData* getShaderData() const;
 
    private:
+    uint64_t hit_time;
+    int64_t delta;
 };

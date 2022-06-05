@@ -7,17 +7,11 @@ Synthmania::Synthmania(std::string song, std::string skin) {
     Diff d = c.diffs[0];
     handler = new MidiHandler();
     window = new Window(1920, 1080, "Synthmania");
-    // TODO FILL TEXTURES
     renderer = new Renderer(this, window);
     textures = readTextures(std::string(skin).append("/skin.json"));
-    for (auto &elem : textures) {
+    for (auto &elem : textures)
         elem.second = std::string(skin).append("/").append(elem.second);
-        std::cout << "loading : " << elem.first << "=" << elem.second
-                  << std::endl;
-    }
     renderer->loadTextures(textures);
-    for (auto tex : renderer->getTextures())
-        std::cout << "Texture " << tex->getName() << " present" << std::endl;
     this->startTime = c.offset;
     std::string path = song;
     path.append("/");
@@ -27,13 +21,21 @@ Synthmania::Synthmania(std::string song, std::string skin) {
     // Entity *e = new Entity(model, getTextureByName(textures, "room"), "Bob");
     // entities.push_back(e);
     std::vector<ImageView *> textures = renderer->getTextures();
-    addGui(new Gui(getTextureByName(textures, "partition"), "bg"));
-    addGui(new Gui(getTextureByName(textures, "partition"), "partition"));
-    addGui(new Gui(getTextureByName(textures, "sol_key"), "key"));
-    guis[0]->setSize({10, 30});
-    guis[1]->setSize({10, 1});
-    guis[2]->setPosition({-1.7f, 0.1f});
-    guis[2]->setSize({0.8f, 0.8f});
+    Gui *part = new Gui(getTextureByName(textures, "partition"), "partition"),
+        *bg = new Gui(getTextureByName(textures, "partition"), "bg"),
+        *key = new Gui(getTextureByName(textures, "sol_key"), "key"),
+        *precision =
+            new Gui(getTextureByName(textures, "precision"), "precision");
+    addGui(bg);
+    addGui(part);
+    addGui(key);
+    addGui(precision);
+    bg->setSize({10, 30});
+    part->setSize({10, 1});
+    key->setPosition({-1.7f, 0.1f});
+    key->setSize({0.8f, 0.8f});
+    precision->setSize({1.5f, 0.5f});
+    precision->setPosition({0, 0.9f});
     Judgement *bar = new Judgement("judgement", textures, partition);
     bar->setPosition({-1.4f, 0.f});
     bar->setSize({0.25f, 1.f});
@@ -72,16 +74,11 @@ std::map<std::string, std::string> Synthmania::getTextures() {
     return textures;
 }
 
-#include <iostream>
 std::map<std::string, std::string> Synthmania::readTextures(std::string skin) {
     std::map<std::string, std::string> result;
     tree *t = readJson(skin.c_str());
     readTree(*t, result, "");
-    free(t);
-    for (auto elem : *t)
-        if (elem.second.get<std::string>("", "") != "")
-            std::cout << elem.first << " "
-                      << elem.second.get<std::string>("", "") << std::endl;
+    delete t;
     return result;
 }
 
@@ -127,10 +124,19 @@ void Synthmania::run() {
                     note->getStatus() == WAITING &&
                     std::abs(note->getTime() - game->getCurrentTimeMillis()) <
                         HIT_WINDOW) {
-                    // a -= (note->getTime() - game->getCurrentTime()) / ++i;
-                    // std::cout << "avg = " << std::to_string(a) << std::endl;
+                    uint64_t time = game->getCurrentTimeMillis();
+                    // a -= (note->getTime() - game->getCurrentTime()) /
+                    // ++i; std::cout << "avg = " << std::to_string(a) <<
+                    // std::endl;
+                    Precision *prec = new Precision(
+                        getTextureByName(game->getRenderer()->getTextures(),
+                                         "precision_tick"),
+                        "tick", time, time - note->getTime());
+                    prec->setSize({0.1f, 0.4f});
+                    prec->setPosition({0, 0.9f});
+                    game->addGui(prec);
                     note->setStatus(HIT);
-                    note->kill(game->getCurrentTimeMillis());
+                    note->kill(time);
                     break;
                 }
             }
@@ -142,6 +148,8 @@ void Synthmania::run() {
         renderer->render();
     }
 }
+
+Renderer *Synthmania::getRenderer() { return renderer; }
 
 int64_t Synthmania::getCurrentTimeMillis() {
     if (music != NULL) {
@@ -199,6 +207,14 @@ void Synthmania::update() {
                 if (note->getStatus() == WAITING &&
                     note->getPitch() == m.data1 &&
                     std::abs(note->getTime() - time_from_start) < HIT_WINDOW) {
+                    Precision *prec =
+                        new Precision(getTextureByName(renderer->getTextures(),
+                                                       "precision_tick"),
+                                      "tick", time_from_start,
+                                      time_from_start - note->getTime());
+                    prec->setSize({0.1f, 0.4f});
+                    prec->setPosition({0, 0.9f});
+                    this->addGui(prec);
                     note->setStatus(HIT);
                     note->kill(time_from_start);
                     got_one = true;
