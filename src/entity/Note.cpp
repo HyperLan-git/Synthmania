@@ -24,7 +24,7 @@ ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
     float initial = 1;
     std::string texName = "note_";
     while (initial > duration) initial /= 2;
-    std::cout << duration << " " << (int)pitch << std::endl;
+    // std::cout << duration << " " << (int)pitch << std::endl;
     if (duration == 0) initial = 0.125f;
 
     if (initial < 1)
@@ -86,9 +86,13 @@ void Note::setStatus(NoteStatus status) {
         color = {1, 0, 0, 1};
 }
 
+NoteStatus Note::getStatus() { return status; }
+
 int64_t Note::getTime() { return this->time; }
 
 u_char Note::getPitch() { return pitch; }
+
+void Note::kill(uint64_t moment) { this->kill_moment = moment; }
 
 bool Note::update(int64_t time) {
     this->position.x = (this->time - time) / 300000. - 1.4f;

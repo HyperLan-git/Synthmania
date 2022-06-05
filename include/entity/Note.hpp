@@ -11,8 +11,8 @@ class Note;
 #include <map>
 #include <string>
 
-#define HIT_WINDOW 100000
-#define DELETE_ANIM 200000
+#define HIT_WINDOW 150000
+#define DELETE_ANIM 100000
 
 enum Key { SOL, FA };
 
@@ -33,8 +33,10 @@ class Note : public Gui {
          std::vector<ImageView*> textures);
 
     void setStatus(NoteStatus status);
+    NoteStatus getStatus();
     int64_t getTime();
     u_char getPitch();
+    void kill(uint64_t moment);
 
     virtual bool update(int64_t time);
 

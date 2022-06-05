@@ -1,6 +1,6 @@
 #include "JsonHandler.hpp"
 
-tree* read(const char* json) {
+tree* readJson(const char* json) {
     tree* t = new tree();
     boost::property_tree::json_parser::read_json(json, *t);
     return t;
@@ -8,7 +8,7 @@ tree* read(const char* json) {
 
 Chart readChart(const char* json) {
     Chart c;
-    tree* t = read(json);
+    tree* t = readJson(json);
     std::string str = "None";
     uint64_t n = 0;
     uint i = 0;
@@ -28,4 +28,17 @@ Chart readChart(const char* json) {
     }
     delete t;
     return c;
+}
+
+void readTree(tree t, std::map<std::string, std::string>& result,
+              std::string path) {
+    for (auto e : t) {
+        std::string str = e.second.get_value("");
+        if (str == "") {
+            std::string p = path.append(e.first);
+            readTree(e.second, result, p.append("_"));
+        } else
+            result.emplace(std::string(path).append(e.first),
+                           e.second.get_value<std::string>());
+    }
 }

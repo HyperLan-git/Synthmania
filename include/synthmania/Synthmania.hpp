@@ -25,18 +25,23 @@ class Synthmania;
 
 class Synthmania {
    public:
-    Synthmania(std::string song);
+    Synthmania(std::string songfolder, std::string skin);
 
     void run();
     void update();
 
+    std::map<std::string, std::string> readTextures(std::string skin);
+
     std::vector<Entity *> getEntities();
     std::vector<Gui *> getGuis();
+
+    Window *getWindow();
 
     void addGui(Gui *gui);
     void addEntity(Entity *entity);
 
     int64_t getCurrentTimeMillis();
+    int64_t getCurrentTime();
 
     ~Synthmania();
 
@@ -54,4 +59,5 @@ class Synthmania {
     std::vector<Entity *> entities;
     std::vector<Gui *> guis;
     std::vector<Note *> notes;
+    AudioSource *music;
 };

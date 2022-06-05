@@ -12,14 +12,15 @@ MIDISRC=$(wildcard src/midi/*.cpp) test/miditest.cpp
 AUDIOSRC=$(wildcard src/audio/*.cpp) test/audiotest.cpp
 JSONSRC=$(wildcard src/json/*.cpp) test/jsontest.cpp
 
-%.o: %.cpp
-	g++ $(CFLAGS) -c $< $(LDFLAGS) -o $@
-
 Synthmania: shader
 	d=$$(date +%s) ; \
 	make $(OBJ) ; \
 	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(LDFLAGS) \
 	&& echo "Build took $$(($$(date +%s)-d)) seconds"
+
+%.o: %.cpp
+	g++ $(CFLAGS) -c $< $(LDFLAGS) -o $@
+
 
 .PHONY: test clean shader obj
 

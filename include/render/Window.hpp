@@ -17,11 +17,16 @@ class Window {
 
     bool shouldClose();
 
+    GLFWwindow *getWindow();
+
     void getFramebufferSize(uint32_t *width, uint32_t *height);
 
     VkResult createSurface(Instance *instance,
                            const VkAllocationCallbacks *allocator,
                            VkSurfaceKHR *surface);
+
+    void setWindowUserPointer(void *pointer);
+    void setKeycallback(GLFWkeyfun fun);
 
     ~Window();
 

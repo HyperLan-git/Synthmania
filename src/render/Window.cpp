@@ -1,9 +1,14 @@
 #include "Window.hpp"
 
+// This is the only time I will do that
+// I prefer having all header related stuff in headers
+#include "Synthmania.hpp"
+
 static void framebufferResizeCallback(GLFWwindow *window, int width,
                                       int height) {
-    Window *win = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
-    win->onResize();
+    Synthmania *game =
+        reinterpret_cast<Synthmania *>(glfwGetWindowUserPointer(window));
+    game->getWindow()->onResize();
 }
 
 Window::Window(const uint32_t width, const uint32_t height, const char *title) {
@@ -12,7 +17,6 @@ Window::Window(const uint32_t width, const uint32_t height, const char *title) {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     window = glfwCreateWindow(width, height, title, nullptr, nullptr);
-    glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
@@ -39,3 +43,9 @@ VkResult Window::createSurface(Instance *instance,
 }
 
 void Window::setResized(bool resized) { this->resized = resized; }
+
+void Window::setWindowUserPointer(void *pointer) {
+    glfwSetWindowUserPointer(window, pointer);
+}
+
+void Window::setKeycallback(GLFWkeyfun fun) { glfwSetKeyCallback(window, fun); }

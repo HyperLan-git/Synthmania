@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include <map>
+
 Renderer::Renderer(Synthmania* game, Window* window) {
     this->game = game;
     this->window = window;
@@ -23,22 +25,6 @@ void Renderer::initVulkan() {
                           {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}},
                           {{-0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}}},
                          {3, 0, 2, 0, 1, 2}, &physicalDevice, device);
-    textures.push_back(
-        readTexture("resources/textures/viking_room.png", "room"));
-    textures.push_back(
-        readTexture("resources/textures/partition.png", "partition"));
-    textures.push_back(
-        readTexture("resources/textures/judgement.png", "judgement_line"));
-    textures.push_back(
-        readTexture("resources/textures/how_to_draw.png", "sol_key"));
-    textures.push_back(
-        readTexture("resources/textures/taptap.png", "note_8th"));
-    textures.push_back(
-        readTexture("resources/textures/racism.png", "note_4th"));
-    textures.push_back(readTexture("resources/textures/no_racist.png",
-                                   "note_2th"));  // hehehe get infuriated pls
-    textures.push_back(readTexture("resources/textures/racism2.png", "note_1"));
-    textures.push_back(readTexture("resources/textures/hashtag.png", "sharp"));
     guiSampler = new TextureSampler(&physicalDevice, device);
     textureSampler = new TextureSampler(&physicalDevice, device);
     Model* model =
@@ -47,6 +33,23 @@ void Renderer::initVulkan() {
     createVertexBuffer(model->toVertexBuffer()->getSize());
     createIndexBuffer(model->toIndicesBuffer()->getSize());
     createUniformBuffers();
+
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        commandBuffers.push_back(new CommandBuffer(device, commandPool, false));
+
+        imageAvailableSemaphores.push_back(new Semaphore(device));
+        renderFinishedSemaphores.push_back(new Semaphore(device));
+        inFlightFences.push_back(new Fence(device));
+    }
+}
+
+void Renderer::loadTextures(std::map<std::string, std::string> textures) {
+    for (auto entry : textures) {
+        std::cout << "Loading : " << entry.first << std::endl;
+        this->textures.push_back(
+            readTexture(entry.second.c_str(), entry.first.c_str()));
+    }
+
     uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * textures.size();
     std::vector<VkDescriptorType> types(type_sz);
     for (size_t i = 0; i < textures.size(); i++) {
@@ -58,14 +61,6 @@ void Renderer::initVulkan() {
     pool = new ShaderDescriptorPool(device, tp, type_sz);
     guiPool = new ShaderDescriptorPool(device, tp, type_sz);
     createDescriptorSets();
-
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        commandBuffers.push_back(new CommandBuffer(device, commandPool, false));
-
-        imageAvailableSemaphores.push_back(new Semaphore(device));
-        renderFinishedSemaphores.push_back(new Semaphore(device));
-        inFlightFences.push_back(new Fence(device));
-    }
 }
 
 VkPhysicalDevice* Renderer::getPhysicalDevice() { return &physicalDevice; }
@@ -190,7 +185,7 @@ void Renderer::pickPhysicalDevice() {
 }
 
 void Renderer::createGraphicsPipeline() {
-    VkDescriptorSetLayoutBinding ubo, textureSampler, color;
+    VkDescriptorSetLayoutBinding ubo, textureSampler;
     ubo.binding = 0;
     ubo.descriptorCount = 1;
     ubo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -199,10 +194,6 @@ void Renderer::createGraphicsPipeline() {
     textureSampler.descriptorCount = 1;
     textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     textureSampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    color.binding = 2;
-    color.descriptorCount = 1;
-    color.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    color.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     shaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
@@ -328,7 +319,8 @@ Image* Renderer::createTextureImage(const char* path) {
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
     if (!pixels) {
-        throw std::runtime_error("failed to load texture image!");
+        throw std::runtime_error(std::string(path) +
+                                 " failed to load texture image!");
     }
 
     Buffer* stagingBuffer = new Buffer(

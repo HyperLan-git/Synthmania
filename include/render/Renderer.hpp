@@ -22,6 +22,7 @@ class Renderer;
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <optional>
 #include <set>
 #include <stdexcept>
@@ -83,6 +84,7 @@ class Renderer {
     Renderer(Synthmania* theGame, Window* window);
 
     void render();
+    void loadTextures(std::map<std::string, std::string> textures);
 
     std::vector<ImageView*> getTextures();
 
