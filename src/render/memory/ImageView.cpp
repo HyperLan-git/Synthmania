@@ -27,7 +27,7 @@ VkImageView *ImageView::getView() { return view; }
 
 Image *ImageView::getImage() { return image; }
 
-const char *ImageView::getName() { return name; }
+std::string ImageView::getName() { return name; }
 
 ImageView::~ImageView() {
     vkDestroyImageView(*(device->getDevice()), *view, nullptr);

@@ -141,6 +141,6 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
 ImageView* getTextureByName(std::vector<ImageView*> textures,
                             const char* name) {
     for (ImageView* img : textures)
-        if (std::strcmp(name, img->getName()) == 0) return img;
+        if (std::strcmp(name, img->getName().c_str()) == 0) return img;
     return nullptr;
 }

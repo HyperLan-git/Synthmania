@@ -5,6 +5,7 @@ class ImageView;
 #include <vulkan/vulkan.h>
 
 #include <stdexcept>
+#include <string>
 
 #include "Image.hpp"
 
@@ -14,12 +15,12 @@ class ImageView {
               VkImageAspectFlags aspectFlags, const char *name);
     VkImageView *getView();
     Image *getImage();
-    const char *getName();
+    std::string getName();
     ~ImageView();
 
    private:
     Device *device;
     VkImageView *view;
     Image *image;
-    const char *name;
+    std::string name;
 };

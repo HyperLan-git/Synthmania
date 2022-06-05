@@ -2,7 +2,7 @@
 
 class Renderer;
 
-#define NDEBUG
+//#define NDEBUG
 
 #include <algorithm>
 #include <array>

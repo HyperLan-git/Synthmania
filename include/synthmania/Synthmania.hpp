@@ -31,6 +31,7 @@ class Synthmania {
     void update();
 
     std::map<std::string, std::string> readTextures(std::string skin);
+    std::map<std::string, std::string> getTextures();
 
     std::vector<Entity *> getEntities();
     std::vector<Gui *> getGuis();
@@ -41,7 +42,6 @@ class Synthmania {
     void addEntity(Entity *entity);
 
     int64_t getCurrentTimeMillis();
-    int64_t getCurrentTime();
 
     ~Synthmania();
 
@@ -55,6 +55,8 @@ class Synthmania {
     std::chrono::_V2::system_clock::time_point begTime =
         std::chrono::high_resolution_clock::now();
     uint64_t startTime = 0;
+
+    std::map<std::string, std::string> textures;
 
     std::vector<Entity *> entities;
     std::vector<Gui *> guis;
