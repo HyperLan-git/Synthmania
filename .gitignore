@@ -1,6 +1,6 @@
 bin/
+plugins/
 libremidi/
-vst3sdk/
 resources/songs/*
 !resources/songs/examplesong
 **/*.o

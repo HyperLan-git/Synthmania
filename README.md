@@ -8,7 +8,7 @@ You will need to install :
 - Vulkan and GLFW
 - OpenAL with ALUT
 - libremidi (just clone the repo in here)
-- vst3sdk same just clone repo
+- JUCE same just clone repo
 - glslc
 - boost
 Imma keep the latest versions of those and make sure project compiles with them (hopefully).
