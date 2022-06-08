@@ -5,7 +5,7 @@ IDIRS=$(addprefix -I ,$(wildcard include/**/) $(wildcard include/render/**/)) -I
 
 CFLAGS = -std=c++17 -O2 $(VSTOBJ)
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype \
-				-L../SimplePluginHost/export/lib -l:libSimplePluginHost.a -g
+				-L../SimplePluginHost/export/lib -l:libSimplePluginHost.a
 
 OBJDIR=bin/obj
 LIBS=obj/tiny_obj_loader.h stb/stb_image.h

@@ -1,8 +1,9 @@
 #include <iostream>
 
-#include "test.hpp"
+class SimplePluginHost;
+#include "SimplePluginHost.hpp"
 
 int main() {
-    printf("%d", yolo());
+    SimplePluginHost test("plugins/Vital.vst3");
     return 0;
 }
