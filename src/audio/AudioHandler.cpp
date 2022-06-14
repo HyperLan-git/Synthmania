@@ -43,10 +43,13 @@ AudioSource* AudioHandler::playSound(std::string name) {
     return result;
 }
 
+void AudioHandler::addSource(AudioSource* source) { sources.push_back(source); }
+
 ALCint AudioHandler::getSampleRate() { return sampleRate; }
 
 bool AudioHandler::update() {
     for (auto iter = sources.begin(); iter != sources.end(); iter++) {
+        if (!(*iter)->destroyOnFinished()) continue;
         ALenum state = (*iter)->getState();
         if (state == AL_STOPPED) {
             delete *iter;

@@ -15,6 +15,7 @@ class Synthmania;
 #include <stdexcept>
 
 #include "AudioHandler.hpp"
+#include "AudioPluginHandler.hpp"
 #include "Entity.hpp"
 #include "Gui.hpp"
 #include "JsonHandler.hpp"
@@ -35,6 +36,7 @@ class Synthmania {
     std::map<std::string, std::string> getTextures();
 
     Renderer *getRenderer();
+    AudioPluginHandler *getPluginHandler();
 
     std::vector<Entity *> getEntities();
     std::vector<Gui *> getGuis();
@@ -53,6 +55,7 @@ class Synthmania {
     Window *window;
     Renderer *renderer;
     AudioHandler *audio;
+    AudioPluginHandler *plugin;
     TrackPartition partition;
 
     std::chrono::_V2::system_clock::time_point begTime =

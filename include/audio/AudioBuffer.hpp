@@ -15,17 +15,19 @@ class AudioBuffer;
 class AudioBuffer {
    public:
     AudioBuffer();
+    AudioBuffer(ALuint id);
     AudioBuffer(const char* file);
 
     void write(ALenum format, const ALvoid* data, ALsizei size,
                ALsizei samplerate);
-
     ALuint getBuffer();
 
     ALint getSamplerate();
     ALint getBits();
     ALint getChannels();
     ALint getSize();
+
+    void setBuffer(ALuint id);
 
     ~AudioBuffer();
 

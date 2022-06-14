@@ -18,6 +18,7 @@ Synthmania::Synthmania(std::string song, std::string skin) {
     path.append(d.midi);
     partition = handler->readMidi(path.c_str());
     audio = new AudioHandler();
+    plugin = new AudioPluginHandler("./plugins/Vital.vst3", audio);
     // Entity *e = new Entity(model, getTextureByName(textures, "room"), "Bob");
     // entities.push_back(e);
     std::vector<ImageView *> textures = renderer->getTextures();
@@ -135,6 +136,8 @@ void Synthmania::run() {
                     prec->setSize({0.1f, 0.4f});
                     prec->setPosition({0, 0.9f});
                     game->addGui(prec);
+                    game->getPluginHandler()->playNote(
+                        note->getPitch(), 64, time + note->getDuration());
                     note->setStatus(HIT);
                     note->kill(time);
                     break;
@@ -166,6 +169,7 @@ int64_t Synthmania::getCurrentTimeMillis() {
 
 void Synthmania::update() {
     int64_t time_from_start = getCurrentTimeMillis();
+    plugin->update(time_from_start);
     std::vector<Gui *> toDestroy;
     for (Gui *g : guis)
         if (g->update(time_from_start)) {
@@ -234,7 +238,10 @@ void Synthmania::update() {
         }
         m = handler->getMessage();
     }
+    thrd_yield();
 }
+
+AudioPluginHandler *Synthmania::getPluginHandler() { return plugin; }
 
 void Synthmania::addGui(Gui *gui) {
     if (guis.empty()) {
@@ -254,6 +261,7 @@ Synthmania::~Synthmania() {
     for (Entity *e : entities) delete e;
     for (Gui *g : guis) delete g;
 
+    delete plugin;
     delete audio;
 
     delete handler;

@@ -55,6 +55,7 @@ Note::Note(const char* name, int64_t time, u_char pitch, double duration,
            std::vector<ImageView*> textures)
     : Gui(getTextureForNote(textures, pitch, duration, Key::SOL), name) {
     this->time = time;
+    this->duration = duration * 350000;
     this->kill_moment = time + HIT_WINDOW;
     glm::vec2 temp = getSizeAndLocForNote(duration);
     this->position.y = temp.x - 0.083f * getDifferenceFromC4(pitch);
@@ -89,6 +90,8 @@ void Note::setStatus(NoteStatus status) {
 NoteStatus Note::getStatus() { return status; }
 
 int64_t Note::getTime() { return this->time; }
+
+int64_t Note::getDuration() { return this->duration; }
 
 u_char Note::getPitch() { return pitch; }
 

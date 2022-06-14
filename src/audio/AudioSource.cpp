@@ -1,11 +1,23 @@
 #include "AudioSource.hpp"
 
-AudioSource::AudioSource(AudioBuffer data) {
+AudioSource::AudioSource(bool destroyOnFinished) {
     alGenSources(1, &sourceID);
+    alSourcei(sourceID, AL_BUFFER, 0);
+    destroy = destroyOnFinished;
+}
+
+AudioSource::AudioSource(AudioBuffer data, bool destroyOnFinished)
+    : AudioSource(destroyOnFinished) {
+    setBuffer(data);
+}
+
+void AudioSource::setBuffer(AudioBuffer data) {
     alSourcei(sourceID, AL_BUFFER, data.getBuffer());
 }
 
-void AudioSource::play() { alSourcePlay(sourceID); }
+void AudioSource::play() {
+    if (getState() != AL_PLAYING) alSourcePlay(sourceID);
+}
 
 ALenum AudioSource::getState() { return getSourcei(AL_SOURCE_STATE); }
 
@@ -44,6 +56,28 @@ ALint AudioSource::getProcessedBuffers() {
 }
 ALint AudioSource::getFreq() { return getSourcei(AL_FREQUENCY); }
 
+bool AudioSource::destroyOnFinished() { return destroy; }
+
+void AudioSource::queueBuffers(AudioBuffer* buffers, int nb) {
+    for (int i = 0; i < nb; i++) {
+        uint id = buffers[i].getBuffer();
+        alSourceQueueBuffers(sourceID, 1, &id);
+    }
+}
+
+void AudioSource::queueBuffer(AudioBuffer* buffer) {
+    ALuint b = buffer->getBuffer();
+    alSourceQueueBuffers(sourceID, 1, &b);
+}
+
+AudioBuffer* AudioSource::unqueueBuffers(int nb) {
+    uint buffers[nb];
+    alSourceUnqueueBuffers(sourceID, nb, buffers);
+    AudioBuffer* ret = new AudioBuffer[nb];
+    for (int i = 0; i < nb; i++) ret[i].setBuffer(buffers[i]);
+    return ret;
+}
+
 ALfloat AudioSource::getSourcef(ALenum param) {
     ALfloat result;
     alGetSourcef(sourceID, param, &result);
@@ -65,6 +99,8 @@ glm::vec3 AudioSource::getSource3f(ALenum param) {
 void AudioSource::setSampleOffset(ALfloat value) {
     setSourcef(AL_SAMPLE_OFFSET, value);
 }
+
+void AudioSource::setLooping(bool looping) { setSourcei(AL_LOOPING, looping); }
 
 void AudioSource::setSourcef(ALenum param, ALfloat value) {
     alSourcef(sourceID, param, value);

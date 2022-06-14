@@ -26,6 +26,8 @@ class AudioHandler {
     void addSound(std::string name, AudioBuffer* sound);
     AudioSource* playSound(std::string name);
 
+    void addSource(AudioSource* source);
+
     ALCint getSampleRate();
 
     bool update();

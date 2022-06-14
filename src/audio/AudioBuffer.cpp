@@ -4,6 +4,8 @@
 
 AudioBuffer::AudioBuffer() { alGenBuffers(1, &bufferID); }
 
+AudioBuffer::AudioBuffer(ALuint id) { this->bufferID = id; }
+
 AudioBuffer::AudioBuffer(const char* file) {
     bufferID = alutCreateBufferFromFile(file);
 }
@@ -25,8 +27,13 @@ ALint AudioBuffer::getSize() { return getBufferi(AL_SIZE); }
 
 ALint AudioBuffer::getBufferi(ALenum param) {
     ALint result;
-    alGetBufferi(bufferID, param, &result);
+    alGetBufferi(getBuffer(), param, &result);
     return result;
+}
+
+void AudioBuffer::setBuffer(ALuint id) {
+    alDeleteBuffers(1, &bufferID);
+    bufferID = id;
 }
 
 AudioBuffer::~AudioBuffer() { alDeleteBuffers(1, &bufferID); }

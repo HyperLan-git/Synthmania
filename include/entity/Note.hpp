@@ -35,6 +35,7 @@ class Note : public Gui {
     void setStatus(NoteStatus status);
     NoteStatus getStatus();
     int64_t getTime();
+    int64_t getDuration();
     u_char getPitch();
     void kill(uint64_t moment);
 
@@ -44,6 +45,7 @@ class Note : public Gui {
 
    private:
     int64_t time;
+    int64_t duration;
     int64_t kill_moment;
     u_char pitch;
     NoteStatus status = WAITING;

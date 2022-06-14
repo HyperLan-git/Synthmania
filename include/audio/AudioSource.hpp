@@ -5,6 +5,7 @@ class AudioSource;
 #include <AL/al.h>
 
 #include <fstream>
+#include <vector>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -14,7 +15,10 @@ class AudioSource;
 
 class AudioSource {
    public:
-    AudioSource(AudioBuffer data);
+    AudioSource(bool destroyOnFinished = true);
+    AudioSource(AudioBuffer data, bool destroyOnFinished = true);
+
+    void setBuffer(AudioBuffer data);
 
     void play();
 
@@ -43,7 +47,15 @@ class AudioSource {
     ALint getProcessedBuffers();
     ALint getFreq();
 
+    bool destroyOnFinished();
+
+    void queueBuffers(AudioBuffer* buffers, int nb);
+    AudioBuffer* unqueueBuffers(int nb);
+
+    void queueBuffer(AudioBuffer* buffer);
+
     void setSampleOffset(ALfloat value);
+    void setLooping(bool looping);
 
     ~AudioSource();
 
@@ -57,4 +69,5 @@ class AudioSource {
     void setSourcei(ALenum param, ALint value);
 
     ALuint sourceID;
+    bool destroy;
 };
