@@ -5,10 +5,10 @@ I got motivation for making this project after recieving my very own synth and g
 
 # Installation
 You will need to install :
-- Vulkan and GLFW
+- Vulkan and GLFW with glm
 - OpenAL with ALUT
 - libremidi (just clone the repo in here)
-- JUCE same just clone repo
+- JUCE
 - glslc
 - boost
 Imma keep the latest versions of those and make sure project compiles with them (hopefully).

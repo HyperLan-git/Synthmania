@@ -1,6 +1,6 @@
 #include "Precision.hpp"
 
-Precision::Precision(ImageView* texture, const char* name, uint64_t time,
+Precision::Precision(ImageView* texture, const char* name, int64_t time,
                      int64_t delta)
     : Gui(texture, name) {
     hit_time = time;
@@ -18,7 +18,9 @@ bool Precision::update(int64_t time) {
 ShaderData* Precision::getShaderData() const {
     ShaderData* data = new ShaderData();
     GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
-    edata->pos = position;
+    glm::vec3 p = glm::vec3(graphicalPosition, 0);
+    p += position;
+    edata->pos = p;
     edata->rot = rotation;
     edata->size = size;
     edata->color = color;

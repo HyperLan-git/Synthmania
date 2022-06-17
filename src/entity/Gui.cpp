@@ -29,7 +29,9 @@ void Gui::setDestroyed() { this->destroyed = true; }
 ShaderData* Gui::getShaderData() const {
     ShaderData* data = new ShaderData();
     GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
-    edata->pos = position;
+    glm::vec3 p = glm::vec3(graphicalPosition, 0);
+    p += position;
+    edata->pos = p;
     edata->rot = rotation;
     edata->size = size;
     edata->color = color;

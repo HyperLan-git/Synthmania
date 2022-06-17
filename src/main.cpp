@@ -1,5 +1,5 @@
 #include "Synthmania.hpp"
-
+// TODO mysterious segfault at end of program hihii~
 int main(int argc, char **argv) {
     std::string path = "resources/songs/ETEA";
     std::string skin = "resources/textures";

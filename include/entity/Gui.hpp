@@ -42,6 +42,7 @@ class Gui {
    protected:
     ImageView* texture;
     glm::vec3 position = {0, 0, 0};
+    glm::vec2 graphicalPosition = {0, 0};
     float rotation = 0;
     glm::vec2 size = {1, 1};
     glm::vec4 color = {1, 1, 1, 1};

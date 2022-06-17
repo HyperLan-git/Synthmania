@@ -5,8 +5,8 @@ class SimplePluginHost;
 #include "SimplePluginHost.hpp"
 #include "threads.h"
 
-#define BUFFER_LENGTH 10000
-#define BUFFERS 5
+#define BUFFERS 4
+#define BUFFERSIZE 700
 
 struct E {
     AudioHandler* handler;
@@ -15,21 +15,24 @@ struct E {
 
 int audiorun(void* arg) {
     try {
-        SimplePluginHost* host = (SimplePluginHost*)arg;
+        E* e = (E*)arg;
+        SimplePluginHost* host = e->host;
+        auto* handler = e->handler;
 
         std::vector<std::string> devices = getDevices();
         // for (auto device : devices) std::cout << device << std::endl;
-        short buf[BUFFER_LENGTH * 2] = {0};
+        short buf[BUFFERSIZE] = {0};
         int sampleRate = handler->getSampleRate();
         AudioBuffer* buffers = new AudioBuffer[BUFFERS];
         AudioSource* source = new AudioSource();
         // std::cout << sampleRate << std::endl;
+
         for (int i = 0; i < BUFFERS; i++) {
             const float** channels = host->update();
-            for (int j = 0; j < BUFFER_LENGTH * 2; j++)
-                buf[j] = channels[j % 2][j] * 32760;  // LEFT / RIGHT
-            buffers[i].write(AL_FORMAT_STEREO16, buf, BUFFER_LENGTH,
-                             sampleRate);
+            for (int j = 0; j < BUFFERSIZE; j++)
+                buf[j] = channels[j % 2][j] * 32767;  // LEFT / RIGHT
+            buffers[i].write(AL_FORMAT_STEREO16, buf,
+                             BUFFERSIZE * sizeof(short), sampleRate);
         }
         source->queueBuffers(buffers, BUFFERS);
         handler->addSource(source);
@@ -41,10 +44,11 @@ int audiorun(void* arg) {
             while (proc--) {
                 AudioBuffer* b = source->unqueueBuffers(1);
                 const float** channels = host->update();
-                for (int j = 0; j < BUFFER_LENGTH; j++) {
-                    buf[j] = channels[j % 2][j] * 32760;  // LEFT / RIGHT
+                for (int j = 0; j < BUFFERSIZE; j++) {
+                    buf[j] = channels[j % 2][j] * 32767;  // LEFT / RIGHT
                 }
-                b->write(AL_FORMAT_STEREO16, buf, BUFFER_LENGTH, sampleRate);
+                b->write(AL_FORMAT_STEREO16, buf, BUFFERSIZE * sizeof(short),
+                         sampleRate);
                 source->queueBuffer(b);
             }
         }
@@ -75,12 +79,13 @@ int guirun(void* arg) {
 #include <stdexcept>
 int main() {
     AudioHandler* handler = new AudioHandler();
-    SimplePluginHost test("./plugins/Vital.vst3");
+    SimplePluginHost test("./plugins/Vital.vst3", handler->getSampleRate(),
+                          BUFFERSIZE, true);
 
     thrd_t thread;
     int result;
 
-    thrd_create(&thread, audiorun, &test);
+    thrd_create(&thread, audiorun, new E{handler, &test});
     thrd_create(&thread, guirun, &test);
 
     while (handler)

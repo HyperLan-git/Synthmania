@@ -1,24 +1,5 @@
 #include "Note.hpp"
 
-int getDifferenceFromC4(u_char pitch) {
-    char octave = pitch / 12;
-    octave -= 5;
-    int result = octave * 7;
-    u_char key = pitch % 12;
-    result += key;
-    if (key > 0) result--;
-    if (key > 2) result--;
-    if (key > 5) result--;
-    if (key > 7) result--;
-    if (key > 9) result--;
-    return result;
-}
-
-bool isFromCMajor(u_char pitch) {
-    u_char key = pitch % 12;
-    return !(key == 1 || key == 3 || key == 6 || key == 8 || key == 10);
-}
-
 ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
                              double duration, Key currentKey) {
     float initial = 1;
@@ -43,22 +24,24 @@ glm::vec2 getSizeAndLocForNote(double duration) {
         case -8:
         case -4:
         case -2:
-            return {0.36f, 0.53f};
+            return {-0.14f, 0.53f};
         case 1:
-            return {0.5f, 0.25f};
+        case 2:
+            return {0, 0.25f};
         default:
-            return {0.36f, 0.53f};
+            return {-0.14f, 0.53f};
     }
 }
 
 Note::Note(const char* name, int64_t time, u_char pitch, double duration,
            std::vector<ImageView*> textures)
-    : Gui(getTextureForNote(textures, pitch, duration, Key::SOL), name) {
-    this->time = time;
+    : PartitionNotation(
+          name, time, pitch,
+          getTextureForNote(textures, pitch, duration, Key::SOL)) {
     this->duration = duration * 350000;
     this->kill_moment = time + HIT_WINDOW;
     glm::vec2 temp = getSizeAndLocForNote(duration);
-    this->position.y = temp.x - 0.083f * getDifferenceFromC4(pitch);
+    this->graphicalPosition.y = temp.x;
     this->size = {temp.y, temp.y};
     this->pitch = pitch;
 }
@@ -66,7 +49,9 @@ Note::Note(const char* name, int64_t time, u_char pitch, double duration,
 ShaderData* Note::getShaderData() const {
     ShaderData* data = new ShaderData();
     GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
-    edata->pos = position;
+    glm::vec3 p = glm::vec3(graphicalPosition, 0);
+    p += position;
+    edata->pos = p;
     edata->rot = rotation;
     edata->size = size;
     edata->color = color;
@@ -98,7 +83,7 @@ u_char Note::getPitch() { return pitch; }
 void Note::kill(uint64_t moment) { this->kill_moment = moment; }
 
 bool Note::update(int64_t time) {
-    this->position.x = (this->time - time) / 300000. - 1.4f;
+    PartitionNotation::update(time);
     if (this->status == WAITING && kill_moment < time) setStatus(MISSED);
 
     if (this->kill_moment < time) {

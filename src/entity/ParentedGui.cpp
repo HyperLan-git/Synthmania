@@ -11,11 +11,12 @@ ShaderData* ParentedGui::getShaderData() const {
     ShaderData* data = new ShaderData();
     GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
     float rot = parent->getRotation();
+    glm::vec3 p = glm::vec3(graphicalPosition, 0);
+    p += parent->getPosition();
     edata->pos =
-        parent->getPosition() +
-        glm::vec3(position.x * glm::cos(rot) - position.y * glm::sin(rot),
-                  position.y * glm::cos(rot) + position.x * glm::sin(rot),
-                  position.z - parent->getPosition().z);
+        p + glm::vec3(position.x * glm::cos(rot) - position.y * glm::sin(rot),
+                      position.y * glm::cos(rot) + position.x * glm::sin(rot),
+                      position.z - parent->getPosition().z);
     edata->rot = rotation + rot;
     edata->size = size;
     edata->color = parent->getColor();

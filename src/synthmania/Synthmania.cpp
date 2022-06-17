@@ -38,7 +38,7 @@ Synthmania::Synthmania(std::string song, std::string skin) {
     precision->setSize({1.5f, 0.5f});
     precision->setPosition({0, 0.9f});
     Judgement *bar = new Judgement("judgement", textures, partition);
-    bar->setPosition({-1.4f, 0.f});
+    bar->setPosition({-1.4f, bar->getPosition().y});
     bar->setSize({0.25f, 1.f});
     addGui(bar);
     for (MidiNote note : partition.notes) {
@@ -49,12 +49,27 @@ Synthmania::Synthmania(std::string song, std::string skin) {
                            note.length / partition.MPQ / 8., textures);
         notes.push_back(n);
         addGui(n);
+        int diff = getDifferenceFromC4(note.note);
+        if (diff <= 0 || diff >= 12) {
+            bool up = diff >= 12;
+            for (int i = up ? 12 : 0; (up && i <= diff) || (!up && i >= diff);
+                 up ? i += 2 : i -= 2) {
+                strcpy(name, "Bar_");
+                strcat(name, hash);
+                PartitionNotation *readability = new PartitionNotation(
+                    name, note.timestamp, (0.5 - 0.083 * i),
+                    getTextureByName(textures, "bar"));
+                readability->setPosition({0, readability->getPosition().y});
+                readability->setSize({0.25, 0.15});
+                addGui(readability);
+            }
+        }
         if (!isFromCMajor(note.note)) {
             strcpy(name, "Sharp_");
             strcat(name, hash);
             ParentedGui *sharp =
                 new ParentedGui(getTextureByName(textures, "sharp"), name, n);
-            sharp->setPosition({-0.25, 0.15});
+            sharp->setPosition({-0.25, 0});
             sharp->setSize({0.25, 0.25});
             addGui(sharp);
         }
@@ -68,7 +83,9 @@ Synthmania::Synthmania(std::string song, std::string skin) {
 
         audio->addSound("song", buffer);
         music = audio->playSound("song");
+        music->setGain(.3f);
     }
+    begTime = std::chrono::high_resolution_clock::now();
 }
 
 std::map<std::string, std::string> Synthmania::getTextures() {
@@ -125,7 +142,7 @@ void Synthmania::run() {
                     note->getStatus() == WAITING &&
                     std::abs(note->getTime() - game->getCurrentTimeMillis()) <
                         HIT_WINDOW) {
-                    uint64_t time = game->getCurrentTimeMillis();
+                    int64_t time = game->getCurrentTimeMillis();
                     // a -= (note->getTime() - game->getCurrentTime()) /
                     // ++i; std::cout << "avg = " << std::to_string(a) <<
                     // std::endl;
@@ -164,7 +181,7 @@ int64_t Synthmania::getCurrentTimeMillis() {
                currentTime - begTime)
                    .count() /
                1000 -
-           this->startTime;
+           (int64_t)this->startTime;
 }
 
 void Synthmania::update() {

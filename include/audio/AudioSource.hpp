@@ -56,6 +56,7 @@ class AudioSource {
 
     void setSampleOffset(ALfloat value);
     void setLooping(bool looping);
+    void setGain(ALfloat gain);
 
     ~AudioSource();
 

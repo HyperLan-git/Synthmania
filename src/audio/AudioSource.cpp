@@ -2,7 +2,7 @@
 
 AudioSource::AudioSource(bool destroyOnFinished) {
     alGenSources(1, &sourceID);
-    alSourcei(sourceID, AL_BUFFER, 0);
+    // alSourcei(sourceID, AL_BUFFER, 0);
     destroy = destroyOnFinished;
 }
 
@@ -101,6 +101,8 @@ void AudioSource::setSampleOffset(ALfloat value) {
 }
 
 void AudioSource::setLooping(bool looping) { setSourcei(AL_LOOPING, looping); }
+
+void AudioSource::setGain(ALfloat gain) { setSourcef(AL_GAIN, gain); }
 
 void AudioSource::setSourcef(ALenum param, ALfloat value) {
     alSourcef(sourceID, param, value);

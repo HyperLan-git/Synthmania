@@ -2,8 +2,8 @@
 
 class Note;
 
-#include "Gui.hpp"
 #include "ImageView.hpp"
+#include "PartitionNotation.hpp"
 #include "Utils.hpp"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -21,13 +21,9 @@ enum NoteStatus { WAITING, HIT, MISSED };
 ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
                              double duration, Key currentKey);
 
-int getDifferenceFromC4(u_char pitch);
-
-bool isFromCMajor(u_char pitch);
-
 glm::vec2 getSizeAndLocForNote(double duration);
 
-class Note : public Gui {
+class Note : public PartitionNotation {
    public:
     Note(const char* name, int64_t time, u_char pitch, double duration,
          std::vector<ImageView*> textures);
@@ -44,7 +40,6 @@ class Note : public Gui {
     virtual ShaderData* getShaderData() const;
 
    private:
-    int64_t time;
     int64_t duration;
     int64_t kill_moment;
     u_char pitch;
