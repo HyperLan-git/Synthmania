@@ -142,5 +142,6 @@ ImageView* getTextureByName(std::vector<ImageView*> textures,
                             const char* name) {
     for (ImageView* img : textures)
         if (std::strcmp(name, img->getName().c_str()) == 0) return img;
-    return nullptr;
+    if (strcmp("missing", name) == 0) return NULL;
+    return getTextureByName(textures, "missing");
 }

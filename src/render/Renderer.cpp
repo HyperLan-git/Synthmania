@@ -593,7 +593,7 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
         swapchain->getExtent().width / (float)swapchain->getExtent().height;
     UniformBufferObject ubo{};
     ubo.model = glm::mat4(1.0f);
-    ubo.view = glm::lookAt(glm::vec3(x, y + 1, 1.0f), glm::vec3(x, y, 0.0f),
+    ubo.view = glm::lookAt(glm::vec3(x, y, 1.0f), glm::vec3(x, y, 0.0f),
                            glm::vec3(0.0f, -1.0f, 0.0f));
     ubo.proj = glm::perspective(glm::radians(90.0f),  // MASTER FOV
                                 ratio, 0.1f, 10.0f);

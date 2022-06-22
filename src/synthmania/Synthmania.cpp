@@ -18,10 +18,16 @@ Synthmania::Synthmania(std::string song, std::string skin) {
     path.append(d.midi);
     partition = handler->readMidi(path.c_str());
     audio = new AudioHandler();
-    plugin = new AudioPluginHandler("./plugins/Vital.vst3", audio);
-    // Entity *e = new Entity(model, getTextureByName(textures, "room"), "Bob");
-    // entities.push_back(e);
+    std::string pdata = song;
+    pdata.append("/");
+    pdata.append(c.plugindata);
+    plugin = new AudioPluginHandler("./plugins/Vital.vst3", audio, pdata);
+    Model *model =
+        new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
+                  renderer->getDevice());
     std::vector<ImageView *> textures = renderer->getTextures();
+    Entity *e = new Entity(model, getTextureByName(textures, "room"), "Bob");
+    entities.push_back(e);
     Gui *part = new Gui(getTextureByName(textures, "partition"), "partition"),
         *bg = new Gui(getTextureByName(textures, "partition"), "bg"),
         *key = new Gui(getTextureByName(textures, "sol_key"), "key"),
@@ -46,7 +52,7 @@ Synthmania::Synthmania(std::string song, std::string skin) {
         const char *hash = std::to_string(std::hash<MidiNote>()(note)).c_str();
         strcat(name, hash);
         Note *n = new Note(name, note.timestamp, note.note,
-                           note.length / partition.MPQ / 8., textures);
+                           note.length / partition.MPQ / 4., textures);
         notes.push_back(n);
         addGui(n);
         int diff = getDifferenceFromC4(note.note);
@@ -104,63 +110,68 @@ Window *Synthmania::getWindow() { return this->window; }
 
 void Synthmania::run() {
     window->setWindowUserPointer(this);
-    window->setKeycallback(
-        [](GLFWwindow *win, int key, int scancode, int action, int mods) {
-            Synthmania *game = (Synthmania *)glfwGetWindowUserPointer(win);
-            Window *window = game->getWindow();
-            if (game == NULL || action != GLFW_PRESS) return;
-            int k = 0;
-            switch (key) {
-                case GLFW_KEY_W:
-                    k = 60;
-                    break;
-                case GLFW_KEY_X:
-                    k = 62;
-                    break;
-                case GLFW_KEY_C:
-                    k = 64;
-                    break;
-                case GLFW_KEY_V:
-                    k = 65;
-                    break;
-                case GLFW_KEY_B:
-                    k = 67;
-                    break;
-                case GLFW_KEY_N:
-                    k = 69;
-                    break;
-                case GLFW_KEY_M:
-                    k = 71;
-                    break;
-                default:
-                    std::cout << "key = " << key << std::endl;
-            }
+    window->setKeycallback([](GLFWwindow *win, int key, int scancode,
+                              int action, int mods) {
+        Synthmania *game = (Synthmania *)glfwGetWindowUserPointer(win);
+        Window *window = game->getWindow();
+        if (game == NULL || action != GLFW_PRESS) return;
+        int k = 0;
+        switch (key) {
+            case GLFW_KEY_W:
+                k = 60;
+                break;
+            case GLFW_KEY_X:
+                k = 62;
+                break;
+            case GLFW_KEY_C:
+                k = 64;
+                break;
+            case GLFW_KEY_V:
+                k = 65;
+                break;
+            case GLFW_KEY_B:
+                k = 67;
+                break;
+            case GLFW_KEY_N:
+                k = 69;
+                break;
+            case GLFW_KEY_M:
+                k = 71;
+                break;
+            default:
+                std::cout << "key = " << key << std::endl;
+        }
 
-            for (Note *note : game->notes) {
-                // This is osu for now
-                if (  // note->getPitch() == k &&
-                    note->getStatus() == WAITING &&
-                    std::abs(note->getTime() - game->getCurrentTimeMillis()) <
-                        HIT_WINDOW) {
-                    int64_t time = game->getCurrentTimeMillis();
-                    // a -= (note->getTime() - game->getCurrentTime()) /
-                    // ++i; std::cout << "avg = " << std::to_string(a) <<
-                    // std::endl;
-                    Precision *prec = new Precision(
-                        getTextureByName(game->getRenderer()->getTextures(),
-                                         "precision_tick"),
-                        "tick", time, time - note->getTime());
-                    prec->setSize({0.1f, 0.4f});
-                    prec->setPosition({0, 0.9f});
-                    game->addGui(prec);
-                    game->getPluginHandler()->playNote(
-                        note->getPitch(), 64, time + note->getDuration());
-                    note->setStatus(HIT);
-                    note->kill(time);
-                    break;
-                }
+        for (Note *note : game->notes) {
+            // This is osu for now
+            if (  // note->getPitch() == k &&
+                note->getStatus() == WAITING &&
+                std::abs(note->getTime() - game->getCurrentTimeMillis()) <
+                    HIT_WINDOW  // && next note not skipped/close?? or just set
+                                // OD to a value that prevents the need for
+                                // notelock idk hmm
+            ) {
+                int64_t time = game->getCurrentTimeMillis();
+                // a -= (note->getTime() - game->getCurrentTime()) /
+                // ++i; std::cout << "avg = " << std::to_string(a) <<
+                // std::endl;
+                int64_t delta = time - note->getTime();
+                Precision *prec = new Precision(
+                    getTextureByName(game->getRenderer()->getTextures(),
+                                     "precision_tick"),
+                    "tick", time, delta);
+                prec->setSize({0.1f, 0.4f});
+                prec->setPosition({0, 0.9f});
+                game->addGui(prec);
+                if (delta < 0) delta = 0;
+                game->getPluginHandler()->playNote(
+                    note->getPitch(), 64, time + note->getDuration() - delta);
+                note->setStatus(HIT);
+                note->kill(time);
+                break;
             }
-        });
+        }
+    });
     while (!window->shouldClose()) {
         glfwPollEvents();
         update();
@@ -264,7 +275,7 @@ void Synthmania::addGui(Gui *gui) {
     if (guis.empty()) {
         gui->setZ(0.9999f);
     } else {
-        gui->setZ((*--guis.end())->getPosition().z - 0.0001f);
+        gui->setZ((*--guis.end())->getPosition().z - 0.00001f);
     }
     this->guis.push_back(gui);
 }

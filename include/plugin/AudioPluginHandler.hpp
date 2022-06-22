@@ -23,7 +23,8 @@ struct SynthParams {
 
 class AudioPluginHandler {
    public:
-    AudioPluginHandler(std::string path, AudioHandler* handler);
+    AudioPluginHandler(std::string path, AudioHandler* handler,
+                       std::string synthdata);
 
     void noteOn(u_char pitch, u_char velocity);
     void noteOff(u_char pitch);

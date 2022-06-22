@@ -16,8 +16,10 @@ Chart readChart(const char* json) {
     c.artist = t->get<std::string>("artist", str);
     c.audio = t->get<std::string>("audio", str);
     c.name = t->get<std::string>("name", str);
+    c.plugin = t->get<std::string>("plugin", str);
+    c.plugindata = t->get<std::string>("plugindata", str);
     c.offset = t->get<uint64_t>("offset", n);
-    tree diffs = t->get_child("diffs");
+    tree diffs = t->get_child("diffs");  // TODO handle exception
     for (auto elem : diffs) {
         tree diff = elem.second;
         Diff d;

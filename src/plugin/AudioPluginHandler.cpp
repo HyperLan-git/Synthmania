@@ -1,8 +1,9 @@
 #include "AudioPluginHandler.hpp"
 
-AudioPluginHandler::AudioPluginHandler(std::string path,
-                                       AudioHandler* handler) {
-    this->host = new SimplePluginHost(path, handler->getSampleRate(), 1024);
+AudioPluginHandler::AudioPluginHandler(std::string path, AudioHandler* handler,
+                                       std::string synthdata) {
+    this->host = new SimplePluginHost(path, handler->getSampleRate(), 1024,
+                                      false, synthdata);
 
     thrd_create(&synth_thread, synthThread,
                 new SynthParams{host, handler, 3, 1024});

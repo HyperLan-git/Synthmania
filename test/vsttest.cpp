@@ -8,6 +8,7 @@ class SimplePluginHost;
 #define BUFFERS 4
 #define BUFFERSIZE 700
 
+// Rush E
 struct E {
     AudioHandler* handler;
     SimplePluginHost* host;
@@ -80,16 +81,21 @@ int guirun(void* arg) {
 int main() {
     AudioHandler* handler = new AudioHandler();
     SimplePluginHost test("./plugins/Vital.vst3", handler->getSampleRate(),
-                          BUFFERSIZE, true);
+                          BUFFERSIZE, true,
+                          "./resources/songs/Aegleseeker/synth1.dat");
 
-    thrd_t thread;
-    int result;
+    thrd_t thread, thread2;
+    int result, result2;
 
     thrd_create(&thread, audiorun, new E{handler, &test});
-    thrd_create(&thread, guirun, &test);
+    thrd_create(&thread2, guirun, &test);
 
-    while (handler)
+    while (test.isVisible())
         ;
+    // Program never ends
+    // Oh well do I even care lol
+    thrd_join(thread, &result);
+    thrd_join(thread, &result2);
 
-    return result;
+    return result | result2;
 }
