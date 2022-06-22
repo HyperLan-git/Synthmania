@@ -11,6 +11,7 @@ AudioPluginHandler::AudioPluginHandler(std::string path, AudioHandler* handler,
 }
 
 void AudioPluginHandler::noteOn(u_char pitch, u_char velocity) {
+    noteOff(pitch);
     libremidi::message msg = libremidi::message::note_on(1, pitch, velocity);
     char* data = new char[msg.size()];
     memcpy(data, msg.bytes.data(), msg.size());

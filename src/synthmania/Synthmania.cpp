@@ -21,6 +21,7 @@ Synthmania::Synthmania(std::string song, std::string skin) {
     std::string pdata = song;
     pdata.append("/");
     pdata.append(c.plugindata);
+    if (c.plugindata.compare("None") == 0) pdata = "None";
     plugin = new AudioPluginHandler("./plugins/Vital.vst3", audio, pdata);
     Model *model =
         new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
@@ -54,7 +55,6 @@ Synthmania::Synthmania(std::string song, std::string skin) {
         Note *n = new Note(name, note.timestamp, note.note,
                            note.length / partition.MPQ / 4., textures);
         notes.push_back(n);
-        addGui(n);
         int diff = getDifferenceFromC4(note.note);
         if (diff <= 0 || diff >= 12) {
             bool up = diff >= 12;
@@ -70,6 +70,7 @@ Synthmania::Synthmania(std::string song, std::string skin) {
                 addGui(readability);
             }
         }
+        addGui(n);
         if (!isFromCMajor(note.note)) {
             strcpy(name, "Sharp_");
             strcat(name, hash);

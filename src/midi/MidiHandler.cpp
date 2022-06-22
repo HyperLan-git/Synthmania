@@ -87,7 +87,7 @@ TrackPartition MidiHandler::readMidi(const char *path) {
             libremidi::message message = event.m;
             unsigned long long dt = event.tick;
             dt = dt * 1000000 / r.ticksPerBeat * 60 * 120 / r.startingTempo /
-                 117;
+                 170;
             t += dt;
             switch (message.get_message_type()) {
                 case libremidi::message_type::NOTE_ON:

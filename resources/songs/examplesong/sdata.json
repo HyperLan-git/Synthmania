@@ -14,5 +14,6 @@
     "audio": "None",
     "offset": 0,
     "plugin": "Vital",
+    "plugindata": "mysynth.dat",
     "animation": "None"
 }
