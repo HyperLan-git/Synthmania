@@ -10,7 +10,7 @@ Precision::Precision(ImageView* texture, const char* name, int64_t time,
 bool Precision::update(int64_t time) {
     uint64_t d = this->hit_time + LINGER_PRECISION - time;
     color.a = d / (double)LINGER_PRECISION;
-    this->position.x = delta / (double)HIT_WINDOW;
+    this->position.x = delta / (long double)HIT_WINDOW / 1.2;
 
     return this->hit_time + LINGER_PRECISION < time;
 }

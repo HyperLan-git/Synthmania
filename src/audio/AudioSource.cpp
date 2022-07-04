@@ -97,7 +97,10 @@ glm::vec3 AudioSource::getSource3f(ALenum param) {
 }
 
 void AudioSource::setSampleOffset(ALfloat value) {
+    ALenum state = getState();
+    alSourceRewind(sourceID);
     setSourcef(AL_SAMPLE_OFFSET, value);
+    if (state == AL_PLAYING) alSourcePlay(sourceID);
 }
 
 void AudioSource::setLooping(bool looping) { setSourcei(AL_LOOPING, looping); }

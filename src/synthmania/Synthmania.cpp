@@ -53,7 +53,8 @@ Synthmania::Synthmania(std::string song, std::string skin) {
         const char *hash = std::to_string(std::hash<MidiNote>()(note)).c_str();
         strcat(name, hash);
         Note *n = new Note(name, note.timestamp, note.note,
-                           note.length / partition.MPQ / 4., textures);
+                           note.length / (long double)partition.MPQ / 4.,
+                           partition.MPQ, textures);
         notes.push_back(n);
         int diff = getDifferenceFromC4(note.note);
         if (diff <= 0 || diff >= 12) {
@@ -90,7 +91,7 @@ Synthmania::Synthmania(std::string song, std::string skin) {
 
         audio->addSound("song", buffer);
         music = audio->playSound("song");
-        music->setGain(.3f);
+        music->setGain(.5f);
     }
     begTime = std::chrono::high_resolution_clock::now();
 }
@@ -116,43 +117,27 @@ void Synthmania::run() {
         Synthmania *game = (Synthmania *)glfwGetWindowUserPointer(win);
         Window *window = game->getWindow();
         if (game == NULL || action != GLFW_PRESS) return;
-        int k = 0;
-        switch (key) {
-            case GLFW_KEY_W:
-                k = 60;
-                break;
-            case GLFW_KEY_X:
-                k = 62;
-                break;
-            case GLFW_KEY_C:
-                k = 64;
-                break;
-            case GLFW_KEY_V:
-                k = 65;
-                break;
-            case GLFW_KEY_B:
-                k = 67;
-                break;
-            case GLFW_KEY_N:
-                k = 69;
-                break;
-            case GLFW_KEY_M:
-                k = 71;
-                break;
-            default:
-                std::cout << "key = " << key << std::endl;
+        if (key == GLFW_KEY_RIGHT) {
+            game->setTimeMicros(game->getCurrentTimeMicros() + 2000000);
+            return;
         }
-
+        int k = 0;
+        int keys[] = {GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_X, GLFW_KEY_D,
+                      GLFW_KEY_C, GLFW_KEY_V, GLFW_KEY_G, GLFW_KEY_B,
+                      GLFW_KEY_H, GLFW_KEY_N, GLFW_KEY_J, GLFW_KEY_M};
+        for (k = 0; k < 12; k++) {
+            if (keys[k] == key) break;
+        }
         for (Note *note : game->notes) {
             // This is osu for now
             if (  // note->getPitch() == k &&
                 note->getStatus() == WAITING &&
-                std::abs(note->getTime() - game->getCurrentTimeMillis()) <
-                    HIT_WINDOW  // && next note not skipped/close?? or just set
-                                // OD to a value that prevents the need for
-                                // notelock idk hmm
+                std::abs(note->getTime() - game->getCurrentTimeMicros()) <
+                    HIT_WINDOW  // && next note not skipped/close?? or just
+                                // set OD to a value that prevents the need
+                                // for notelock idk hmm
             ) {
-                int64_t time = game->getCurrentTimeMillis();
+                int64_t time = game->getCurrentTimeMicros();
                 // a -= (note->getTime() - game->getCurrentTime()) /
                 // ++i; std::cout << "avg = " << std::to_string(a) <<
                 // std::endl;
@@ -164,15 +149,16 @@ void Synthmania::run() {
                 prec->setSize({0.1f, 0.4f});
                 prec->setPosition({0, 0.9f});
                 game->addGui(prec);
-                if (delta < 0) delta = 0;
+                delta = std::clamp<int64_t>(delta, 0, note->getDuration() / 2);
                 game->getPluginHandler()->playNote(
-                    note->getPitch(), 64, time + note->getDuration() - delta);
+                    note->getPitch(), 90, time + note->getDuration() - delta);
                 note->setStatus(HIT);
                 note->kill(time);
                 break;
             }
         }
     });
+    setTimeMicros(-this->startTime);
     while (!window->shouldClose()) {
         glfwPollEvents();
         update();
@@ -183,21 +169,30 @@ void Synthmania::run() {
 
 Renderer *Synthmania::getRenderer() { return renderer; }
 
-int64_t Synthmania::getCurrentTimeMillis() {
-    if (music != NULL) {
+int64_t Synthmania::getCurrentTimeMicros() {
+    /*if (music != NULL) {
         long long j = music->getSampleOffset() * 1000000.;
-        return j / 44100 - this->startTime;
-    }
+        return j / (uint64_t)44100 - this->startTime;
+    }*/
     auto currentTime = std::chrono::high_resolution_clock::now();
+    // Necessary conversions to not lose precision
     return std::chrono::duration<int64_t, std::chrono::nanoseconds::period>(
                currentTime - begTime)
                    .count() /
-               1000 -
-           (int64_t)this->startTime;
+               (uint64_t)1000 -
+           (int64_t)this->startTime - (int64_t)relativeTime;
+}
+
+void Synthmania::setTimeMicros(int64_t time) {
+    relativeTime -= time - getCurrentTimeMicros();
+    if (music != NULL)
+        music->setSampleOffset((getCurrentTimeMicros() + startTime) * 44100. /
+                               1000000.f);
 }
 
 void Synthmania::update() {
-    int64_t time_from_start = getCurrentTimeMillis();
+    int64_t time_from_start = getCurrentTimeMicros();
+    // std::cout << std::dec << time_from_start << " ";
     plugin->update(time_from_start);
     std::vector<Gui *> toDestroy;
     for (Gui *g : guis)
@@ -266,6 +261,14 @@ void Synthmania::update() {
             }
         }
         m = handler->getMessage();
+    }
+    if (audio != NULL) {  // audio latency study
+        long long j = music->getSampleOffset() * 1000000.;
+        int64_t res = j / (uint64_t)44100 - this->startTime;
+        int64_t a = getCurrentTimeMicros();
+        int64_t b = res - a;
+        // std::cout << b << std::dec << " ";
+        if (b > 10000) setTimeMicros(a);
     }
     thrd_yield();
 }

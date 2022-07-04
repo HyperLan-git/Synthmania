@@ -584,7 +584,7 @@ void Renderer::drawGui(Gui* gui, CommandBuffer* commandBuffer) {
 }
 
 void Renderer::updateUniformBuffer(uint32_t currentImage) {
-    double time_from_start = game->getCurrentTimeMillis() / 1000000.;
+    double time_from_start = game->getCurrentTimeMicros() / 1000000.;
     float x = cos(time_from_start * 2 / 3) / 2,
           y = sin(time_from_start * 5 / 3) / 2;  // Lissajous :)
 

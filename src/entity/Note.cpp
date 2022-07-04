@@ -2,7 +2,7 @@
 
 ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
                              double duration, Key currentKey) {
-    float initial = 1;
+    float initial = 2;
     std::string texName = "note_";
     while (initial > duration) initial /= 2;
     // std::cout << duration << " " << (int)pitch << std::endl;
@@ -17,28 +17,22 @@ ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
     return getTextureByName(textures, texName.c_str());
 }
 
+// TODO dotted/arbitrary length note
 glm::vec2 getSizeAndLocForNote(double duration) {
     int i = duration;
+    if (duration < 0.125f) duration = 0.125f;
     if (duration < 1.f) i = -(1.f) / duration;
-    switch (i) {
-        case -8:
-        case -4:
-        case -2:
-            return {-0.14f, 0.53f};
-        case 1:
-        case 2:
-            return {0, 0.25f};
-        default:
-            return {-0.14f, 0.53f};
-    }
+    // TODO put all that in the skin file
+    if (i < 0) return {-0.14f, 0.53f};
+    return {0, 0.25f};
 }
 
 Note::Note(const char* name, int64_t time, u_char pitch, double duration,
-           std::vector<ImageView*> textures)
+           uint64_t MPQ, std::vector<ImageView*> textures)
     : PartitionNotation(
           name, time, pitch,
           getTextureForNote(textures, pitch, duration, Key::SOL)) {
-    this->duration = duration * 350000;
+    this->duration = duration * MPQ * 4;
     this->kill_moment = time + HIT_WINDOW;
     glm::vec2 temp = getSizeAndLocForNote(duration);
     this->graphicalPosition.y = temp.x;

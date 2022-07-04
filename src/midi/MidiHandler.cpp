@@ -75,7 +75,8 @@ TrackPartition MidiHandler::readMidi(const char *path) {
     libremidi::reader::parse_result result = r.parse(bytes);
     std::vector<MidiNote> notes;
 
-    uint64_t MPQ = 125000 / 2;
+    r.startingTempo = 117;
+    uint64_t MPQ = 250000 * 60 / r.startingTempo;
     // If parsing succeeded, use the parsed data
     if (result == libremidi::reader::invalid) return TrackPartition{MPQ, notes};
     // Pitch wheel : 0x2000 = 8192 = +-0 semitones 0x0 = -2 semitones
@@ -86,8 +87,7 @@ TrackPartition MidiHandler::readMidi(const char *path) {
         for (auto &event : track) {
             libremidi::message message = event.m;
             unsigned long long dt = event.tick;
-            dt = dt * 1000000 / r.ticksPerBeat * 60 * 120 / r.startingTempo /
-                 170;
+            dt = dt * 1000000 / r.ticksPerBeat * 60 / r.startingTempo;
             t += dt;
             switch (message.get_message_type()) {
                 case libremidi::message_type::NOTE_ON:

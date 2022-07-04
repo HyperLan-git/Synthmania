@@ -11,6 +11,7 @@ class Synthmania;
 #define STBI_NO_PNM
 #include <stdlib.h>
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 
@@ -46,7 +47,8 @@ class Synthmania {
     void addGui(Gui *gui);
     void addEntity(Entity *entity);
 
-    int64_t getCurrentTimeMillis();
+    int64_t getCurrentTimeMicros();
+    void setTimeMicros(int64_t time);
 
     ~Synthmania();
 
@@ -60,7 +62,7 @@ class Synthmania {
 
     std::chrono::_V2::system_clock::time_point begTime =
         std::chrono::high_resolution_clock::now();
-    uint64_t startTime = 0;
+    uint64_t startTime = 0, relativeTime = 0;
 
     std::map<std::string, std::string> textures;
 

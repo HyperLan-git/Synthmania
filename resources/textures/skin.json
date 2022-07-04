@@ -1,4 +1,5 @@
 {
+    "missing": "missing.jpg",
     "partition": "partition.png",
     "judgement_line": "judgement.png",
     "precision": "precision.png",
@@ -8,9 +9,11 @@
     "bar": "bar.png",
     "room": "viking_room.png",
     "note": {
+        "16th": "streams.png",
         "8th": "taptap.png",
         "4th": "racism.png",
         "2th": "no_racist.png",
-        "1": "racism2.png"
+        "1": "racism2.png",
+        "2": "racism3.png"
     }
 }
