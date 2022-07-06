@@ -80,7 +80,6 @@ Device::Device(VkPhysicalDevice *physicalDevice,
         VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
-
     int i = 0;
     for (uint32_t family : uniqueQueueFamilies) {
         queues.push_back(new Queue(this, family, 0));

@@ -18,6 +18,7 @@ class Synthmania;
 #include "AudioHandler.hpp"
 #include "AudioPluginHandler.hpp"
 #include "Entity.hpp"
+#include "Game.hpp"
 #include "Gui.hpp"
 #include "JsonHandler.hpp"
 #include "MidiHandler.hpp"
@@ -26,48 +27,30 @@ class Synthmania;
 #include "Renderer.hpp"
 #include "Window.hpp"
 
-class Synthmania {
+class Synthmania : public Game {
    public:
     Synthmania(std::string songfolder, std::string skin);
 
-    void run();
-    void update();
+    virtual void init();
 
-    std::map<std::string, std::string> readTextures(std::string skin);
-    std::map<std::string, std::string> getTextures();
+    virtual void update();
 
-    Renderer *getRenderer();
     AudioPluginHandler *getPluginHandler();
 
-    std::vector<Entity *> getEntities();
-    std::vector<Gui *> getGuis();
-
-    Window *getWindow();
-
-    void addGui(Gui *gui);
-    void addEntity(Entity *entity);
-
-    int64_t getCurrentTimeMicros();
-    void setTimeMicros(int64_t time);
+    virtual void setTimeMicros(int64_t time);
 
     ~Synthmania();
 
+    static void keyCallback(GLFWwindow *win, int key, int scancode, int action,
+                            int mods);
+
    private:
     MidiHandler *handler;
-    Window *window;
-    Renderer *renderer;
     AudioHandler *audio;
     AudioPluginHandler *plugin;
     TrackPartition partition;
 
-    std::chrono::_V2::system_clock::time_point begTime =
-        std::chrono::high_resolution_clock::now();
-    uint64_t startTime = 0, relativeTime = 0;
-
-    std::map<std::string, std::string> textures;
-
-    std::vector<Entity *> entities;
-    std::vector<Gui *> guis;
     std::vector<Note *> notes;
     AudioSource *music;
+    std::string songFolder, skin;
 };

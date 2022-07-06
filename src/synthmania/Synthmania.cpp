@@ -1,24 +1,28 @@
 #include "Synthmania.hpp"
 
-Synthmania::Synthmania(std::string song, std::string skin) {
-    std::string json = song;
-    json.append("/sdata.json");
-    Chart c = readChart(json.c_str());
-    Diff d = c.diffs[0];
+Synthmania::Synthmania(std::string song, std::string skin)
+    : Game(1920, 1080, "Synthmania") {
+    this->songFolder = song;
+    this->skin = skin;
     handler = new MidiHandler();
-    window = new Window(1920, 1080, "Synthmania");
-    renderer = new Renderer(this, window);
     textures = readTextures(std::string(skin).append("/skin.json"));
     for (auto &elem : textures)
         elem.second = std::string(skin).append("/").append(elem.second);
-    renderer->loadTextures(textures);
+    audio = new AudioHandler();
+    keyFunction = Synthmania::keyCallback;
+}
+
+void Synthmania::init() {
+    std::string json = songFolder;
+    json.append("/sdata.json");
+    Chart c = readChart(json.c_str());
+    Diff d = c.diffs[0];
     this->startTime = c.offset;
-    std::string path = song;
+    std::string path = songFolder;
     path.append("/");
     path.append(d.midi);
     partition = handler->readMidi(path.c_str());
-    audio = new AudioHandler();
-    std::string pdata = song;
+    std::string pdata = songFolder;
     pdata.append("/");
     pdata.append(c.plugindata);
     if (c.plugindata.compare("None") == 0) pdata = "None";
@@ -84,7 +88,7 @@ Synthmania::Synthmania(std::string song, std::string skin) {
     }
     music = NULL;
     if (c.audio.compare("None") != 0) {
-        std::string wav = song;
+        std::string wav = songFolder;
         wav.append("/");
         wav.append(c.audio);
         AudioBuffer *buffer = new AudioBuffer(wav.c_str());
@@ -93,98 +97,57 @@ Synthmania::Synthmania(std::string song, std::string skin) {
         music = audio->playSound("song");
         music->setGain(.5f);
     }
-    begTime = std::chrono::high_resolution_clock::now();
 }
 
-std::map<std::string, std::string> Synthmania::getTextures() {
-    return textures;
-}
-
-std::map<std::string, std::string> Synthmania::readTextures(std::string skin) {
-    std::map<std::string, std::string> result;
-    tree *t = readJson(skin.c_str());
-    readTree(*t, result, "");
-    delete t;
-    return result;
-}
-
-Window *Synthmania::getWindow() { return this->window; }
-
-void Synthmania::run() {
-    window->setWindowUserPointer(this);
-    window->setKeycallback([](GLFWwindow *win, int key, int scancode,
-                              int action, int mods) {
-        Synthmania *game = (Synthmania *)glfwGetWindowUserPointer(win);
-        Window *window = game->getWindow();
-        if (game == NULL || action != GLFW_PRESS) return;
-        if (key == GLFW_KEY_RIGHT) {
-            game->setTimeMicros(game->getCurrentTimeMicros() + 2000000);
-            return;
+void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
+                             int mods) {
+    Synthmania *game = (Synthmania *)glfwGetWindowUserPointer(win);
+    Window *window = game->getWindow();
+    if (game == NULL || action != GLFW_PRESS) return;
+    if (key == GLFW_KEY_RIGHT) {
+        game->setTimeMicros(game->getCurrentTimeMicros() + 2000000);
+        return;
+    }
+    int k = 0;
+    int keys[] = {GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_X, GLFW_KEY_D,
+                  GLFW_KEY_C, GLFW_KEY_V, GLFW_KEY_G, GLFW_KEY_B,
+                  GLFW_KEY_H, GLFW_KEY_N, GLFW_KEY_J, GLFW_KEY_M};
+    for (k = 0; k < 12; k++) {
+        if (keys[k] == key) break;
+    }
+    for (Note *note : game->notes) {
+        // This is osu for now
+        if (  // note->getPitch() == k &&
+            note->getStatus() == WAITING &&
+            std::abs(note->getTime() - game->getCurrentTimeMicros()) <
+                HIT_WINDOW  // && next note not skipped/close?? or just
+                            // set OD to a value that prevents the need
+                            // for notelock idk hmm
+        ) {
+            int64_t time = game->getCurrentTimeMicros();
+            // a -= (note->getTime() - game->getCurrentTime()) /
+            // ++i; std::cout << "avg = " << std::to_string(a) <<
+            // std::endl;
+            int64_t delta = time - note->getTime();
+            Precision *prec = new Precision(
+                getTextureByName(game->getRenderer()->getTextures(),
+                                 "precision_tick"),
+                "tick", time, delta);
+            prec->setSize({0.1f, 0.4f});
+            prec->setPosition({0, 0.9f});
+            game->addGui(prec);
+            delta = std::clamp<int64_t>(delta, 0, note->getDuration() / 2);
+            game->getPluginHandler()->playNote(
+                note->getPitch(), 90, time + note->getDuration() - delta);
+            note->setStatus(HIT);
+            note->kill(time);
+            break;
         }
-        int k = 0;
-        int keys[] = {GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_X, GLFW_KEY_D,
-                      GLFW_KEY_C, GLFW_KEY_V, GLFW_KEY_G, GLFW_KEY_B,
-                      GLFW_KEY_H, GLFW_KEY_N, GLFW_KEY_J, GLFW_KEY_M};
-        for (k = 0; k < 12; k++) {
-            if (keys[k] == key) break;
-        }
-        for (Note *note : game->notes) {
-            // This is osu for now
-            if (  // note->getPitch() == k &&
-                note->getStatus() == WAITING &&
-                std::abs(note->getTime() - game->getCurrentTimeMicros()) <
-                    HIT_WINDOW  // && next note not skipped/close?? or just
-                                // set OD to a value that prevents the need
-                                // for notelock idk hmm
-            ) {
-                int64_t time = game->getCurrentTimeMicros();
-                // a -= (note->getTime() - game->getCurrentTime()) /
-                // ++i; std::cout << "avg = " << std::to_string(a) <<
-                // std::endl;
-                int64_t delta = time - note->getTime();
-                Precision *prec = new Precision(
-                    getTextureByName(game->getRenderer()->getTextures(),
-                                     "precision_tick"),
-                    "tick", time, delta);
-                prec->setSize({0.1f, 0.4f});
-                prec->setPosition({0, 0.9f});
-                game->addGui(prec);
-                delta = std::clamp<int64_t>(delta, 0, note->getDuration() / 2);
-                game->getPluginHandler()->playNote(
-                    note->getPitch(), 90, time + note->getDuration() - delta);
-                note->setStatus(HIT);
-                note->kill(time);
-                break;
-            }
-        }
-    });
-    setTimeMicros(-this->startTime);
-    while (!window->shouldClose()) {
-        glfwPollEvents();
-        update();
-        audio->update();
-        renderer->render();
     }
 }
 
-Renderer *Synthmania::getRenderer() { return renderer; }
-
-int64_t Synthmania::getCurrentTimeMicros() {
-    /*if (music != NULL) {
-        long long j = music->getSampleOffset() * 1000000.;
-        return j / (uint64_t)44100 - this->startTime;
-    }*/
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    // Necessary conversions to not lose precision
-    return std::chrono::duration<int64_t, std::chrono::nanoseconds::period>(
-               currentTime - begTime)
-                   .count() /
-               (uint64_t)1000 -
-           (int64_t)this->startTime - (int64_t)relativeTime;
-}
-
 void Synthmania::setTimeMicros(int64_t time) {
-    relativeTime -= time - getCurrentTimeMicros();
+    Game::setTimeMicros(time);
     if (music != NULL)
         music->setSampleOffset((getCurrentTimeMicros() + startTime) * 44100. /
                                1000000.f);
@@ -275,31 +238,9 @@ void Synthmania::update() {
 
 AudioPluginHandler *Synthmania::getPluginHandler() { return plugin; }
 
-void Synthmania::addGui(Gui *gui) {
-    if (guis.empty()) {
-        gui->setZ(0.9999f);
-    } else {
-        gui->setZ((*--guis.end())->getPosition().z - 0.00001f);
-    }
-    this->guis.push_back(gui);
-}
-
-void Synthmania::addEntity(Entity *entity) { entities.push_back(entity); }
-
-std::vector<Entity *> Synthmania::getEntities() { return entities; }
-std::vector<Gui *> Synthmania::getGuis() { return guis; }
-
 Synthmania::~Synthmania() {
-    for (Entity *e : entities) delete e;
-    for (Gui *g : guis) delete g;
-
     delete plugin;
     delete audio;
 
     delete handler;
-
-    delete renderer;
-    delete window;
-
-    glfwTerminate();
 }

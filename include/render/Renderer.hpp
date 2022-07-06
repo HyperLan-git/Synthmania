@@ -13,7 +13,7 @@ class Renderer;
 #include <fstream>
 #include <functional>
 
-#include "Synthmania.hpp"
+#include "Game.hpp"
 #include "stb_image.h"
 
 #define GLM_FORCE_RADIANS
@@ -81,7 +81,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
 
 class Renderer {
    public:
-    Renderer(Synthmania* theGame, Window* window);
+    Renderer(Game* theGame, Window* window);
 
     void render();
     void loadTextures(std::map<std::string, std::string> textures);
@@ -96,7 +96,7 @@ class Renderer {
     ~Renderer();
 
    private:
-    Synthmania* game;
+    Game* game;
 
     Window* window;
 
@@ -180,14 +180,19 @@ class Renderer {
 
     ImageView* readTexture(const char* path, const char* name);
 
+   public:
     void addTexture(Image* texture, const char* name);
 
+   private:
     void updateDescriptorSet(ShaderDescriptorSet* descriptor,
                              ImageView* texture, TextureSampler* sampler,
                              Buffer* uniformBuffer);
 
+   public:
     void transitionImageLayout(Image* image, VkImageLayout oldLayout,
                                VkImageLayout newLayout);
+
+   private:
     void copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
                            uint32_t height);
     void copyImage(Image* src, VkImageLayout srcLayout, Image* dst,

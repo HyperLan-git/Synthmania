@@ -5,7 +5,7 @@
 
 #include <map>
 
-Renderer::Renderer(Synthmania* game, Window* window) {
+Renderer::Renderer(Game* game, Window* window) {
     this->game = game;
     this->window = window;
     initVulkan();
@@ -45,12 +45,11 @@ void Renderer::initVulkan() {
 
 void Renderer::loadTextures(std::map<std::string, std::string> textures) {
     for (auto entry : textures) {
-        std::cout << "Loading : " << entry.first << std::endl;
         this->textures.push_back(
             readTexture(entry.second.c_str(), entry.first.c_str()));
     }
 
-    uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * textures.size();
+    uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * this->textures.size();
     std::vector<VkDescriptorType> types(type_sz);
     for (size_t i = 0; i < textures.size(); i++) {
         types[2 * i] = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
