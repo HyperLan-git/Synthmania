@@ -237,6 +237,24 @@ void CommandBuffer::copyImage(Image *src, VkImageLayout srcImageLayout,
                    *(dst->getImage()), dstImageLayout, 1, &regions);
 }
 
+void CommandBuffer::convertImage(Image *src, VkImageLayout srcImageLayout,
+                                 Image *dst, VkImageLayout dstImageLayout,
+                                 VkFilter filter) {
+    VkImageBlit blit;
+    blit.srcOffsets[0] = blit.dstOffsets[0] = {0, 0, 0};
+    blit.srcOffsets[1] = blit.dstOffsets[1] = {1, 1, 1};
+    blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blit.srcSubresource.mipLevel = 0;
+    blit.srcSubresource.baseArrayLayer = 0;
+    blit.srcSubresource.layerCount = 1;
+    blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blit.dstSubresource.mipLevel = 0;
+    blit.dstSubresource.baseArrayLayer = 0;
+    blit.dstSubresource.layerCount = 1;
+    vkCmdBlitImage(*buffer, *(src->getImage()), srcImageLayout,
+                   *(dst->getImage()), dstImageLayout, 1, &blit, filter);
+}
+
 CommandBuffer::~CommandBuffer() {
     vkFreeCommandBuffers(*(device->getDevice()), *(pool->getPool()), 1, buffer);
     delete buffer;

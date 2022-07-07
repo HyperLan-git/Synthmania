@@ -192,6 +192,9 @@ class Renderer {
     void transitionImageLayout(Image* image, VkImageLayout oldLayout,
                                VkImageLayout newLayout);
 
+    void convertImage(Image* src, VkImageLayout srcImageLayout, Image* dst,
+                      VkImageLayout dstImageLayout, VkFilter filter);
+
    private:
     void copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
                            uint32_t height);

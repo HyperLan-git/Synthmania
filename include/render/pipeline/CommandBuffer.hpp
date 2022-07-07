@@ -33,6 +33,9 @@ class CommandBuffer {
     void copyImage(Image *src, VkImageLayout srcImageLayout, Image *dst,
                    VkImageLayout dstImageLayout);
 
+    void convertImage(Image *src, VkImageLayout srcImageLayout, Image *dst,
+                      VkImageLayout dstImageLayout, VkFilter filter);
+
     void copyBufferToImage(Buffer *srcBuffer, Image *image,
                            VkExtent3D imageExtent);
 

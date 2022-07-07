@@ -391,6 +391,20 @@ void Renderer::copyImage(Image* src, VkImageLayout srcLayout, Image* dst,
     delete commandBuffer;
 }
 
+void Renderer::convertImage(Image* src, VkImageLayout srcImageLayout,
+                            Image* dst, VkImageLayout dstImageLayout,
+                            VkFilter filter) {
+    CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
+    commandBuffer->begin();
+
+    commandBuffer->convertImage(src, srcImageLayout, dst, dstImageLayout,
+                                filter);
+
+    commandBuffer->end();
+    commandBuffer->submit(device->getQueue(0));
+    delete commandBuffer;
+}
+
 void Renderer::createVertexBuffer(VkDeviceSize size) {
     vertexBuffer = new Buffer(
         &physicalDevice, device, size,

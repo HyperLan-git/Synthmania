@@ -19,6 +19,7 @@ Image::Image(VkPhysicalDevice* physicalDevice, Device* device, uint32_t width,
     imageInfo.usage = usage;
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    imageInfo.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
 
     if (vkCreateImage(*(device->getDevice()), &imageInfo, nullptr, image) !=
         VK_SUCCESS) {
