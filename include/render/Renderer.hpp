@@ -18,6 +18,12 @@ class Renderer;
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <ft2build.h>
+
+#define FT
+#include <freetype/freetype.h>
+#include <freetype/ftbitmap.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -34,6 +40,7 @@ class Renderer;
 #include "Device.hpp"
 #include "Entity.hpp"
 #include "Fence.hpp"
+#include "Font.hpp"
 #include "Framebuffer.hpp"
 #include "Gui.hpp"
 #include "Image.hpp"
@@ -84,9 +91,12 @@ class Renderer {
     Renderer(Game* theGame, Window* window);
 
     void render();
-    void loadTextures(std::map<std::string, std::string> textures);
+    void loadTextures(std::map<std::string, std::string> textures,
+                      std::map<std::string, std::vector<ulong>> fonts);
 
     std::vector<ImageView*> getTextures();
+    std::vector<Font> getFonts();
+    Character getCharacter(std::string fontName, ulong code);
 
     void setStartTime(double start);
 
@@ -147,6 +157,8 @@ class Renderer {
     std::vector<ImageView*> textures;
     std::vector<ShaderDescriptorSet*> textureAccessors;
 
+    std::vector<Font> fonts;
+
     std::chrono::_V2::system_clock::time_point begTime =
         std::chrono::high_resolution_clock::now();
     double startTime = 0;
@@ -182,6 +194,10 @@ class Renderer {
 
    public:
     void addTexture(Image* texture, const char* name);
+
+    void loadFonts(std::map<std::string, std::vector<ulong>> fonts);
+
+    Image* loadCharacter(FT_Face face, ulong character);
 
    private:
     void updateDescriptorSet(ShaderDescriptorSet* descriptor,

@@ -43,11 +43,93 @@ void Renderer::initVulkan() {
     }
 }
 
-void Renderer::loadTextures(std::map<std::string, std::string> textures) {
+Image* Renderer::loadCharacter(FT_Face face, ulong character) {
+    FT_GlyphSlot glyphSlot = face->glyph;
+    FT_UInt i = FT_Get_Char_Index(face, character);
+    FT_Load_Glyph(face, i, FT_LOAD_DEFAULT);
+    FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL);
+    uint w = glyphSlot->bitmap.width + 2, h = glyphSlot->bitmap.rows + 2;
+    uint8_t buffer[w * h * 4] = {0};
+    for (int i = 0; i < w * h * 4; i++) buffer[i] = 255;
+
+    uint8_t* bitmap = glyphSlot->bitmap.buffer;
+
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            if (y == 0 || y == h - 1 || x == 0 || x == w - 1) {
+                buffer[(x + y * w) * 4 + 3] = 0;
+                continue;
+            }
+            uint8_t value = bitmap[(x - 1) + (y - 1) * (w - 2)];
+            buffer[(x + y * w) * 4 + 3] = value;
+        }
+    }
+
+    Image* image =
+        new Image(&physicalDevice, device, w, h, VK_FORMAT_R8G8B8A8_SRGB,
+                  VK_IMAGE_TILING_LINEAR,  // Fricking tiling
+                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    void* d;
+    vkMapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()), 0,
+                w * h * 4, 0, &d);
+    memcpy(d, buffer, w * h * 4);
+    vkUnmapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()));
+    return image;
+}
+
+#define FONT_SIZE 128
+
+void Renderer::loadFonts(
+    std::map<std::string, std::vector<ulong>> fontsToLoad) {
+    FT_Library* lib = new FT_Library();
+    FT_Init_FreeType(lib);
+    for (auto entry : fontsToLoad) {
+        FT_Face f;
+        if (FT_New_Face(*lib, entry.first.c_str(), 0, &f)) continue;
+        if (FT_Set_Pixel_Sizes(f, 0, static_cast<FT_UInt>(FONT_SIZE))) continue;
+
+        Font font;
+        font.name = f->family_name;
+
+        for (auto c : entry.second) {
+            std::string charName = f->family_name;
+            charName.append("_");
+            charName.append(std::to_string(c));
+            addTexture(loadCharacter(f, c), charName.c_str());
+            Character chr;
+            chr.texture = getTextureByName(textures, charName.c_str());
+            chr.character = c;
+            chr.width = f->glyph->bitmap.width + 2;
+            chr.height = f->glyph->bitmap.rows + 2;
+            chr.offsetTop = f->glyph->bitmap_top;
+            chr.offsetLeft = f->glyph->bitmap_left;
+            font.characters.emplace(c, chr);
+        }
+        fonts.push_back(font);
+    }
+}
+
+std::vector<Font> Renderer::getFonts() { return fonts; }
+
+Character Renderer::getCharacter(std::string fontName, ulong code) {
+    for (Font f : fonts) {
+        if (fontName.compare(f.name) != 0) continue;
+        return f.characters[code];
+    }
+    return Character({0, 0, 0, 0, 0, NULL});
+}
+
+void Renderer::loadTextures(std::map<std::string, std::string> textures,
+                            std::map<std::string, std::vector<ulong>> fonts) {
     for (auto entry : textures) {
         this->textures.push_back(
             readTexture(entry.second.c_str(), entry.first.c_str()));
     }
+    loadFonts(fonts);
 
     uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * this->textures.size();
     std::vector<VkDescriptorType> types(type_sz);

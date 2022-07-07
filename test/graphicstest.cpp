@@ -7,7 +7,7 @@
 
 #define FONT "./resources/fonts/Stupid.ttf"
 
-FT_Face getFont(const std::string& fontname, int pt, int sz, FT_Library* lib) {
+FT_Face getFont(const std::string& fontname, int pt, FT_Library* lib) {
     FT_Face face;
     if (FT_New_Face(*lib, fontname.c_str(), 0, &face)) return NULL;
     if (FT_Set_Pixel_Sizes(face, 0, static_cast<FT_UInt>(pt))) return NULL;
@@ -25,26 +25,31 @@ class Test : public Game {
         Renderer* r = renderer;
         VkPhysicalDevice* pd = r->getPhysicalDevice();
         Device* device = r->getDevice();
-        FT_Face face = getFont(FONT, 128, 0, lib);
+        FT_Face face = getFont(FONT, 128, lib);
         FT_GlyphSlot glyphSlot = face->glyph;
         FT_UInt i = getGlyph('H', face);
         FT_Load_Glyph(face, i, FT_LOAD_DEFAULT);
         FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL);
-        uint w = glyphSlot->bitmap.width, h = glyphSlot->bitmap.rows;
+        uint w = glyphSlot->bitmap.width + 2, h = glyphSlot->bitmap.rows + 2;
         uint8_t buffer[w * h * 4] = {0};
         for (int i = 0; i < w * h * 4; i++) buffer[i] = 255;
 
         uint8_t* src = glyphSlot->bitmap.buffer;
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                std::cout << ((((int)src[x + y * w]) > 120) ? 'O' : ' ') << " ";
+        for (int y = 0; y < h - 2; y++) {
+            for (int x = 0; x < w - 2; x++) {
+                std::cout << ((((int)src[x + y * (w - 2)]) > 120) ? 'O' : ' ')
+                          << " ";
             }
             std::cout << '\n';
         }
 
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
-                uint8_t value = src[x + y * w];
+                if (y == 0 || y == h - 1 || x == 0 || x == w - 1) {
+                    buffer[(x + y * w) * 4 + 3] = 0;
+                    continue;
+                }
+                uint8_t value = src[(x - 1) + (y - 1) * (w - 2)];
                 buffer[(x + y * w) * 4 + 3] = value;
             }
         }

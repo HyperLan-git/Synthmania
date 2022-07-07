@@ -97,6 +97,7 @@ void Synthmania::init() {
         music = audio->playSound("song");
         music->setGain(.5f);
     }
+    addGui(new Gui(renderer->getCharacter("FreeSans", 'A').texture, "A"));
 }
 
 void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,

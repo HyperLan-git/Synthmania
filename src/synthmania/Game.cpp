@@ -5,12 +5,19 @@ Game::Game(int width, int height, const char *title) {
     renderer = new Renderer(this, window);
     textures = std::map<std::string, std::string>();
     textures.emplace("missing", "resources/textures/missing.jpg");
+    const char *list =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+    //"&\"'(-_)=+|#{}[]`\\^@*,;:!?./%$";
+    std::vector<ulong> chars;
+    for (const char *c = list; *c != '\0'; c++) chars.push_back(*c);
+    fontsToLoad.emplace("/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+                        chars);
 }
 
 void Game::run() {
-    renderer->loadTextures(textures);
-    init();
+    renderer->loadTextures(textures, fontsToLoad);
     window->setWindowUserPointer(this);
+    init();
     window->setKeycallback(keyFunction);
     setTimeMicros(-this->startTime);
     while (!window->shouldClose()) {

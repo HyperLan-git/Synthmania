@@ -63,6 +63,7 @@ class Game {
     uint64_t startTime = 0, relativeTime = 0;
 
     std::map<std::string, std::string> textures;
+    std::map<std::string, std::vector<ulong>> fontsToLoad;
 
     std::vector<Entity *> entities;
     std::vector<Gui *> guis;
