@@ -7,7 +7,7 @@
 
 struct Character {
     int offsetLeft, offsetTop;
-    uint width, height;
+    uint width, height, advance;
     ulong character;
     ImageView* texture;
 };

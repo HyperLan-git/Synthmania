@@ -86,6 +86,8 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    VkDebugUtilsMessengerEXT debugMessenger,
                                    const VkAllocationCallbacks* pAllocator);
 
+#define FONT_SIZE 128
+
 class Renderer {
    public:
     Renderer(Game* theGame, Window* window);

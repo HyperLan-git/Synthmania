@@ -97,7 +97,24 @@ void Synthmania::init() {
         music = audio->playSound("song");
         music->setGain(.5f);
     }
-    addGui(new Gui(renderer->getCharacter("FreeSans", 'A').texture, "A"));
+    double pos = -2;
+    double conv = 8. * FONT_SIZE;
+    std::string text = c.name;
+    text.append(" by ");
+    text.append(c.artist);
+    for (int i = 0; i < text.size(); i++) {
+        Character c = renderer->getCharacter("Stupid", (ulong)text[i]);
+        std::string name = "text_";
+        name.append(std::to_string(i));
+        Gui *A = new Gui(c.texture, name.c_str());
+        A->setColor({.2, .2, 1, 1});
+        A->setPosition(
+            {pos + (double)c.width / conv / 2 - c.offsetLeft / conv * 0.7,
+             -.9 + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7});
+        A->setSize({(double)c.width / conv, (double)c.height / conv});
+        addGui(A);
+        pos += (c.advance) / conv;
+    }
 }
 
 void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,

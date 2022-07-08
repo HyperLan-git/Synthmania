@@ -50,7 +50,6 @@ Image* Renderer::loadCharacter(FT_Face face, ulong character) {
     FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL);
     uint w = glyphSlot->bitmap.width + 2, h = glyphSlot->bitmap.rows + 2;
     uint8_t buffer[w * h * 4] = {0};
-    for (int i = 0; i < w * h * 4; i++) buffer[i] = 255;
 
     uint8_t* bitmap = glyphSlot->bitmap.buffer;
 
@@ -81,8 +80,6 @@ Image* Renderer::loadCharacter(FT_Face face, ulong character) {
     return image;
 }
 
-#define FONT_SIZE 128
-
 void Renderer::loadFonts(
     std::map<std::string, std::vector<ulong>> fontsToLoad) {
     FT_Library* lib = new FT_Library();
@@ -105,6 +102,7 @@ void Renderer::loadFonts(
             chr.character = c;
             chr.width = f->glyph->bitmap.width + 2;
             chr.height = f->glyph->bitmap.rows + 2;
+            chr.advance = f->glyph->linearHoriAdvance / 65536;
             chr.offsetTop = f->glyph->bitmap_top;
             chr.offsetLeft = f->glyph->bitmap_left;
             font.characters.emplace(c, chr);
@@ -120,7 +118,7 @@ Character Renderer::getCharacter(std::string fontName, ulong code) {
         if (fontName.compare(f.name) != 0) continue;
         return f.characters[code];
     }
-    return Character({0, 0, 0, 0, 0, NULL});
+    return Character({0, 0, 0, 0, 0, 0, NULL});
 }
 
 void Renderer::loadTextures(std::map<std::string, std::string> textures,

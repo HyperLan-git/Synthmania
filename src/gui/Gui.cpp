@@ -20,6 +20,8 @@ void Gui::setZ(float z) { this->position.z = z; }
 
 void Gui::setSize(glm::vec2 size) { this->size = size; }
 
+void Gui::setColor(glm::vec4 color) { this->color = color; }
+
 bool Gui::update(int64_t time) { return false; }
 
 bool Gui::isDestroyed() { return this->destroyed; }

@@ -29,6 +29,7 @@ class Gui {
     void setPosition(glm::vec2 pos);
     void setZ(float z);
     void setSize(glm::vec2 size);
+    void setColor(glm::vec4 color);
 
     void setDestroyed();
     bool isDestroyed();

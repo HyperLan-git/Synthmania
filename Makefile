@@ -22,7 +22,7 @@ AUDIOSRC = $(wildcard src/audio/*.cpp) test/audiotest.cpp
 JSONSRC = $(wildcard src/json/*.cpp) test/jsontest.cpp
 VSTSRC = $(wildcard src/audio/*.cpp) test/vsttest.cpp
 GSRC = test/graphicstest.cpp $(wildcard src/render/*.cpp) $(wildcard src/render/*/*.cpp)\
-				$(wildcard src/entity/*.cpp) $(wildcard src/json/*.cpp) src/synthmania/Game.cpp
+				$(wildcard src/entity/*.cpp) $(wildcard src/gui/*.cpp) $(wildcard src/json/*.cpp) src/synthmania/Game.cpp
 
 Synthmania: shader $(VSTLIB)
 	d=$$(date +%s) ; \

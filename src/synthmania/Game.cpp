@@ -6,12 +6,11 @@ Game::Game(int width, int height, const char *title) {
     textures = std::map<std::string, std::string>();
     textures.emplace("missing", "resources/textures/missing.jpg");
     const char *list =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
-    //"&\"'(-_)=+|#{}[]`\\^@*,;:!?./%$";
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
+        "&\"'(-_)=+|#{}[]`\\^@*,;:!?./%$";
     std::vector<ulong> chars;
     for (const char *c = list; *c != '\0'; c++) chars.push_back(*c);
-    fontsToLoad.emplace("/usr/share/fonts/truetype/freefont/FreeSans.ttf",
-                        chars);
+    fontsToLoad.emplace("resources/fonts/Stupid.ttf", chars);
 }
 
 void Game::run() {
