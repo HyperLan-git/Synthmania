@@ -2,6 +2,7 @@
 
 class Note;
 
+#include "Game.hpp"
 #include "ImageView.hpp"
 #include "PartitionNotation.hpp"
 #include "Utils.hpp"
@@ -12,11 +13,13 @@ class Note;
 #include <string>
 
 #define HIT_WINDOW 150000
-#define DELETE_ANIM 100000
+#define DELETE_ANIM 50000
 
 enum Key { SOL, FA };
 
-enum NoteStatus { WAITING, HIT, MISSED };
+enum NoteStatus { WAITING, HIT, FINISHED, MISSED };
+
+std::vector<double> splitDuration(double duration);
 
 ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
                              double duration, Key currentKey);
@@ -25,13 +28,15 @@ glm::vec2 getSizeAndLocForNote(double duration);
 
 class Note : public PartitionNotation {
    public:
-    Note(const char* name, int64_t time, u_char pitch, double duration,
-         uint64_t MPQ, std::vector<ImageView*> textures);
+    Note(const char* name, int64_t time, u_char pitch, double totalDuration,
+         double duration, uint64_t MPQ, std::vector<ImageView*> textures);
 
+    bool justMissed();
     void setStatus(NoteStatus status);
     NoteStatus getStatus();
     int64_t getTime();
     int64_t getDuration();
+    int64_t getTotalDuration();
     u_char getPitch();
     void kill(uint64_t moment);
 
@@ -40,8 +45,9 @@ class Note : public PartitionNotation {
     virtual ShaderData* getShaderData() const;
 
    private:
-    int64_t duration;
+    int64_t totalDuration, duration;
     int64_t kill_moment;
     u_char pitch;
     NoteStatus status = WAITING;
+    bool missed = false;
 };

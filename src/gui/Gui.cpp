@@ -8,6 +8,7 @@ Gui::Gui(ImageView* texture, const char* name) {
 ImageView* Gui::getTexture() const { return texture; }
 const char* Gui::getName() const { return name; }
 glm::vec3 Gui::getPosition() const { return position; }
+glm::vec2 Gui::getGraphicalPosition() const { return graphicalPosition; }
 float Gui::getRotation() const { return (rotation - ((int)rotation / (M_PI))); }
 glm::vec2 Gui::getSize() const { return size; }
 glm::vec4 Gui::getColor() const { return color; }
@@ -15,6 +16,8 @@ glm::vec4 Gui::getColor() const { return color; }
 void Gui::setPosition(glm::vec2 pos) {
     this->position = glm::vec3(pos.x, pos.y, position.z);
 }
+
+void Gui::setGraphicalPosition(glm::vec2 pos) { this->graphicalPosition = pos; }
 
 void Gui::setZ(float z) { this->position.z = z; }
 

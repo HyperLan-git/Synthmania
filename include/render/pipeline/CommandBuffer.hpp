@@ -1,5 +1,7 @@
 #pragma once
 
+class CommandBuffer;
+
 #include <vulkan/vulkan.h>
 
 #include <stdexcept>

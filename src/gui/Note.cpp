@@ -1,5 +1,17 @@
 #include "Note.hpp"
 
+std::vector<double> splitDuration(double duration) {
+    if (duration <= 0.125) return {duration};
+    std::vector<double> result;
+    while (duration > 0.125) {
+        double d = 2;
+        while (d > duration) d /= 2;
+        duration -= d;
+        result.push_back(d);
+    }
+    return result;
+}
+
 ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
                              double duration, Key currentKey) {
     float initial = 2;
@@ -17,7 +29,6 @@ ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
     return getTextureByName(textures, texName.c_str());
 }
 
-// TODO dotted/arbitrary length note
 glm::vec2 getSizeAndLocForNote(double duration) {
     int i = duration;
     if (duration < 0.125f) duration = 0.125f;
@@ -27,11 +38,12 @@ glm::vec2 getSizeAndLocForNote(double duration) {
     return {0, 0.25f};
 }
 
-Note::Note(const char* name, int64_t time, u_char pitch, double duration,
-           uint64_t MPQ, std::vector<ImageView*> textures)
+Note::Note(const char* name, int64_t time, u_char pitch, double totalDuration,
+           double duration, uint64_t MPQ, std::vector<ImageView*> textures)
     : PartitionNotation(
           name, time, pitch,
           getTextureForNote(textures, pitch, duration, Key::SOL)) {
+    this->totalDuration = totalDuration * MPQ * 4;
     this->duration = duration * MPQ * 4;
     this->kill_moment = time + HIT_WINDOW;
     glm::vec2 temp = getSizeAndLocForNote(duration);
@@ -56,14 +68,19 @@ ShaderData* Note::getShaderData() const {
 
 void Note::setStatus(NoteStatus status) {
     this->status = status;
-    if (status == WAITING) {
-        color = {1, 1, 1, 1};
-        return;
+    switch (status) {
+        case WAITING:
+            color = {1, 1, 1, 1};
+            break;
+        case HIT:
+            color = {.1, .5, .1, 1};
+            break;
+        case FINISHED:
+            color = {0, 1, 0, 1};
+            break;
+        default:
+            color = {1, 0, 0, 1};
     }
-    if (status == HIT)
-        color = {0, 1, 0, 1};
-    else
-        color = {1, 0, 0, 1};
 }
 
 NoteStatus Note::getStatus() { return status; }
@@ -72,13 +89,20 @@ int64_t Note::getTime() { return this->time; }
 
 int64_t Note::getDuration() { return this->duration; }
 
+int64_t Note::getTotalDuration() { return this->totalDuration; }
+
 u_char Note::getPitch() { return pitch; }
 
 void Note::kill(uint64_t moment) { this->kill_moment = moment; }
 
+bool Note::justMissed() { return missed; }
+
 bool Note::update(int64_t time) {
     PartitionNotation::update(time);
-    if (this->status == WAITING && kill_moment < time) setStatus(MISSED);
+    if (missed) missed = false;
+    if (this->status == WAITING && kill_moment < time) {
+        missed = true;
+    }
 
     if (this->kill_moment < time) {
         this->color.a = 1. + (this->kill_moment - time) / (double)DELETE_ANIM;

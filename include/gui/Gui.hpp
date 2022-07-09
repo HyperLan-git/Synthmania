@@ -22,11 +22,13 @@ class Gui {
     ImageView* getTexture() const;
     const char* getName() const;
     glm::vec3 getPosition() const;
+    glm::vec2 getGraphicalPosition() const;
     float getRotation() const;
     glm::vec2 getSize() const;
     glm::vec4 getColor() const;
 
     void setPosition(glm::vec2 pos);
+    void setGraphicalPosition(glm::vec2 pos);
     void setZ(float z);
     void setSize(glm::vec2 size);
     void setColor(glm::vec4 color);
@@ -34,8 +36,10 @@ class Gui {
     void setDestroyed();
     bool isDestroyed();
 
+    // Updates and returns true if gui SHOULD DIE :skull:
     virtual bool update(int64_t time);
 
+    // Data for the shader, will depend on the shader
     virtual ShaderData* getShaderData() const;
 
     ~Gui();

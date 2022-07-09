@@ -21,7 +21,6 @@ class Game;
 #include "Gui.hpp"
 #include "JsonHandler.hpp"
 #include "MidiHandler.hpp"
-#include "Note.hpp"
 #include "Precision.hpp"
 #include "Renderer.hpp"
 #include "Window.hpp"

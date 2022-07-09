@@ -17,7 +17,7 @@ void Game::run() {
     renderer->loadTextures(textures, fontsToLoad);
     window->setWindowUserPointer(this);
     init();
-    window->setKeycallback(keyFunction);
+    if (keyFunction != NULL) window->setKeycallback(keyFunction);
     setTimeMicros(-this->startTime);
     while (!window->shouldClose()) {
         glfwPollEvents();

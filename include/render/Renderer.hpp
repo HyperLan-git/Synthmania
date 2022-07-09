@@ -63,6 +63,9 @@ class Renderer;
 #include "Utils.hpp"
 #include "Window.hpp"
 
+// Font texture sizes
+const unsigned long FONT_SIZE = 128;
+
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<const char*> validationLayers = {
@@ -86,8 +89,6 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    VkDebugUtilsMessengerEXT debugMessenger,
                                    const VkAllocationCallbacks* pAllocator);
 
-#define FONT_SIZE 128
-
 class Renderer {
    public:
     Renderer(Game* theGame, Window* window);
@@ -99,6 +100,9 @@ class Renderer {
     std::vector<ImageView*> getTextures();
     std::vector<Font> getFonts();
     Character getCharacter(std::string fontName, ulong code);
+
+    std::vector<Text> createText(std::string text, std::string fontName,
+                                 double size, glm::vec2 start);
 
     void setStartTime(double start);
 

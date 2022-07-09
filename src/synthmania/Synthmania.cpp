@@ -1,4 +1,5 @@
 #include "Synthmania.hpp"
+// TODO fix the white half note being slightly misplaced to the right
 
 Synthmania::Synthmania(std::string song, std::string skin)
     : Game(1920, 1080, "Synthmania") {
@@ -9,7 +10,7 @@ Synthmania::Synthmania(std::string song, std::string skin)
     for (auto &elem : textures)
         elem.second = std::string(skin).append("/").append(elem.second);
     audio = new AudioHandler();
-    keyFunction = Synthmania::keyCallback;
+    if (!autoPlay) keyFunction = Synthmania::keyCallback;
 }
 
 void Synthmania::init() {
@@ -41,7 +42,6 @@ void Synthmania::init() {
     addGui(bg);
     addGui(part);
     addGui(key);
-    addGui(precision);
     bg->setSize({10, 30});
     part->setSize({10, 1});
     key->setPosition({-1.7f, 0.1f});
@@ -49,26 +49,28 @@ void Synthmania::init() {
     precision->setSize({1.5f, 0.5f});
     precision->setPosition({0, 0.9f});
     Judgement *bar = new Judgement("judgement", textures, partition);
+    line = bar;
     bar->setPosition({-1.4f, bar->getPosition().y});
     bar->setSize({0.25f, 1.f});
     addGui(bar);
     for (MidiNote note : partition.notes) {
-        char name[255] = "Note_";
+        std::string name = "Note_";
         const char *hash = std::to_string(std::hash<MidiNote>()(note)).c_str();
-        strcat(name, hash);
-        Note *n = new Note(name, note.timestamp, note.note,
-                           note.length / (long double)partition.MPQ / 4.,
-                           partition.MPQ, textures);
+        name.append(hash);
+        double totalDuration = note.length / (long double)partition.MPQ / 4.;
+        std::vector<double> cutDown = splitDuration(totalDuration);
+        Note *n = new Note(name.c_str(), note.timestamp, note.note,
+                           totalDuration, cutDown[0], partition.MPQ, textures);
         notes.push_back(n);
         int diff = getDifferenceFromC4(note.note);
         if (diff <= 0 || diff >= 12) {
             bool up = diff >= 12;
             for (int i = up ? 12 : 0; (up && i <= diff) || (!up && i >= diff);
                  up ? i += 2 : i -= 2) {
-                strcpy(name, "Bar_");
-                strcat(name, hash);
+                std::string barName = "Bar_";
+                barName.append(hash);
                 PartitionNotation *readability = new PartitionNotation(
-                    name, note.timestamp, (0.5 - 0.083 * i),
+                    barName.c_str(), note.timestamp, (0.5 - 0.083 * i),
                     getTextureByName(textures, "bar"));
                 readability->setPosition({0, readability->getPosition().y});
                 readability->setSize({0.25, 0.15});
@@ -76,14 +78,40 @@ void Synthmania::init() {
             }
         }
         addGui(n);
+
         if (!isFromCMajor(note.note)) {
-            strcpy(name, "Sharp_");
-            strcat(name, hash);
-            ParentedGui *sharp =
-                new ParentedGui(getTextureByName(textures, "sharp"), name, n);
+            std::string sharpName = "Sharp_";
+            sharpName.append(hash);
+            ParentedGui *sharp = new ParentedGui(
+                getTextureByName(textures, "sharp"), sharpName.c_str(), n);
             sharp->setPosition({-0.25, 0});
             sharp->setSize({0.25, 0.25});
             addGui(sharp);
+        }
+        uint64_t last = note.timestamp;
+        uint64_t t = note.timestamp + cutDown[0] * partition.MPQ * 4;
+        for (int i = 1; i < cutDown.size(); i++) {
+            std::string name2 = name;
+            name2.append("_");
+            name2.append(std::to_string(i));
+            double d = cutDown[i];
+            ParentedGui *p = new ParentedGui(
+                getTextureForNote(textures, note.note, d, Key::SOL),
+                name2.c_str(), n);
+            glm::vec2 temp = getSizeAndLocForNote(d);
+            p->setPosition({(t - note.timestamp) / 300000.f, 0});
+            p->setGraphicalPosition({0, temp.x});
+            p->setSize({temp.y, temp.y});
+            addGui(p);
+            ParentedGui *arc = new ParentedGui(
+                getTextureByName(textures, "arc"), name2.c_str(), n);
+            arc->setPosition(
+                {(((t + last) / 2) - note.timestamp) / 300000.f, 0});
+            arc->setGraphicalPosition({0, temp.x - .15});
+            arc->setSize({(t - last) / 350000.f, .15f});
+            addGui(arc);
+            last = t;
+            t += d * partition.MPQ * 4;
         }
     }
     music = NULL;
@@ -97,24 +125,30 @@ void Synthmania::init() {
         music = audio->playSound("song");
         music->setGain(.5f);
     }
-    double pos = -2;
-    double conv = 8. * FONT_SIZE;
     std::string text = c.name;
     text.append(" by ");
     text.append(c.artist);
-    for (int i = 0; i < text.size(); i++) {
-        Character c = renderer->getCharacter("Stupid", (ulong)text[i]);
-        std::string name = "text_";
-        name.append(std::to_string(i));
-        Gui *A = new Gui(c.texture, name.c_str());
-        A->setColor({.2, .2, 1, 1});
-        A->setPosition(
-            {pos + (double)c.width / conv / 2 - c.offsetLeft / conv * 0.7,
-             -.9 + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7});
-        A->setSize({(double)c.width / conv, (double)c.height / conv});
-        addGui(A);
-        pos += (c.advance) / conv;
+    int i = 0;
+    for (Text t : renderer->createText(text, "Stupid", 11, {-1.995, -.895})) {
+        std::string name = "title_shadow_";
+        name.append(std::to_string(i++));
+        Gui *gui = new Gui(t.character.texture, name.c_str());
+        gui->setColor({0, 0, 0, .7});
+        gui->setPosition(t.pos);
+        gui->setSize(t.size * 1.05f);
+        addGui(gui);
     }
+    for (Text t : renderer->createText(text, "Stupid", 11, {-2, -.9})) {
+        std::string name = "title_";
+        name.append(std::to_string(i++));
+        Gui *gui = new Gui(t.character.texture, name.c_str());
+        gui->setColor({.2, .2, 1, 1});
+        gui->setPosition(t.pos);
+        gui->setSize(t.size);
+        addGui(gui);
+    }
+    // Needs to be above everything else
+    addGui(precision);
 }
 
 void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
@@ -142,25 +176,68 @@ void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
                             // set OD to a value that prevents the need
                             // for notelock idk hmm
         ) {
-            int64_t time = game->getCurrentTimeMicros();
-            // a -= (note->getTime() - game->getCurrentTime()) /
-            // ++i; std::cout << "avg = " << std::to_string(a) <<
-            // std::endl;
-            int64_t delta = time - note->getTime();
-            Precision *prec = new Precision(
-                getTextureByName(game->getRenderer()->getTextures(),
-                                 "precision_tick"),
-                "tick", time, delta);
-            prec->setSize({0.1f, 0.4f});
-            prec->setPosition({0, 0.9f});
-            game->addGui(prec);
-            delta = std::clamp<int64_t>(delta, 0, note->getDuration() / 2);
-            game->getPluginHandler()->playNote(
-                note->getPitch(), 90, time + note->getDuration() - delta);
-            note->setStatus(HIT);
-            note->kill(time);
+            game->noteHit(note);
             break;
         }
+    }
+}
+
+void Synthmania::noteHit(Note *note) {
+    if (note->getStatus() != WAITING) return;
+    int64_t time = getCurrentTimeMicros();
+    int64_t delta = autoPlay ? 0 : time - note->getTime();
+    Precision *prec = new Precision(
+        getTextureByName(renderer->getTextures(), "precision_tick"), "tick",
+        time, delta);
+    prec->setSize({0.1f, 0.4f});
+    prec->setPosition({0, 0.9f});
+    addGui(prec);
+    delta = std::clamp<int64_t>(delta, 0, note->getDuration() / 2);
+    plugin->playNote(note->getPitch(), 90, time + note->getDuration() - delta);
+    note->setStatus(HIT);
+    note->kill(time + note->getTotalDuration());
+
+    std::string text = "Good!";
+    int i = 0;
+    for (Text t :
+         renderer->createText(text, "Stupid", 11,
+                              {-2, (double)(line->getGraphicalPosition().y +
+                                            line->getSize().y / 2.)})) {
+        std::string name = "hit_";
+        name.append(std::to_string((size_t)note));
+        name.append("_");
+        name.append(std::to_string(i++));
+        TemporaryGui *gui = new TemporaryGui(t.character.texture, name.c_str(),
+                                             time, time + HIT_TIME);
+        gui->setColor({.3, 1, .3, 1});
+        gui->setPosition(t.pos);
+        gui->setSize(t.size);
+        addGui(gui);
+    }
+}
+
+void Synthmania::noteMiss(Note *note) {
+    if (note->getStatus() != WAITING) return;
+    int64_t time = getCurrentTimeMicros();
+    note->setStatus(MISSED);
+    note->kill(time);
+
+    std::string text = "BAD";
+    int i = 0;
+    for (Text t :
+         renderer->createText(text, "Stupid", 11,
+                              {-2, (double)(line->getGraphicalPosition().y +
+                                            line->getSize().y / 2.)})) {
+        std::string name = "miss_";
+        name.append(std::to_string((size_t)note));
+        name.append("_");
+        name.append(std::to_string(i++));
+        TemporaryGui *gui = new TemporaryGui(t.character.texture, name.c_str(),
+                                             time, time + HIT_TIME);
+        gui->setColor({1, 0, 0, 1});
+        gui->setPosition(t.pos);
+        gui->setSize(t.size);
+        addGui(gui);
     }
 }
 
@@ -174,6 +251,11 @@ void Synthmania::setTimeMicros(int64_t time) {
 void Synthmania::update() {
     int64_t time_from_start = getCurrentTimeMicros();
     // std::cout << std::dec << time_from_start << " ";
+    if (autoPlay) {
+        for (Note *note : notes) {
+            if (note->getTime() <= time_from_start) noteHit(note);
+        }
+    }
     plugin->update(time_from_start);
     std::vector<Gui *> toDestroy;
     for (Gui *g : guis)
@@ -195,6 +277,22 @@ void Synthmania::update() {
                 break;
             }
     }
+    // TODO refactor this shit the game should not be handling note logic
+    // Or should it ? *vsauce music plays*
+    // Accshually, if I only check a few notes (the first 5 in array for
+    // instance) and if there cannot be more than this amount in the hit window
+    // then I can check shit semi-optimally
+    for (Note *n : notes) {
+        if (n->justMissed()) {
+            noteMiss(n);
+            continue;
+        }
+
+        if (n->getStatus() == HIT &&
+            time_from_start >= n->getTime() + n->getTotalDuration()) {
+            n->setStatus(FINISHED);
+        }
+    }
 
     std::vector<Entity *> toDelete;
     for (Entity *e : entities) {
@@ -208,40 +306,33 @@ void Synthmania::update() {
                 delete e;
                 break;
             }
-    Message m = handler->getMessage();
-    while (m.type != libremidi::message_type::INVALID) {
-        if (m.type == libremidi::message_type::NOTE_ON) {
-            short got_one = false;
-            for (Note *note : notes) {
-                if (note->getStatus() == WAITING &&
-                    note->getPitch() == m.data1 &&
-                    std::abs(note->getTime() - time_from_start) < HIT_WINDOW) {
-                    Precision *prec =
-                        new Precision(getTextureByName(renderer->getTextures(),
-                                                       "precision_tick"),
-                                      "tick", time_from_start,
-                                      time_from_start - note->getTime());
-                    prec->setSize({0.1f, 0.4f});
-                    prec->setPosition({0, 0.9f});
-                    this->addGui(prec);
-                    note->setStatus(HIT);
-                    note->kill(time_from_start);
-                    got_one = true;
-                    break;
-                }
-            }
-            if (!got_one) {
+    if (!autoPlay) {
+        Message m = handler->getMessage();
+        while (m.type != libremidi::message_type::INVALID) {
+            if (m.type == libremidi::message_type::NOTE_ON) {
+                short got_one = false;
                 for (Note *note : notes) {
                     if (note->getStatus() == WAITING &&
+                        note->getPitch() == m.data1 &&
                         std::abs(note->getTime() - time_from_start) <
                             HIT_WINDOW) {
-                        note->setStatus(MISSED);
-                        note->kill(time_from_start);
+                        noteHit(note);
+                        got_one = true;
+                        break;
+                    }
+                }
+                if (!got_one) {
+                    for (Note *note : notes) {
+                        if (note->getStatus() == WAITING &&
+                            std::abs(note->getTime() - time_from_start) <
+                                HIT_WINDOW) {
+                            noteMiss(note);
+                        }
                     }
                 }
             }
+            m = handler->getMessage();
         }
-        m = handler->getMessage();
     }
     if (audio != NULL) {  // audio latency study
         long long j = music->getSampleOffset() * 1000000.;
@@ -249,6 +340,8 @@ void Synthmania::update() {
         int64_t a = getCurrentTimeMicros();
         int64_t b = res - a;
         // std::cout << b << std::dec << " ";
+        // If music gets more than 10ms off reset it
+        // Most people can play with 10ms off right? (I'm sorry rythm gamers)
         if (b > 10000) setTimeMicros(a);
     }
     thrd_yield();

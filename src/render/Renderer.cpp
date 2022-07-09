@@ -109,6 +109,8 @@ void Renderer::loadFonts(
         }
         fonts.push_back(font);
     }
+    FT_Done_FreeType(*lib);
+    delete lib;
 }
 
 std::vector<Font> Renderer::getFonts() { return fonts; }
@@ -626,9 +628,7 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     for (auto iter = guis.begin(); iter != guis.end(); iter++) {
         Gui* g = *iter;
         ImageView* texture = g->getTexture();
-        if (texture == NULL) {
-            throw std::runtime_error("No textures ???");
-        }
+        if (texture == NULL) texture = getTextureByName(textures, "missing");
         if (lastTexture != texture) {
             size_t idx = 0;
             for (idx = 0; idx < textures.size(); idx++) {
@@ -829,4 +829,22 @@ std::vector<const char*> Renderer::getRequiredExtensions() {
     }
 
     return extensions;
+}
+
+std::vector<Text> Renderer::createText(std::string text, std::string fontName,
+                                       double size, glm::vec2 start) {
+    std::vector<Text> result;
+    double conv = 64. * FONT_SIZE / size;
+    for (int i = 0; i < text.size(); i++) {
+        Character c = getCharacter(fontName, (ulong)text[i]);
+        Text t;
+        t.character = c;
+        t.pos = {
+            start.x + (double)c.width / conv / 2 - c.offsetLeft / conv * 0.7,
+            start.y + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7};
+        t.size = {(double)c.width / conv, (double)c.height / conv};
+        result.push_back(t);
+        start.x += (c.advance) / conv;
+    }
+    return result;
 }

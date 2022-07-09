@@ -25,7 +25,10 @@ class Synthmania;
 #include "Note.hpp"
 #include "Precision.hpp"
 #include "Renderer.hpp"
+#include "TemporaryGui.hpp"
 #include "Window.hpp"
+
+#define HIT_TIME 1500000
 
 class Synthmania : public Game {
    public:
@@ -38,6 +41,9 @@ class Synthmania : public Game {
     AudioPluginHandler *getPluginHandler();
 
     virtual void setTimeMicros(int64_t time);
+
+    void noteHit(Note *note);
+    void noteMiss(Note *note);
 
     ~Synthmania();
 
@@ -53,4 +59,6 @@ class Synthmania : public Game {
     std::vector<Note *> notes;
     AudioSource *music;
     std::string songFolder, skin;
+    Judgement *line;
+    bool autoPlay = false;
 };
