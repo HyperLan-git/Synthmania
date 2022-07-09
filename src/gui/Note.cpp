@@ -73,13 +73,13 @@ void Note::setStatus(NoteStatus status) {
             color = {1, 1, 1, 1};
             break;
         case HIT:
-            color = {.1, .5, .1, 1};
+            color = {.1, .5, .1, .85};
             break;
         case FINISHED:
-            color = {0, 1, 0, 1};
+            color = {0, 1, 0, .85};
             break;
         default:
-            color = {1, 0, 0, 1};
+            color = {1, 0, 0, .85};
     }
 }
 
@@ -105,7 +105,8 @@ bool Note::update(int64_t time) {
     }
 
     if (this->kill_moment < time) {
-        this->color.a = 1. + (this->kill_moment - time) / (double)DELETE_ANIM;
+        this->color.a =
+            (1. + (this->kill_moment - time) / (double)DELETE_ANIM) * .85;
     }
 
     return (int64_t)(kill_moment + DELETE_ANIM) <= time;

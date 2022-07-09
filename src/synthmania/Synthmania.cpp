@@ -59,6 +59,13 @@ void Synthmania::init() {
         name.append(hash);
         double totalDuration = note.length / (long double)partition.MPQ / 4.;
         std::vector<double> cutDown = splitDuration(totalDuration);
+        bool firstDotted = false;
+        if (cutDown.size() > 1 && cutDown[1] == cutDown[0] / 2.) {
+            double d = cutDown[0] * 1.5;
+            cutDown.erase(cutDown.begin());
+            cutDown[0] = d;
+            firstDotted = true;
+        }
         Note *n = new Note(name.c_str(), note.timestamp, note.note,
                            totalDuration, cutDown[0], partition.MPQ, textures);
         notes.push_back(n);
@@ -79,6 +86,16 @@ void Synthmania::init() {
         }
         addGui(n);
 
+        if (firstDotted) {
+            ParentedGui *dot = new ParentedGui(
+                getTextureByName(textures, "dot"), name.c_str(), n);
+            dot->setSize({.05, .05});
+            dot->setPosition({0, -.05});
+            dot->setGraphicalPosition(
+                {0, n->getGraphicalPosition().y - n->getSize().y / 2});
+            addGui(dot);
+        }
+
         if (!isFromCMajor(note.note)) {
             std::string sharpName = "Sharp_";
             sharpName.append(hash);
@@ -95,6 +112,12 @@ void Synthmania::init() {
             name2.append("_");
             name2.append(std::to_string(i));
             double d = cutDown[i];
+            bool dotted = false;
+            if (i < cutDown.size() - 1 && cutDown[i + 1] == d / 2.) {
+                d += d / 2.;
+                dotted = true;
+                i++;
+            }
             ParentedGui *p = new ParentedGui(
                 getTextureForNote(textures, note.note, d, Key::SOL),
                 name2.c_str(), n);
@@ -110,6 +133,15 @@ void Synthmania::init() {
             arc->setGraphicalPosition({0, temp.x - .15});
             arc->setSize({(t - last) / 350000.f, .15f});
             addGui(arc);
+            if (dotted) {
+                ParentedGui *dot = new ParentedGui(
+                    getTextureByName(textures, "dot"), name2.c_str(), p);
+                dot->setSize({.05, .05});
+                dot->setPosition({0, -.05});
+                dot->setGraphicalPosition(
+                    {0, p->getGraphicalPosition().y - p->getSize().y / 2});
+                addGui(dot);
+            }
             last = t;
             t += d * partition.MPQ * 4;
         }
@@ -192,8 +224,9 @@ void Synthmania::noteHit(Note *note) {
     prec->setSize({0.1f, 0.4f});
     prec->setPosition({0, 0.9f});
     addGui(prec);
-    delta = std::clamp<int64_t>(delta, 0, note->getDuration() / 2);
-    plugin->playNote(note->getPitch(), 90, time + note->getDuration() - delta);
+    delta = std::clamp<int64_t>(delta, 0, note->getTotalDuration() / 2);
+    plugin->playNote(note->getPitch(), 90,
+                     time + note->getTotalDuration() - delta);
     note->setStatus(HIT);
     note->kill(time + note->getTotalDuration());
 

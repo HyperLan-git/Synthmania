@@ -75,8 +75,9 @@ TrackPartition MidiHandler::readMidi(const char *path) {
     libremidi::reader::parse_result result = r.parse(bytes);
     std::vector<MidiNote> notes;
 
-    r.startingTempo = 170;
+    r.startingTempo = 120;
     uint64_t MPQ = 250000 * 60 / r.startingTempo;
+
     // If parsing succeeded, use the parsed data
     if (result == libremidi::reader::invalid) return TrackPartition{MPQ, notes};
     // Pitch wheel : 0x2000 = 8192 = +-0 semitones 0x0 = -2 semitones
@@ -144,9 +145,22 @@ TrackPartition MidiHandler::readMidi(const char *path) {
                               << (int)message[1] << std::endl;
                     break;
                 case libremidi::message_type::SYSTEM_RESET:
-                    std::cout << "msg=" << std::hex << (int)message[0] << " "
-                              << (int)message[1] << " " << (int)message[1]
-                              << std::endl;
+                    switch (message.get_meta_event_type()) {
+                        case libremidi::meta_event_type::TEMPO_CHANGE:
+                            MPQ = message[3];
+                            MPQ = MPQ << 8;
+                            MPQ += message[4];
+                            MPQ = MPQ << 8;
+                            MPQ += message[5];
+                            r.startingTempo = (60 * 1000000.) / MPQ;
+                            MPQ /= 4;  // TODO remove and put in demisemiquaver
+                            break;
+                        default:
+                            std::cout << "msg=" << std::hex << (int)message[0]
+                                      << " " << (int)message[1] << " "
+                                      << (int)message[2] << std::endl;
+                            break;
+                    }
                     break;
                 default:
                     std::cout << "msg=" << std::hex << (int)message[0] << " "
