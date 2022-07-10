@@ -92,7 +92,7 @@ int64_t Note::getDuration() { return this->duration; }
 
 int64_t Note::getTotalDuration() { return this->totalDuration; }
 
-u_char Note::getPitch() { return pitch; }
+unsigned char Note::getPitch() { return pitch; }
 
 void Note::kill(uint64_t moment) { this->kill_moment = moment; }
 

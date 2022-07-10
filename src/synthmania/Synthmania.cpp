@@ -362,7 +362,7 @@ void Synthmania::update() {
         // Most people can play with 10ms off right? (I'm sorry rythm gamers)
         if (b > 10000) setTimeMicros(a);
     }
-    thrd_yield();
+    //thrd_yield();
 }
 
 AudioPluginHandler *Synthmania::getPluginHandler() { return plugin; }

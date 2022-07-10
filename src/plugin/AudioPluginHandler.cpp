@@ -5,9 +5,8 @@ AudioPluginHandler::AudioPluginHandler(std::string path, AudioHandler* handler,
     this->host = new SimplePluginHost(path, handler->getSampleRate(), 1024,
                                       false, synthdata);
 
-    thrd_create(&synth_thread, synthThread,
-                new SynthParams{host, handler, 3, 1024});
-    thrd_create(&gui_thread, guiThread, this);
+	synth_thread = std::thread(synthThread, new SynthParams{host, handler, 3, 1024});
+	gui_thread = std::thread(guiThread, this);
 }
 
 void AudioPluginHandler::noteOn(unsigned char pitch, unsigned char velocity) {

@@ -8,7 +8,7 @@ Game::Game(int width, int height, const char *title) {
     const char *list =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
         "&\"'(-_)=+|#{}[]`\\^@*,;:!?./%$";
-    std::vector<ulong> chars;
+    std::vector<unsigned long> chars;
     for (const char *c = list; *c != '\0'; c++) chars.push_back(*c);
     fontsToLoad.emplace("resources/fonts/Stupid.ttf", chars);
 }

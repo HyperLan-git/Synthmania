@@ -1,6 +1,10 @@
 #pragma once
 
-#include <threads.h>
+#ifdef _WIN32
+#include "mingw.thread.h"
+#else
+#include <thread>
+#endif
 
 #include <iterator>
 #include <vector>
@@ -44,8 +48,8 @@ class AudioPluginHandler {
      thread-safe (window destruction triggers this).
     */
     SimplePluginHost* host;
-    thrd_t synth_thread;  // :trollface:
-    thrd_t gui_thread;
+    std::thread synth_thread;  // :trollface:
+    std::thread gui_thread;
 
     std::map<unsigned char, int64_t> lingeringNotes;
 };

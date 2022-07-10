@@ -1,14 +1,26 @@
 VSTFLAGS = -L../SimplePluginHost/export/lib -l:libSimplePluginHost.a
+ifeq ($(OS),Windows_NT)
+VSTFLAGS = -L../SimplePluginHost/Builds/VisualStudio2019/x64/Release/Static\ Library -l:SimplePluginHost.lib
+endif
 VSTHEADERS = ../SimplePluginHost/export/include
 VSTOBJ = $(wildcard ../SimplePluginHost/Builds/LinuxMakefile/build/intermediate/*.o)
 VSTLIB = ../SimplePluginHost/export/lib/libSimplePluginHost.a
+ifeq ($(OS),Windows_NT)
+VSTLIB = ../SimplePluginHost/export/lib/SimplePluginHost.lib
+endif
 IDIRS = $(addprefix -I ,$(shell find include -type d | sed -z 's/\n/ /g'))\
 			-I libremidi/include/ -I stb -I obj -I $(VSTHEADERS) \
 			-I /usr/include/freetype2/
 
+ifeq ($(OS),Windows_NT)
+IDIRS += -I mingw-std-threads
+endif
+
 CFLAGS = -std=c++17 -O2 $(VSTOBJ)
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype
-
+ifeq ($(OS),Windows_NT)
+LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lalut -lwinmm -lfreetype
+endif
 
 OBJDIR = bin/obj
 LIBS = obj/tiny_obj_loader.h stb/stb_image.h

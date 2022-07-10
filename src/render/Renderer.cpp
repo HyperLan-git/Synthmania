@@ -43,7 +43,7 @@ void Renderer::initVulkan() {
     }
 }
 
-Image* Renderer::loadCharacter(FT_Face face, ulong character) {
+Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
     FT_GlyphSlot glyphSlot = face->glyph;
     FT_UInt i = FT_Get_Char_Index(face, character);
     FT_Load_Glyph(face, i, FT_LOAD_DEFAULT);
@@ -82,7 +82,7 @@ Image* Renderer::loadCharacter(FT_Face face, ulong character) {
 }
 
 void Renderer::loadFonts(
-    std::map<std::string, std::vector<ulong>> fontsToLoad) {
+    std::map<std::string, std::vector<unsigned long>> fontsToLoad) {
     FT_Library* lib = new FT_Library();
     FT_Init_FreeType(lib);
     for (auto entry : fontsToLoad) {
@@ -116,7 +116,7 @@ void Renderer::loadFonts(
 
 std::vector<Font> Renderer::getFonts() { return fonts; }
 
-Character Renderer::getCharacter(std::string fontName, ulong code) {
+Character Renderer::getCharacter(std::string fontName, unsigned long code) {
     for (Font f : fonts) {
         if (fontName.compare(f.name) != 0) continue;
         return f.characters[code];
@@ -125,7 +125,7 @@ Character Renderer::getCharacter(std::string fontName, ulong code) {
 }
 
 void Renderer::loadTextures(std::map<std::string, std::string> textures,
-                            std::map<std::string, std::vector<ulong>> fonts) {
+                            std::map<std::string, std::vector<unsigned long>> fonts) {
     for (auto entry : textures) {
         this->textures.push_back(
             readTexture(entry.second.c_str(), entry.first.c_str()));
@@ -837,7 +837,7 @@ std::vector<Text> Renderer::createText(std::string text, std::string fontName,
     std::vector<Text> result;
     double conv = 64. * FONT_SIZE / size;
     for (int i = 0; i < text.size(); i++) {
-        Character c = getCharacter(fontName, (ulong)text[i]);
+        Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t;
         t.character = c;
         t.pos = {

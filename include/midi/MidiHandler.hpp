@@ -4,7 +4,11 @@ class MidiHandler;
 struct Message;
 
 #define LIBREMIDI_HEADER_ONLY 1
+#ifdef _WIN32
+#define LIBREMIDI_WINMM 1
+#else
 #define LIBREMIDI_ALSA 1
+#endif
 
 #include <boost/lockfree/queue.hpp>
 #include <chrono>

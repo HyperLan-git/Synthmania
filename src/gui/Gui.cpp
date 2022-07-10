@@ -1,5 +1,7 @@
 #include "Gui.hpp"
 
+#define M_PI 3.14159265359
+
 Gui::Gui(ImageView* texture, const char* name) {
     this->texture = texture;
     this->name = name;

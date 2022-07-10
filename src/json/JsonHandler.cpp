@@ -24,7 +24,7 @@ Chart readChart(const char* json) {
         tree diff = elem.second;
         Diff d;
         d.name = diff.get<std::string>("name", str);
-        d.track_id = diff.get<uint>("track_id", i);
+        d.track_id = diff.get<unsigned int>("track_id", i);
         d.midi = diff.get<std::string>("midi", str);
         c.diffs.push_back(d);
     }

@@ -95,11 +95,11 @@ class Renderer {
 
     void render();
     void loadTextures(std::map<std::string, std::string> textures,
-                      std::map<std::string, std::vector<ulong>> fonts);
+                      std::map<std::string, std::vector<unsigned long>> fonts);
 
     std::vector<ImageView*> getTextures();
     std::vector<Font> getFonts();
-    Character getCharacter(std::string fontName, ulong code);
+    Character getCharacter(std::string fontName, unsigned long code);
 
     std::vector<Text> createText(std::string text, std::string fontName,
                                  double size, glm::vec2 start);
@@ -201,9 +201,9 @@ class Renderer {
    public:
     void addTexture(Image* texture, const char* name);
 
-    void loadFonts(std::map<std::string, std::vector<ulong>> fonts);
+    void loadFonts(std::map<std::string, std::vector<unsigned long>> fonts);
 
-    Image* loadCharacter(FT_Face face, ulong character);
+    Image* loadCharacter(FT_Face face, unsigned long character);
 
    private:
     void updateDescriptorSet(ShaderDescriptorSet* descriptor,
