@@ -24,7 +24,7 @@ std::vector<std::string> MidiHandler::getMidiPorts() {
     return result;
 }
 
-void MidiHandler::openPort(uint port) {
+void MidiHandler::openPort(unsigned int port) {
     in.set_callback([this](const libremidi::message &message) {
         // int bit = message[0] >> 7; // Should always be 1
         int type = (message[0] >> 4) - 8;
@@ -55,7 +55,7 @@ void MidiHandler::openPort(uint port) {
     in.open_port(port);
 }
 
-void MidiHandler::openPort(uint port,
+void MidiHandler::openPort(unsigned int port,
                            libremidi::midi_in::message_callback callback) {
     in.set_callback(callback);
     in.open_port(port);

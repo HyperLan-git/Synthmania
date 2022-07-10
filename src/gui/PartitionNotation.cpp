@@ -1,10 +1,10 @@
 #include "PartitionNotation.hpp"
 
-int getDifferenceFromC4(u_char pitch) {
+int getDifferenceFromC4(unsigned char pitch) {
     char octave = pitch / 12;
     octave -= 5;
     int result = octave * 7;
-    u_char key = pitch % 12;
+    unsigned char key = pitch % 12;
     result += key;
     if (key > 0) result--;
     if (key > 2) result--;
@@ -14,13 +14,13 @@ int getDifferenceFromC4(u_char pitch) {
     return result;
 }
 
-bool isFromCMajor(u_char pitch) {
-    u_char key = pitch % 12;
+bool isFromCMajor(unsigned char pitch) {
+    unsigned char key = pitch % 12;
     return !(key == 1 || key == 3 || key == 6 || key == 8 || key == 10);
 }
 
 PartitionNotation::PartitionNotation(const char* name, int64_t time,
-                                     u_char pitch, ImageView* texture)
+                                     unsigned char pitch, ImageView* texture)
     : Gui(texture, name) {
     this->time = time;
     this->position.y = 0.5f - 0.083f * getDifferenceFromC4(pitch);

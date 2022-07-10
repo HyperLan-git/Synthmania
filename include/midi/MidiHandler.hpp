@@ -39,8 +39,9 @@ class MidiHandler {
     TrackPartition readMidi(const char* path);
 
     std::vector<std::string> getMidiPorts();
-    void openPort(uint port);
-    void openPort(uint port, libremidi::midi_in::message_callback callback);
+    void openPort(unsigned int port);
+    void openPort(unsigned int port,
+                  libremidi::midi_in::message_callback callback);
 
     ~MidiHandler();
 

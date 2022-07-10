@@ -11,7 +11,7 @@ Chart readChart(const char* json) {
     tree* t = readJson(json);
     std::string str = "None";
     uint64_t n = 0;
-    uint i = 0;
+    unsigned int i = 0;
     c.animation = t->get<std::string>("animation", str);
     c.artist = t->get<std::string>("artist", str);
     c.audio = t->get<std::string>("audio", str);

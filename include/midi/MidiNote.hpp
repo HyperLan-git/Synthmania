@@ -8,8 +8,8 @@
 struct MidiNote {
     uint64_t timestamp;
     uint64_t length;
-    u_char note;
-    u_char velocity;
+    unsigned char note;
+    unsigned char velocity;
 };
 
 struct TrackPartition {

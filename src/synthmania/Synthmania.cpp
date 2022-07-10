@@ -90,9 +90,7 @@ void Synthmania::init() {
             ParentedGui *dot = new ParentedGui(
                 getTextureByName(textures, "dot"), name.c_str(), n);
             dot->setSize({.05, .05});
-            dot->setPosition({0, -.05});
-            dot->setGraphicalPosition(
-                {0, n->getGraphicalPosition().y - n->getSize().y / 2});
+            dot->setPosition({.2, 0});
             addGui(dot);
         }
 
@@ -137,9 +135,7 @@ void Synthmania::init() {
                 ParentedGui *dot = new ParentedGui(
                     getTextureByName(textures, "dot"), name2.c_str(), p);
                 dot->setSize({.05, .05});
-                dot->setPosition({0, -.05});
-                dot->setGraphicalPosition(
-                    {0, p->getGraphicalPosition().y - p->getSize().y / 2});
+                dot->setPosition({.1, 0});
                 addGui(dot);
             }
             last = t;
@@ -160,25 +156,14 @@ void Synthmania::init() {
     std::string text = c.name;
     text.append(" by ");
     text.append(c.artist);
-    int i = 0;
-    for (Text t : renderer->createText(text, "Stupid", 11, {-1.995, -.895})) {
-        std::string name = "title_shadow_";
-        name.append(std::to_string(i++));
-        Gui *gui = new Gui(t.character.texture, name.c_str());
-        gui->setColor({0, 0, 0, .7});
-        gui->setPosition(t.pos);
-        gui->setSize(t.size * 1.05f);
-        addGui(gui);
-    }
-    for (Text t : renderer->createText(text, "Stupid", 11, {-2, -.9})) {
-        std::string name = "title_";
-        name.append(std::to_string(i++));
-        Gui *gui = new Gui(t.character.texture, name.c_str());
-        gui->setColor({.2, .2, 1, 1});
-        gui->setPosition(t.pos);
-        gui->setSize(t.size);
-        addGui(gui);
-    }
+
+    for (Gui *g : printShadowedString(text, renderer, "title_", "Stupid", 11,
+                                      {-2, -.9}, {.2, .2, 1, 1}))
+        addGui(g);
+
+    for (Gui *g : printShakingString("ANGERY", renderer, "scary_", "Stupid", 22,
+                                     {0, 0}, .001, {1, 0, 0, 1}))
+        ;  // addGui(g);
     // Needs to be above everything else
     addGui(precision);
 }
@@ -314,7 +299,7 @@ void Synthmania::update() {
     // Or should it ? *vsauce music plays*
     // Accshually, if I only check a few notes (the first 5 in array for
     // instance) and if there cannot be more than this amount in the hit window
-    // then I can check shit semi-optimally
+    // then I can check shit semi-optimally :nerd:
     for (Note *n : notes) {
         if (n->justMissed()) {
             noteMiss(n);
@@ -387,4 +372,62 @@ Synthmania::~Synthmania() {
     delete audio;
 
     delete handler;
+}
+
+std::vector<Gui *> printString(std::string text, Renderer *renderer,
+                               std::string entityNames, std::string font,
+                               double size, glm::vec2 pos, glm::vec4 color) {
+    std::vector<Gui *> result;
+    int i = 0;
+    for (Text t : renderer->createText(text, font, size, pos)) {
+        std::string name = entityNames;
+        name.append(std::to_string(i++));
+        Gui *gui = new Gui(t.character.texture, name.c_str());
+        gui->setColor(color);
+        gui->setPosition(t.pos);
+        gui->setSize(t.size);
+        result.push_back(gui);
+    }
+    return result;
+}
+
+std::vector<Gui *> printShadowedString(std::string text, Renderer *renderer,
+                                       std::string entityNames,
+                                       std::string font, double size,
+                                       glm::vec2 pos, glm::vec4 color) {
+    std::vector<Gui *> result;
+    glm::vec2 shadowPos = pos;
+    shadowPos += glm::vec2({.0005 * size, .0005 * size});
+    std::string shadowName = entityNames;
+    shadowName.append("shadow_");
+    for (Gui *g : printString(text, renderer, shadowName, font, size, shadowPos,
+                              {0, 0, 0, .7})) {
+        glm::vec2 sz = g->getSize();
+        sz *= 1.05;
+        g->setSize(sz);
+        result.push_back(g);
+    }
+    for (Gui *g :
+         printString(text, renderer, entityNames, font, size, pos, color))
+        result.push_back(g);
+    return result;
+}
+
+std::vector<Gui *> printShakingString(std::string text, Renderer *renderer,
+                                      std::string entityNames, std::string font,
+                                      double size, glm::vec2 pos, double shake,
+                                      glm::vec4 color) {
+    std::vector<Gui *> result;
+    int i = 0;
+    for (Text t : renderer->createText(text, font, size, pos)) {
+        std::string name = entityNames;
+        name.append(std::to_string(i++));
+        ShakingGui *gui =
+            new ShakingGui(t.character.texture, name.c_str(), shake * size);
+        gui->setColor(color);
+        gui->setPosition(t.pos);
+        gui->setSize(t.size);
+        result.push_back(gui);
+    }
+    return result;
 }

@@ -11,7 +11,7 @@
 
 struct DelayedNoteOff {
     uint64_t timestamp;
-    u_char pitch;
+    unsigned char pitch;
 };
 
 struct SynthParams {
@@ -26,10 +26,10 @@ class AudioPluginHandler {
     AudioPluginHandler(std::string path, AudioHandler* handler,
                        std::string synthdata);
 
-    void noteOn(u_char pitch, u_char velocity);
-    void noteOff(u_char pitch);
+    void noteOn(unsigned char pitch, unsigned char velocity);
+    void noteOff(unsigned char pitch);
 
-    void playNote(u_char pitch, u_char velocity, int64_t end);
+    void playNote(unsigned char pitch, unsigned char velocity, int64_t end);
 
     void update(int64_t time);
 
@@ -47,7 +47,7 @@ class AudioPluginHandler {
     thrd_t synth_thread;  // :trollface:
     thrd_t gui_thread;
 
-    std::map<u_char, int64_t> lingeringNotes;
+    std::map<unsigned char, int64_t> lingeringNotes;
 };
 
 int synthThread(void*);

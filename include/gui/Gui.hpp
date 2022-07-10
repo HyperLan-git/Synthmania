@@ -15,6 +15,9 @@ struct GuiData {
     alignas(16) glm::vec4 color;
 };
 
+// TODO make a beatiful artwork of programming where multiple classe's logic can
+// be merged into one ie. you can have a shaking note or a temporary and
+// parented gui
 class Gui {
    public:
     Gui(ImageView* texture, const char* name);

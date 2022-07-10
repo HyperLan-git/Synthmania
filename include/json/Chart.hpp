@@ -4,7 +4,7 @@
 
 struct Diff {
     std::string name, midi;
-    uint track_id;
+    unsigned int track_id;
 };
 
 struct Chart {

@@ -21,15 +21,17 @@ enum NoteStatus { WAITING, HIT, FINISHED, MISSED };
 
 std::vector<double> splitDuration(double duration);
 
-ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
-                             double duration, Key currentKey);
+ImageView* getTextureForNote(std::vector<ImageView*> textures,
+                             unsigned char pitch, double duration,
+                             Key currentKey);
 
 glm::vec2 getSizeAndLocForNote(double duration);
 
 class Note : public PartitionNotation {
    public:
-    Note(const char* name, int64_t time, u_char pitch, double totalDuration,
-         double duration, uint64_t MPQ, std::vector<ImageView*> textures);
+    Note(const char* name, int64_t time, unsigned char pitch,
+         double totalDuration, double duration, uint64_t MPQ,
+         std::vector<ImageView*> textures);
 
     bool justMissed();
     void setStatus(NoteStatus status);
@@ -37,7 +39,7 @@ class Note : public PartitionNotation {
     int64_t getTime();
     int64_t getDuration();
     int64_t getTotalDuration();
-    u_char getPitch();
+    unsigned char getPitch();
     void kill(uint64_t moment);
 
     virtual bool update(int64_t time);
@@ -47,7 +49,7 @@ class Note : public PartitionNotation {
    private:
     int64_t totalDuration, duration;
     int64_t kill_moment;
-    u_char pitch;
+    unsigned char pitch;
     NoteStatus status = WAITING;
     bool missed = false;
 };

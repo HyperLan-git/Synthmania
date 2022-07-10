@@ -2,13 +2,13 @@
 
 #include "Gui.hpp"
 
-int getDifferenceFromC4(u_char pitch);
+int getDifferenceFromC4(unsigned char pitch);
 
-bool isFromCMajor(u_char pitch);
+bool isFromCMajor(unsigned char pitch);
 
 class PartitionNotation : public Gui {
    public:
-    PartitionNotation(const char* name, int64_t time, u_char pitch,
+    PartitionNotation(const char* name, int64_t time, unsigned char pitch,
                       ImageView* texture);
 
     PartitionNotation(const char* name, int64_t time, double verticalPosition,

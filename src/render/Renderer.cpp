@@ -48,7 +48,8 @@ Image* Renderer::loadCharacter(FT_Face face, ulong character) {
     FT_UInt i = FT_Get_Char_Index(face, character);
     FT_Load_Glyph(face, i, FT_LOAD_DEFAULT);
     FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL);
-    uint w = glyphSlot->bitmap.width + 2, h = glyphSlot->bitmap.rows + 2;
+    unsigned int w = glyphSlot->bitmap.width + 2,
+                 h = glyphSlot->bitmap.rows + 2;
     uint8_t buffer[w * h * 4] = {0};
 
     uint8_t* bitmap = glyphSlot->bitmap.buffer;

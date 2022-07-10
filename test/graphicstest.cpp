@@ -30,7 +30,8 @@ class Test : public Game {
         FT_UInt i = getGlyph('H', face);
         FT_Load_Glyph(face, i, FT_LOAD_DEFAULT);
         FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL);
-        uint w = glyphSlot->bitmap.width + 2, h = glyphSlot->bitmap.rows + 2;
+        unsigned int w = glyphSlot->bitmap.width + 2,
+                     h = glyphSlot->bitmap.rows + 2;
         uint8_t buffer[w * h * 4] = {0};
         for (int i = 0; i < w * h * 4; i++) buffer[i] = 255;
 

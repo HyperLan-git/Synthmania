@@ -12,8 +12,9 @@ std::vector<double> splitDuration(double duration) {
     return result;
 }
 
-ImageView* getTextureForNote(std::vector<ImageView*> textures, u_char pitch,
-                             double duration, Key currentKey) {
+ImageView* getTextureForNote(std::vector<ImageView*> textures,
+                             unsigned char pitch, double duration,
+                             Key currentKey) {
     float initial = 2;
     std::string texName = "note_";
     while (initial > duration) initial /= 2;
@@ -38,7 +39,7 @@ glm::vec2 getSizeAndLocForNote(double duration) {
     return {0, 0.25f};
 }
 
-Note::Note(const char* name, int64_t time, u_char pitch, double totalDuration,
+Note::Note(const char* name, int64_t time, unsigned char pitch, double totalDuration,
            double duration, uint64_t MPQ, std::vector<ImageView*> textures)
     : PartitionNotation(
           name, time, pitch,

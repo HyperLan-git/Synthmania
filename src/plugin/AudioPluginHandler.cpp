@@ -10,7 +10,7 @@ AudioPluginHandler::AudioPluginHandler(std::string path, AudioHandler* handler,
     thrd_create(&gui_thread, guiThread, this);
 }
 
-void AudioPluginHandler::noteOn(u_char pitch, u_char velocity) {
+void AudioPluginHandler::noteOn(unsigned char pitch, unsigned char velocity) {
     noteOff(pitch);
     libremidi::message msg = libremidi::message::note_on(1, pitch, velocity);
     char* data = new char[msg.size()];
@@ -18,7 +18,7 @@ void AudioPluginHandler::noteOn(u_char pitch, u_char velocity) {
     host->addMidiMessage(SPH::MidiMessage{data, msg.size()});
 }
 
-void AudioPluginHandler::noteOff(u_char pitch) {
+void AudioPluginHandler::noteOff(unsigned char pitch) {
     libremidi::message msg = std::initializer_list<unsigned char>{
         libremidi::message::make_command(libremidi::message_type::NOTE_OFF, 1),
         pitch, 0};
@@ -27,7 +27,8 @@ void AudioPluginHandler::noteOff(u_char pitch) {
     host->addMidiMessage(SPH::MidiMessage{data, msg.size()});
 }
 
-void AudioPluginHandler::playNote(u_char pitch, u_char velocity, int64_t end) {
+void AudioPluginHandler::playNote(unsigned char pitch, unsigned char velocity,
+                                  int64_t end) {
     noteOn(pitch, velocity);
     if (lingeringNotes.count(pitch) == 0 || lingeringNotes[pitch] < end) {
         lingeringNotes.erase(pitch);

@@ -60,7 +60,7 @@ bool AudioSource::destroyOnFinished() { return destroy; }
 
 void AudioSource::queueBuffers(AudioBuffer* buffers, int nb) {
     for (int i = 0; i < nb; i++) {
-        uint id = buffers[i].getBuffer();
+        unsigned int id = buffers[i].getBuffer();
         alSourceQueueBuffers(sourceID, 1, &id);
     }
 }
@@ -71,7 +71,7 @@ void AudioSource::queueBuffer(AudioBuffer* buffer) {
 }
 
 AudioBuffer* AudioSource::unqueueBuffers(int nb) {
-    uint buffers[nb];
+    unsigned int buffers[nb];
     alSourceUnqueueBuffers(sourceID, nb, buffers);
     AudioBuffer* ret = new AudioBuffer[nb];
     for (int i = 0; i < nb; i++) ret[i].setBuffer(buffers[i]);
