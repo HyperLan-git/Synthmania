@@ -16,23 +16,22 @@ typedef std::function<bool(VkPhysicalDevice, VkQueueFamilyProperties, uint32_t)>
 
 #include "Queue.hpp"
 
-std::vector<uint32_t> findQueueFamilies(
-    VkPhysicalDevice device, std::vector<FamilyPredicate> familyPredicates);
+std::map<std::string, uint32_t> findQueueFamilies(
+    VkPhysicalDevice device, std::map<std::string, FamilyPredicate> familyPredicates);
 
 class Device {
    public:
     Device(VkPhysicalDevice *physicalDevice,
            const std::vector<const char *> deviceExtensions,
-           std::vector<FamilyPredicate> familyPredicates,
+           std::map<std::string, FamilyPredicate> familyPredicates,
            const std::vector<const char *> validationLayers =
                std::vector<const char *>());
     VkDevice *getDevice();
-    Queue *getQueue(int id);
+    Queue *getQueue(std::string name);
     void wait();
     ~Device();
 
 private:
     VkDevice *device;
     std::vector<Queue *> queues;
-    std::map<int, int> queuesID;
 };

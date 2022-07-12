@@ -1,11 +1,10 @@
 #include "Device.hpp"
 
 #include <iostream>
-
-std::vector<uint32_t> findQueueFamilies(
-    VkPhysicalDevice device, std::vector<FamilyPredicate> familyPredicates)
+std::map<std::string, uint32_t> findQueueFamilies(
+    VkPhysicalDevice device, std::map<std::string, FamilyPredicate> familyPredicates)
 {
-    std::vector<uint32_t> result = {};
+    std::map<std::string, uint32_t> result;
 
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
@@ -15,22 +14,15 @@ std::vector<uint32_t> findQueueFamilies(
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
                                              queueFamilies.data());
 
-    uint32_t j = 0;
     uint32_t i = 0;
-    for (i = 0; i < queueFamilies.size(); i++)
-    {
-        const VkQueueFamilyProperties &queueFamily = queueFamilies[i];
-        if (familyPredicates[j](device, queueFamily, i))
-        {
-            result.push_back(i);
-            j++;
-            if (j >= familyPredicates.size())
-                return result;
-            i = -1;
+    for (auto entry : familyPredicates) 
+        for (i = 0; i < queueFamilies.size(); i++) {
+            const VkQueueFamilyProperties &queueFamily = queueFamilies[i];
+            if(entry.second(device, queueFamily, i)) {
+                result.emplace(entry.first, i);
+                break;
+            }
         }
-    }
-    if (i >= queueFamilies.size() || result.size() < familyPredicates.size())
-        result.clear();
 
     return result;
 }
@@ -42,9 +34,9 @@ Device::Device(VkPhysicalDevice *physicalDevice,
     this->queues = {};
     this->device = new VkDevice();
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::vector<uint32_t> queueFamilies =
+    std::map<std::string, uint32_t> queueFamilies =
         findQueueFamilies(*physicalDevice, familyPredicates);
-    std::cout << "familyCount:" << queueFamilies.size() << std::endl;
+    // TODO Get rid of this unique queue nonsense and allocate as many queues as needed
     std::set<uint32_t> uniqueQueueFamilies = {};
 
     float queuePriority = 1.0f;
@@ -107,11 +99,13 @@ Device::Device(VkPhysicalDevice *physicalDevice,
 
 VkDevice *Device::getDevice() { return device; }
 
-Queue *Device::getQueue(int id)
+Queue *Device::getQueue(std::string name)
 {
-    if (id >= queuesID.size())
-        id = queuesID.size() - 1;
-    return this->queues[queuesID[id]];
+    for(Queue* queue : queues) {
+        if (queue->getName().compare(name.c_str()))
+            return queue;
+    }
+    return NULL;
 }
 
 void Device::wait() { vkDeviceWaitIdle(*device); }

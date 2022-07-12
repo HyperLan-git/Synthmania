@@ -77,7 +77,27 @@
         "queue": "cpp",
         "xhash": "cpp",
         "xstring": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "charconv": "cpp",
+        "coroutine": "cpp",
+        "filesystem": "cpp",
+        "format": "cpp",
+        "forward_list": "cpp",
+        "ios": "cpp",
+        "locale": "cpp",
+        "shared_mutex": "cpp",
+        "xfacet": "cpp",
+        "xiosbase": "cpp",
+        "xlocale": "cpp",
+        "xlocbuf": "cpp",
+        "xlocinfo": "cpp",
+        "xlocmes": "cpp",
+        "xlocmon": "cpp",
+        "xlocnum": "cpp",
+        "xloctime": "cpp",
+        "xmemory": "cpp",
+        "xstddef": "cpp",
+        "xtr1common": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }
