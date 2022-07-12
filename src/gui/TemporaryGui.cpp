@@ -2,10 +2,10 @@
 
 #include "Gui.hpp"
 
-TemporaryGui::TemporaryGui(ImageView* texture, const char* name, int64_t time,
+TemporaryGui::TemporaryGui(ImageView* texture, const char* name, int64_t fade,
                            int64_t death)
     : Gui(texture, name) {
-    this->time = time;
+    this->fade = fade;
     this->death = death;
 }
 
@@ -23,7 +23,7 @@ void TemporaryGui::setPosition(glm::vec2 pos) {
 
 bool TemporaryGui::update(int64_t time) {
     double progress =
-        (long double)(time - this->time) / (this->death - this->time);
+        (long double)(time - this->fade) / (this->death - this->fade);
     this->position.x =
         progress * finalPosition.x + (1 - progress) * initialPosition.x;
     this->position.y =

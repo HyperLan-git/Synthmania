@@ -9,7 +9,7 @@
 class Shader {
    public:
     Shader(const char* mainFunction, Device* device,
-           const std::vector<char>& code, bool vertex);
+           const std::vector<char>& code, VkShaderStageFlagBits type);
 
     VkPipelineShaderStageCreateInfo toPipeline();
 
@@ -19,6 +19,6 @@ class Shader {
     Device* device;
     VkShaderModule* module;
     const char* mainFunction;
-    bool vertex;
+    VkShaderStageFlagBits type;
     VkPipelineShaderStageCreateInfo info;
 };

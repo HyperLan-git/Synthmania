@@ -59,12 +59,14 @@ void Synthmania::init() {
         name.append(hash);
         double totalDuration = note.length / (long double)partition.MPQ / 4.;
         std::vector<double> cutDown = splitDuration(totalDuration);
-        bool firstDotted = false;
-        if (cutDown.size() > 1 && cutDown[1] == cutDown[0] / 2.) {
-            double d = cutDown[0] * 1.5;
+        short firstDots = 0;
+        for (int i = 1; i < cutDown.size(); i++)
+            if (cutDown.size() > 1 && cutDown[i] == cutDown[i - 1] / 2.) {
+                firstDots = i;
+            }
+        for (int i = 0; i < firstDots; i++) {
+            cutDown[1] += cutDown[0];
             cutDown.erase(cutDown.begin());
-            cutDown[0] = d;
-            firstDotted = true;
         }
         Note *n = new Note(name.c_str(), note.timestamp, note.note,
                            totalDuration, cutDown[0], partition.MPQ, textures);
@@ -86,12 +88,14 @@ void Synthmania::init() {
         }
         addGui(n);
 
-        if (firstDotted) {
+        double p = .2;
+        for (int i = 0; i < firstDots; i++) {
             ParentedGui *dot = new ParentedGui(
                 getTextureByName(textures, "dot"), name.c_str(), n);
             dot->setSize({.05, .05});
-            dot->setPosition({.2, 0});
+            dot->setPosition({p, 0});
             addGui(dot);
+            p += .2;
         }
 
         if (!isFromCMajor(note.note)) {
@@ -110,12 +114,6 @@ void Synthmania::init() {
             name2.append("_");
             name2.append(std::to_string(i));
             double d = cutDown[i];
-            bool dotted = false;
-            if (i < cutDown.size() - 1 && cutDown[i + 1] == d / 2.) {
-                d += d / 2.;
-                dotted = true;
-                i++;
-            }
             ParentedGui *p = new ParentedGui(
                 getTextureForNote(textures, note.note, d, Key::SOL),
                 name2.c_str(), n);
@@ -131,13 +129,6 @@ void Synthmania::init() {
             arc->setGraphicalPosition({0, temp.x - .15});
             arc->setSize({(t - last) / 350000.f, .15f});
             addGui(arc);
-            if (dotted) {
-                ParentedGui *dot = new ParentedGui(
-                    getTextureByName(textures, "dot"), name2.c_str(), p);
-                dot->setSize({.05, .05});
-                dot->setPosition({.1, 0});
-                addGui(dot);
-            }
             last = t;
             t += d * partition.MPQ * 4;
         }
@@ -362,7 +353,7 @@ void Synthmania::update() {
         // Most people can play with 10ms off right? (I'm sorry rythm gamers)
         if (b > 10000) setTimeMicros(a);
     }
-    //thrd_yield();
+    // thrd_yield();
 }
 
 AudioPluginHandler *Synthmania::getPluginHandler() { return plugin; }

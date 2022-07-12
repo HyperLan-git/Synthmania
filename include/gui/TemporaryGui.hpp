@@ -14,5 +14,5 @@ class TemporaryGui : public Gui {
 
    protected:
     glm::vec2 finalPosition = {0, -0.2}, initialPosition = getPosition();
-    int64_t time, death;
+    int64_t fade, death;
 };

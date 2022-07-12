@@ -23,11 +23,9 @@ class Device {
    public:
     Device(VkPhysicalDevice *physicalDevice,
            const std::vector<const char *> deviceExtensions,
-           std::vector<FamilyPredicate> familyPredicates);
-    Device(VkPhysicalDevice *physicalDevice,
-           const std::vector<const char *> deviceExtensions,
            std::vector<FamilyPredicate> familyPredicates,
-           const std::vector<const char *> validationLayers);
+           const std::vector<const char *> validationLayers =
+               std::vector<const char *>());
     VkDevice *getDevice();
     Queue *getQueue(int id);
     void wait();

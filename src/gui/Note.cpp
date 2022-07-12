@@ -1,9 +1,13 @@
 #include "Note.hpp"
 
+#define A_32TH .03125f
+
+#define ALPHA_HIT .85
+
 std::vector<double> splitDuration(double duration) {
-    if (duration <= 0.125) return {duration};
+    if (duration <= A_32TH) return {duration};
     std::vector<double> result;
-    while (duration > 0.125) {
+    while (duration > A_32TH) {
         double d = 2;
         while (d > duration) d /= 2;
         duration -= d;
@@ -19,7 +23,7 @@ ImageView* getTextureForNote(std::vector<ImageView*> textures,
     std::string texName = "note_";
     while (initial > duration) initial /= 2;
     // std::cout << duration << " " << (int)pitch << std::endl;
-    if (duration == 0) initial = 0.125f;
+    if (duration < A_32TH) initial = A_32TH;
 
     if (initial < 1)
         texName += std::to_string((int)(1.0 / initial)) +
@@ -32,15 +36,16 @@ ImageView* getTextureForNote(std::vector<ImageView*> textures,
 
 glm::vec2 getSizeAndLocForNote(double duration) {
     int i = duration;
-    if (duration < 0.125f) duration = 0.125f;
+    if (duration < A_32TH) duration = A_32TH;
     if (duration < 1.f) i = -(1.f) / duration;
     // TODO put all that in the skin file
     if (i < 0) return {-0.14f, 0.53f};
     return {0, 0.25f};
 }
 
-Note::Note(const char* name, int64_t time, unsigned char pitch, double totalDuration,
-           double duration, uint64_t MPQ, std::vector<ImageView*> textures)
+Note::Note(const char* name, int64_t time, unsigned char pitch,
+           double totalDuration, double duration, uint64_t MPQ,
+           std::vector<ImageView*> textures)
     : PartitionNotation(
           name, time, pitch,
           getTextureForNote(textures, pitch, duration, Key::SOL)) {
@@ -74,13 +79,13 @@ void Note::setStatus(NoteStatus status) {
             color = {1, 1, 1, 1};
             break;
         case HIT:
-            color = {.1, .5, .1, .85};
+            color = {.1, .5, .1, ALPHA_HIT};
             break;
         case FINISHED:
-            color = {0, 1, 0, .85};
+            color = {0, 1, 0, ALPHA_HIT};
             break;
         default:
-            color = {1, 0, 0, .85};
+            color = {1, 0, 0, ALPHA_HIT};
     }
 }
 
@@ -107,7 +112,7 @@ bool Note::update(int64_t time) {
 
     if (this->kill_moment < time) {
         this->color.a =
-            (1. + (this->kill_moment - time) / (double)DELETE_ANIM) * .85;
+            (1. + (this->kill_moment - time) / (double)DELETE_ANIM) * ALPHA_HIT;
     }
 
     return (int64_t)(kill_moment + DELETE_ANIM) <= time;

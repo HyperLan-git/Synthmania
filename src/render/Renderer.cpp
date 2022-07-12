@@ -42,7 +42,7 @@ void Renderer::initVulkan() {
         inFlightFences.push_back(new Fence(device));
     }
 }
-
+// TODO put text shit elsewhere
 Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
     FT_GlyphSlot glyphSlot = face->glyph;
     FT_UInt i = FT_Get_Char_Index(face, character);
@@ -124,8 +124,9 @@ Character Renderer::getCharacter(std::string fontName, unsigned long code) {
     return Character({0, 0, 0, 0, 0, 0, NULL});
 }
 
-void Renderer::loadTextures(std::map<std::string, std::string> textures,
-                            std::map<std::string, std::vector<unsigned long>> fonts) {
+void Renderer::loadTextures(
+    std::map<std::string, std::string> textures,
+    std::map<std::string, std::vector<unsigned long>> fonts) {
     for (auto entry : textures) {
         this->textures.push_back(
             readTexture(entry.second.c_str(), entry.first.c_str()));
@@ -280,25 +281,32 @@ void Renderer::createGraphicsPipeline() {
     shaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
     auto vertShaderCode = readFile("bin/vert.spv");
+    auto geomShaderCode = readFile("bin/geom.spv");
     auto fragShaderCode = readFile("bin/frag.spv");
 
-    Shader* vertShader = new Shader("main", device, vertShaderCode, true);
-    Shader* fragShader = new Shader("main", device, fragShaderCode, false);
+    Shader* vertShader =
+        new Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
+    Shader* geomShader = new Shader("main", device, geomShaderCode,
+                                    VK_SHADER_STAGE_GEOMETRY_BIT);
+    Shader* fragShader = new Shader("main", device, fragShaderCode,
+                                    VK_SHADER_STAGE_FRAGMENT_BIT);
     VkPushConstantRange* range = new VkPushConstantRange();
     range->offset = 0;
     range->size = sizeof(EntityData);
     range->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
+                                                      geomShader->toPipeline(),
                                                       fragShader->toPipeline()};
 
     graphicsPipelineLayout = new PipelineLayout(device, shaderLayout, 1, range);
 
     graphicsPipeline =
         new Pipeline(device, graphicsPipelineLayout, swapchain->getRenderPass(),
-                     shaderStages, 2, swapchain->getExtent());
+                     shaderStages, 3, swapchain->getExtent());
     delete range;
     delete vertShader;
+    delete geomShader;
     delete fragShader;
 }
 
@@ -316,17 +324,24 @@ void Renderer::createGuiPipeline() {
     guiShaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
     auto vertShaderCode = readFile("bin/vert_gui.spv");
+    auto geomShaderCode = readFile("bin/geom.spv");
     auto fragShaderCode = readFile("bin/frag.spv");
 
-    Shader* vertShader = new Shader("main", device, vertShaderCode, true);
-    Shader* fragShader = new Shader("main", device, fragShaderCode, false);
+    Shader* vertShader =
+        new Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
+    Shader* geomShader = new Shader("main", device, geomShaderCode,
+                                    VK_SHADER_STAGE_GEOMETRY_BIT);
+    Shader* fragShader = new Shader("main", device, fragShaderCode,
+                                    VK_SHADER_STAGE_FRAGMENT_BIT);
     VkPushConstantRange* range = new VkPushConstantRange();
     range->offset = 0;
     range->size = sizeof(GuiData);
     range->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
-                                                      fragShader->toPipeline()};
+    VkPipelineShaderStageCreateInfo shaderStages[] = {
+        vertShader->toPipeline(),
+        // geomShader->toPipeline(),
+        fragShader->toPipeline()};
 
     guiPipelineLayout = new PipelineLayout(device, guiShaderLayout, 1, range);
 
@@ -335,6 +350,7 @@ void Renderer::createGuiPipeline() {
                      shaderStages, 2, swapchain->getExtent());
     delete range;
     delete vertShader;
+    delete geomShader;
     delete fragShader;
 }
 
@@ -795,7 +811,8 @@ bool Renderer::isDeviceSuitable(VkPhysicalDevice device) {
     vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
     return families.size() == familyPredicates.size() && extensionsSupported &&
-           swapChainAdequate && supportedFeatures.samplerAnisotropy;
+           swapChainAdequate && supportedFeatures.samplerAnisotropy &&
+           supportedFeatures.geometryShader;
 }
 
 bool Renderer::checkDeviceExtensionSupport(VkPhysicalDevice device) {

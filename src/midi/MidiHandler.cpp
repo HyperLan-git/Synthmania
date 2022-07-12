@@ -153,7 +153,6 @@ TrackPartition MidiHandler::readMidi(const char *path) {
                             MPQ = MPQ << 8;
                             MPQ += message[5];
                             r.startingTempo = (60 * 1000000.) / MPQ;
-                            MPQ /= 4;  // TODO remove and put in demisemiquaver
                             break;
                         default:
                             std::cout << "msg=" << std::hex << (int)message[0]

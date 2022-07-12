@@ -68,6 +68,7 @@ vst: $(VSTLIB)
 shader:
 	glslc shader/gui.vert -o bin/vert_gui.spv
 	glslc shader/def.vert -o bin/vert.spv
+	glslc shader/def.geom -o bin/geom.spv
 	glslc shader/def.frag -o bin/frag.spv
 
 $(VSTLIB):

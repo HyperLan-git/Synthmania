@@ -1,7 +1,7 @@
 #include "Shader.hpp"
 
 Shader::Shader(const char* mainFunction, Device* device,
-               const std::vector<char>& code, bool vertex) {
+               const std::vector<char>& code, VkShaderStageFlagBits type) {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
@@ -15,13 +15,12 @@ Shader::Shader(const char* mainFunction, Device* device,
     VkPipelineShaderStageCreateInfo shaderStageInfo =
         VkPipelineShaderStageCreateInfo();
     shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    shaderStageInfo.stage =
-        vertex ? VK_SHADER_STAGE_VERTEX_BIT : VK_SHADER_STAGE_FRAGMENT_BIT;
+    shaderStageInfo.stage = type;
     shaderStageInfo.module = *shaderModule;
     shaderStageInfo.pName = mainFunction;
 
     this->info = shaderStageInfo;
-    this->vertex = vertex;
+    this->type = type;
     this->module = shaderModule;
     this->device = device;
 }
