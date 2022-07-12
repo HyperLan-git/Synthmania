@@ -72,7 +72,12 @@
         "*.ipp": "cpp",
         "future": "cpp",
         "cfenv": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "xtree": "cpp",
+        "queue": "cpp",
+        "xhash": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -59,13 +59,16 @@ class Test : public Game {
             pd, device, w, h, VK_FORMAT_R8G8B8A8_SRGB,
             VK_IMAGE_TILING_LINEAR,  // Fricking tiling
             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         r->transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         void* d;
+		std::cout << "mem\n";
         vkMapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()),
                     0, w * h * 4, 0, &d);
+		std::cout << "mem2\n";
         memcpy(d, buffer, w * h * 4);
         vkUnmapMemory(*(device->getDevice()),
                       *(image->getMemory()->getMemory()));

@@ -5,6 +5,7 @@
 
 #define BUFFERS 30
 #define BUFFERSIZE 1024
+#define M_PI 3.14159265359
 
 int main() {
     std::vector<std::string> devices = getDevices();

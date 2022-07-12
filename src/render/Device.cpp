@@ -1,7 +1,10 @@
 #include "Device.hpp"
 
+#include <iostream>
+
 std::vector<uint32_t> findQueueFamilies(
-    VkPhysicalDevice device, std::vector<FamilyPredicate> familyPredicates) {
+    VkPhysicalDevice device, std::vector<FamilyPredicate> familyPredicates)
+{
     std::vector<uint32_t> result = {};
 
     uint32_t queueFamilyCount = 0;
@@ -14,16 +17,20 @@ std::vector<uint32_t> findQueueFamilies(
 
     uint32_t j = 0;
     uint32_t i = 0;
-    for (i = 0; i < queueFamilies.size(); i++) {
+    for (i = 0; i < queueFamilies.size(); i++)
+    {
         const VkQueueFamilyProperties &queueFamily = queueFamilies[i];
-        if (familyPredicates[j](device, queueFamily, i)) {
+        if (familyPredicates[j](device, queueFamily, i))
+        {
             result.push_back(i);
             j++;
-            if (j >= familyPredicates.size()) return result;
+            if (j >= familyPredicates.size())
+                return result;
             i = -1;
         }
     }
-    if (i >= queueFamilies.size()) result.clear();
+    if (i >= queueFamilies.size() || result.size() < familyPredicates.size())
+        result.clear();
 
     return result;
 }
@@ -37,12 +44,15 @@ Device::Device(VkPhysicalDevice *physicalDevice,
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::vector<uint32_t> queueFamilies =
         findQueueFamilies(*physicalDevice, familyPredicates);
+    std::cout << "familyCount:" << queueFamilies.size() << std::endl;
     std::set<uint32_t> uniqueQueueFamilies = {};
 
     float queuePriority = 1.0f;
-    for (int i = 0; i < queueFamilies.size(); i++) {
+    for (int i = 0; i < queueFamilies.size(); i++)
+    {
         auto result = uniqueQueueFamilies.emplace(queueFamilies[i]);
-        if (result.second) {
+        if (result.second)
+        {
             int j = 0;
             for (auto it = uniqueQueueFamilies.begin(); *it != *(result.first);
                  it++)
@@ -82,25 +92,35 @@ Device::Device(VkPhysicalDevice *physicalDevice,
     createInfo.ppEnabledLayerNames = validationLayers.data();
 
     if (vkCreateDevice(*physicalDevice, &createInfo, nullptr, device) !=
-        VK_SUCCESS) {
+        VK_SUCCESS)
+    {
         throw std::runtime_error("failed to create logical device!");
     }
 
     int i = 0;
-    for (uint32_t family : uniqueQueueFamilies) {
+    for (uint32_t family : uniqueQueueFamilies)
+    {
+        std::cout << "family:" << family << std::endl;
         queues.push_back(new Queue(this, family, 0));
     }
 }
 
 VkDevice *Device::getDevice() { return device; }
 
-Queue *Device::getQueue(int id) { return this->queues[queuesID[id]]; }
+Queue *Device::getQueue(int id)
+{
+    if (id >= queuesID.size())
+        id = queuesID.size() - 1;
+    return this->queues[queuesID[id]];
+}
 
 void Device::wait() { vkDeviceWaitIdle(*device); }
 
-Device::~Device() {
+Device::~Device()
+{
     vkDestroyDevice(*device, nullptr);
-    for (Queue *queue : queues) {
+    for (Queue *queue : queues)
+    {
         delete queue;
     }
     delete device;

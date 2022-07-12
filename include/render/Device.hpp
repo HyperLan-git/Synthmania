@@ -31,7 +31,7 @@ class Device {
     void wait();
     ~Device();
 
-   private:
+private:
     VkDevice *device;
     std::vector<Queue *> queues;
     std::map<int, int> queuesID;
