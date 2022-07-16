@@ -46,6 +46,8 @@ class Note : public PartitionNotation {
 
     virtual ShaderData* getShaderData() const;
 
+    virtual ~Note() = default;
+
    private:
     int64_t totalDuration, duration;
     int64_t kill_moment;

@@ -3,9 +3,10 @@
 Fence::Fence(Device *device) {
     this->device = device;
 
-    VkFenceCreateInfo fenceInfo{};
+    VkFenceCreateInfo fenceInfo;
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    fenceInfo.pNext = NULL;
 
     this->fence = new VkFence();
 
@@ -17,6 +18,10 @@ Fence::Fence(Device *device) {
 }
 
 VkFence *Fence::getFence() { return fence; }
+
+VkResult Fence::getStatus() {
+    return vkGetFenceStatus(*(device->getDevice()), *fence);
+}
 
 void Fence::reset() { vkResetFences(*(device->getDevice()), 1, fence); }
 

@@ -10,6 +10,8 @@ class ShakingGui : public Gui {
 
     virtual bool update(int64_t time);
 
+    virtual ~ShakingGui() = default;
+
    private:
     double amplitude;
 };

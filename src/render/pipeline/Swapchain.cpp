@@ -32,16 +32,16 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    uint32_t queueFamilyIndices[] = {device->getQueue(0)->getFamily(),
-                                     device->getQueue(1)->getFamily()};
+    uint32_t queueFamilyIndices[] = {
+        device->getQueue("main")->getFamily(),
+        device->getQueue("secondary")->getFamily()};
 
-    if (device->getQueue(1)->getFamily() != device->getQueue(0)->getFamily()) {
+    if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
         createInfo.pQueueFamilyIndices = queueFamilyIndices;
-    } else {
+    } else
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    }
 
     createInfo.preTransform = swapchainSupport.capabilities.currentTransform;
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;

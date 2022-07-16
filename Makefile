@@ -16,7 +16,8 @@ ifeq ($(OS),Windows_NT)
 IDIRS += -I mingw-std-threads
 endif
 
-CFLAGS = -std=c++17 -O2 $(VSTOBJ)
+DEBUG = -fsanitize=address
+CFLAGS = -std=c++17 -O3 $(VSTOBJ) -g
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype
 ifeq ($(OS),Windows_NT)
 LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lalut -lwinmm -lfreetype
@@ -40,6 +41,13 @@ Synthmania: shader $(VSTLIB)
 	d=$$(date +%s) ; \
 	make $(OBJ) ; \
 	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(LDFLAGS) $(VSTFLAGS) \
+	&& echo "Build took $$(($$(date +%s)-d)) seconds"
+
+
+debug: shader $(VSTLIB)
+	d=$$(date +%s) ; \
+	make $(OBJ) ; \
+	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(LDFLAGS) $(VSTFLAGS) $(DEBUG) \
 	&& echo "Build took $$(($$(date +%s)-d)) seconds"
 
 %.o: %.cpp

@@ -39,10 +39,6 @@ std::map<std::string, std::string> Game::readTextures(std::string file) {
 }
 
 int64_t Game::getCurrentTimeMicros() {
-    /*if (music != NULL) {
-        long long j = music->getSampleOffset() * 1000000.;
-        return j / (uint64_t)44100 - this->startTime;
-    }*/
     auto currentTime = std::chrono::high_resolution_clock::now();
     // Necessary conversions to not lose precision
     return std::chrono::duration<int64_t, std::chrono::nanoseconds::period>(

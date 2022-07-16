@@ -1,10 +1,19 @@
 #pragma once
 
+// FIXME make a queuefamily class
 class Queue;
+struct FamilyData;
 
 #include <vulkan/vulkan.h>
 
 #include <stdexcept>
+#include <vector>
+
+struct FamilyData {
+    uint32_t id;
+    VkQueueFamilyProperties *properties;
+    std::vector<Queue *> queues;
+};
 
 #include "Device.hpp"
 
@@ -16,6 +25,8 @@ class Queue {
     uint32_t getID();
     std::string getName();
     ~Queue();
+
+    static Queue *getAvailableQueue(std::vector<Queue *> queues);
 
    private:
     Device *device;

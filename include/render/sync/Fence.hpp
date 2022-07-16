@@ -12,6 +12,8 @@ class Fence {
 
     VkFence *getFence();
 
+    VkResult getStatus();
+
     void reset();
     void wait();
 

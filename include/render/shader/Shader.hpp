@@ -12,6 +12,7 @@ class Shader {
            const std::vector<char>& code, VkShaderStageFlagBits type);
 
     VkPipelineShaderStageCreateInfo toPipeline();
+    VkShaderModule* getModule();
 
     ~Shader();
 

@@ -22,6 +22,8 @@ class Judgement : public Gui {
 
     virtual ShaderData* getShaderData() const;
 
+    virtual ~Judgement() = default;
+
    private:
     TrackPartition partition;
 };

@@ -47,13 +47,13 @@ class Model {
     Buffer* toVertexBuffer();
     Buffer* toIndicesBuffer();
 
-    std::vector<struct Vertex> getVertexes();
+    std::vector<Vertex> getVertexes();
     std::vector<uint16_t> getIndexes();
 
     ~Model();
 
    private:
-    std::vector<struct Vertex> vdata;
+    std::vector<Vertex> vdata;
     std::vector<uint16_t> idata;
     Buffer *vertexBuffer, *indexBuffer;
     void createVertexBuffer(VkPhysicalDevice* physicalDevice, Device* device);

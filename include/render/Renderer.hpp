@@ -12,6 +12,7 @@ class Renderer;
 #include <cstring>
 #include <fstream>
 #include <functional>
+#include <map>
 
 #include "Game.hpp"
 #include "stb_image.h"
@@ -70,7 +71,6 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
-
 const std::vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
@@ -112,45 +112,45 @@ class Renderer {
     ~Renderer();
 
    private:
-    Game* game;
+    Game* game = NULL;
 
-    Window* window;
+    Window* window = NULL;
 
-    Instance* instance;
-    VkSurfaceKHR* surface;
+    Instance* instance = NULL;
+    VkSurfaceKHR* surface = NULL;
 
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-    Device* device;
+    VkPhysicalDevice physicalDevice = NULL;
+    Device* device = NULL;
 
-    Swapchain* swapchain;
+    Swapchain* swapchain = NULL;
 
-    ShaderDescriptorSetLayout* shaderLayout = nullptr;
-    ShaderDescriptorSetLayout* guiShaderLayout = nullptr;
+    ShaderDescriptorSetLayout* shaderLayout = NULL;
+    ShaderDescriptorSetLayout* guiShaderLayout = NULL;
 
     std::vector<ShaderDescriptorSet*> descriptorSets;
     std::vector<ShaderDescriptorSet*> guiDescriptorSets;
 
-    CommandPool* commandPool;
+    CommandPool* commandPool = NULL;
 
-    TextureSampler* textureSampler;
-    TextureSampler* guiSampler;
+    TextureSampler* textureSampler = NULL;
+    TextureSampler* guiSampler = NULL;
 
-    Buffer* vertexBuffer;
-    Buffer* indexBuffer;
+    Buffer* vertexBuffer = NULL;
+    Buffer* indexBuffer = NULL;
 
-    PipelineLayout* graphicsPipelineLayout;
-    Pipeline* graphicsPipeline;
+    PipelineLayout* graphicsPipelineLayout = NULL;
+    Pipeline* graphicsPipeline = NULL;
 
-    PipelineLayout* guiPipelineLayout;
-    Pipeline* guiPipeline;
+    PipelineLayout* guiPipelineLayout = NULL;
+    Pipeline* guiPipeline = NULL;
 
     std::vector<Buffer*> uniformBuffers;
     std::vector<Buffer*> guiUniformBuffers;
     std::vector<Buffer*> constantUniformBuffers;
     std::vector<Buffer*> guiConstantUniformBuffers;
 
-    ShaderDescriptorPool* pool;
-    ShaderDescriptorPool* guiPool;
+    ShaderDescriptorPool* pool = NULL;
+    ShaderDescriptorPool* guiPool = NULL;
 
     std::vector<CommandBuffer*> commandBuffers;
 

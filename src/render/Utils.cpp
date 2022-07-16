@@ -147,3 +147,53 @@ ImageView* getTextureByName(std::vector<ImageView*> textures,
     }
     return getTextureByName(textures, "missing");
 }
+
+DebugFunc getDebugFunctions(Device* device) {
+    DebugFunc result;
+#ifndef NDEBUG
+    VkDevice d = *(device->getDevice());
+    result.begin = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(
+        d, "vkCmdBeginDebugUtilsLabelEXT");
+    result.end = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetDeviceProcAddr(
+        d, "vkCmdEndDebugUtilsLabelEXT");
+    result.insert = (PFN_vkCmdInsertDebugUtilsLabelEXT)vkGetDeviceProcAddr(
+        d, "vkCmdInsertDebugUtilsLabelEXT");
+    result.setName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(
+        d, "vkSetDebugUtilsObjectNameEXT");
+    result.setTag = (PFN_vkSetDebugUtilsObjectTagEXT)vkGetDeviceProcAddr(
+        d, "vkSetDebugUtilsObjectTagEXT");
+#else
+    result.begin = NULL;
+    result.end = NULL;
+    result.insert = NULL;
+    result.setName = NULL;
+    result.setTag = NULL;
+#endif
+
+    return result;
+}
+
+void setName(DebugFunc debugFunctions, Device* device, std::string name,
+             VkObjectType type, void* obj) {
+#ifndef NDEBUG
+    VkDebugUtilsObjectNameInfoEXT info;
+    info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+    info.objectHandle = (uint64_t)obj;
+    info.objectType = type;
+    info.pObjectName = name.c_str();
+    info.pNext = NULL;
+    debugFunctions.setName(*(device->getDevice()), &info);
+#endif
+}
+
+void beginSection(DebugFunc debugFunctions, std::string name,
+                  CommandBuffer* buffer) {
+#ifndef NDEBUG
+    VkDebugUtilsLabelEXT info;
+    info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    info.pLabelName = name.c_str();
+    info.color[0] = info.color[3] = 1.f;
+    info.pNext = NULL;
+    debugFunctions.begin(*(buffer->getBuffer()), &info);
+#endif
+}

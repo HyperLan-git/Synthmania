@@ -20,6 +20,8 @@ class PartitionNotation : public Gui {
 
     virtual ShaderData* getShaderData() const;
 
+    virtual ~PartitionNotation() = default;
+
    protected:
     int64_t time;
 };

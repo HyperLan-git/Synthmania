@@ -24,5 +24,3 @@ ShaderData* ParentedGui::getShaderData() const {
     data->size = sizeof(GuiData);
     return data;
 }
-
-ParentedGui::~ParentedGui() {}

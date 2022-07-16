@@ -45,7 +45,7 @@ class Gui {
     // Data for the shader, will depend on the shader
     virtual ShaderData* getShaderData() const;
 
-    ~Gui();
+    virtual ~Gui() = default;
 
    protected:
     ImageView* texture;

@@ -1,6 +1,8 @@
 #include "Gui.hpp"
 
+#ifndef M_PI
 #define M_PI 3.14159265359
+#endif
 
 Gui::Gui(ImageView* texture, const char* name) {
     this->texture = texture;
@@ -46,5 +48,3 @@ ShaderData* Gui::getShaderData() const {
     data->size = sizeof(GuiData);
     return data;
 }
-
-Gui::~Gui() {}

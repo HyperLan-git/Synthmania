@@ -16,8 +16,12 @@ typedef std::function<bool(VkPhysicalDevice, VkQueueFamilyProperties, uint32_t)>
 
 #include "Queue.hpp"
 
-std::map<std::string, uint32_t> findQueueFamilies(
-    VkPhysicalDevice device, std::map<std::string, FamilyPredicate> familyPredicates);
+void getQueueFamilies(VkPhysicalDevice physicalDevice,
+                      std::vector<VkQueueFamilyProperties> &queueFamilies);
+
+std::map<std::string, FamilyData> findQueueFamilies(
+    VkPhysicalDevice device, std::vector<VkQueueFamilyProperties> queueFamilies,
+    std::map<std::string, FamilyPredicate> familyPredicates);
 
 class Device {
    public:
@@ -31,7 +35,7 @@ class Device {
     void wait();
     ~Device();
 
-private:
+   private:
     VkDevice *device;
-    std::vector<Queue *> queues;
+    std::map<std::string, FamilyData> queues;
 };

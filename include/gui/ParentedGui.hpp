@@ -12,7 +12,7 @@ class ParentedGui : public Gui {
 
     virtual ShaderData* getShaderData() const;
 
-    ~ParentedGui();
+    virtual ~ParentedGui() = default;
 
    private:
     Gui* parent;

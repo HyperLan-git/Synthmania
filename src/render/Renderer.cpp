@@ -16,30 +16,87 @@ void Renderer::initVulkan() {
     surface = instance->createSurface(window);
     pickPhysicalDevice();
     createLogicalDevice();
+    // TODO make a function called setAllNames
+    DebugFunc functions = getDebugFunctions(device);
+    // Error for some reason
+    /*setName(functions, device, "GPU", VK_OBJECT_TYPE_PHYSICAL_DEVICE,
+            physicalDevice);*/
+    setName(functions, device, "Instance", VK_OBJECT_TYPE_INSTANCE,
+            *(instance->getInstance()));
+    setName(functions, device, "mainSurface", VK_OBJECT_TYPE_SURFACE_KHR,
+            *surface);
+    setName(functions, device, "Device", VK_OBJECT_TYPE_DEVICE,
+            *(device->getDevice()));
+    setName(functions, device, "secondaryQueue", VK_OBJECT_TYPE_QUEUE,
+            *(device->getQueue("secondary")->getQueue()));
+    setName(functions, device, "mainQueue", VK_OBJECT_TYPE_QUEUE,
+            *(device->getQueue("main")->getQueue()));
     swapchain = new Swapchain(device, &physicalDevice, window, surface);
+    setName(functions, device, "Swapchain", VK_OBJECT_TYPE_SWAPCHAIN_KHR,
+            *(swapchain->getSwapchain()));
+    int i = 0;
+    for (Framebuffer* f : swapchain->getFramebuffers()) {
+        std::string name = "Framebuffer_";
+        name.append(std::to_string(i++));
+        setName(functions, device, name, VK_OBJECT_TYPE_FRAMEBUFFER,
+                *(f->getFramebuffer()));
+    }
+    setName(functions, device, "RenderPass", VK_OBJECT_TYPE_RENDER_PASS,
+            *(swapchain->getRenderPass()->getPass()));
+
     createGraphicsPipeline();
+
     createGuiPipeline();
     commandPool = new CommandPool(physicalDevice, device);
+    setName(functions, device, "Command Pool", VK_OBJECT_TYPE_COMMAND_POOL,
+            *(commandPool->getPool()));
     guiModel = new Model({{{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
                           {{0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
                           {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}},
                           {{-0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}}},
                          {3, 0, 2, 0, 1, 2}, &physicalDevice, device);
+    setName(functions, device, "Gui index buffer", VK_OBJECT_TYPE_BUFFER,
+            *(guiModel->toIndicesBuffer()->getBuffer()));
+    setName(functions, device, "Gui vertex buffer", VK_OBJECT_TYPE_BUFFER,
+            *(guiModel->toVertexBuffer()->getBuffer()));
+
     guiSampler = new TextureSampler(&physicalDevice, device);
+    setName(functions, device, "Gui sampler", VK_OBJECT_TYPE_SAMPLER,
+            *(guiSampler->getSampler()));
     textureSampler = new TextureSampler(&physicalDevice, device);
+    setName(functions, device, "3D sampler", VK_OBJECT_TYPE_SAMPLER,
+            *(textureSampler->getSampler()));
     Model* model =
         new Model("resources/models/room.obj", &physicalDevice, device);
     models.push_back(model);
+    // TODO get max buffer usage
     createVertexBuffer(model->toVertexBuffer()->getSize());
+    setName(functions, device, "Main vertex buffer", VK_OBJECT_TYPE_BUFFER,
+            *(vertexBuffer->getBuffer()));
     createIndexBuffer(model->toIndicesBuffer()->getSize());
+    setName(functions, device, "Main index buffer", VK_OBJECT_TYPE_BUFFER,
+            *(indexBuffer->getBuffer()));
+
     createUniformBuffers();
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         commandBuffers.push_back(new CommandBuffer(device, commandPool, false));
+        setName(functions, device, "Main command buffer " + std::to_string(i),
+                VK_OBJECT_TYPE_COMMAND_BUFFER,
+                *(commandBuffers[i]->getBuffer()));
 
         imageAvailableSemaphores.push_back(new Semaphore(device));
+        setName(functions, device,
+                "Image available semaphore " + std::to_string(i),
+                VK_OBJECT_TYPE_SEMAPHORE,
+                *(imageAvailableSemaphores[i]->getSemaphore()));
         renderFinishedSemaphores.push_back(new Semaphore(device));
+        setName(functions, device, "Main semaphore " + std::to_string(i),
+                VK_OBJECT_TYPE_SEMAPHORE,
+                *(renderFinishedSemaphores[i]->getSemaphore()));
         inFlightFences.push_back(new Fence(device));
+        setName(functions, device, "Main semaphore " + std::to_string(i),
+                VK_OBJECT_TYPE_FENCE, *(inFlightFences[i]->getFence()));
     }
 }
 // TODO put text shit elsewhere
@@ -277,6 +334,7 @@ void Renderer::createGraphicsPipeline() {
     textureSampler.descriptorCount = 1;
     textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     textureSampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    textureSampler.pImmutableSamplers = NULL;
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     shaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
@@ -290,6 +348,13 @@ void Renderer::createGraphicsPipeline() {
                                     VK_SHADER_STAGE_GEOMETRY_BIT);
     Shader* fragShader = new Shader("main", device, fragShaderCode,
                                     VK_SHADER_STAGE_FRAGMENT_BIT);
+    DebugFunc functions = getDebugFunctions(device);
+    setName(functions, device, "3D vertex shader", VK_OBJECT_TYPE_SHADER_MODULE,
+            *(vertShader->getModule()));
+    setName(functions, device, "3D geometry shader",
+            VK_OBJECT_TYPE_SHADER_MODULE, *(geomShader->getModule()));
+    setName(functions, device, "3D fragment shader",
+            VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader->getModule()));
     VkPushConstantRange* range = new VkPushConstantRange();
     range->offset = 0;
     range->size = sizeof(EntityData);
@@ -300,10 +365,15 @@ void Renderer::createGraphicsPipeline() {
                                                       fragShader->toPipeline()};
 
     graphicsPipelineLayout = new PipelineLayout(device, shaderLayout, 1, range);
+    setName(functions, device, "3D pipeline layout",
+            VK_OBJECT_TYPE_PIPELINE_LAYOUT,
+            *(graphicsPipelineLayout->getLayout()));
 
     graphicsPipeline =
         new Pipeline(device, graphicsPipelineLayout, swapchain->getRenderPass(),
                      shaderStages, 3, swapchain->getExtent());
+    setName(functions, device, "3D pipeline", VK_OBJECT_TYPE_PIPELINE,
+            *(graphicsPipeline->getPipeline()));
     delete range;
     delete vertShader;
     delete geomShader;
@@ -320,6 +390,7 @@ void Renderer::createGuiPipeline() {
     textureSampler.descriptorCount = 1;
     textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     textureSampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    textureSampler.pImmutableSamplers = NULL;
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     guiShaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
@@ -333,6 +404,14 @@ void Renderer::createGuiPipeline() {
                                     VK_SHADER_STAGE_GEOMETRY_BIT);
     Shader* fragShader = new Shader("main", device, fragShaderCode,
                                     VK_SHADER_STAGE_FRAGMENT_BIT);
+
+    DebugFunc functions = getDebugFunctions(device);
+    setName(functions, device, "2D vertex shader", VK_OBJECT_TYPE_SHADER_MODULE,
+            *(vertShader->getModule()));
+    setName(functions, device, "2D geom shader", VK_OBJECT_TYPE_SHADER_MODULE,
+            *(geomShader->getModule()));
+    setName(functions, device, "2D fragment shader",
+            VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader->getModule()));
     VkPushConstantRange* range = new VkPushConstantRange();
     range->offset = 0;
     range->size = sizeof(GuiData);
@@ -344,10 +423,14 @@ void Renderer::createGuiPipeline() {
         fragShader->toPipeline()};
 
     guiPipelineLayout = new PipelineLayout(device, guiShaderLayout, 1, range);
+    setName(functions, device, "2D pipeline layout",
+            VK_OBJECT_TYPE_PIPELINE_LAYOUT, *(guiPipelineLayout->getLayout()));
 
     guiPipeline =
         new Pipeline(device, guiPipelineLayout, swapchain->getRenderPass(),
                      shaderStages, 2, swapchain->getExtent());
+    setName(functions, device, "2D pipeline", VK_OBJECT_TYPE_PIPELINE,
+            *(guiPipeline->getPipeline()));
     delete range;
     delete vertShader;
     delete geomShader;
@@ -355,19 +438,18 @@ void Renderer::createGuiPipeline() {
 }
 
 void Renderer::createLogicalDevice() {
-    std::vector<FamilyPredicate> familyPredicates = {};
-    familyPredicates.push_back(
-        [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
-            return prop.queueFlags & VK_QUEUE_GRAPHICS_BIT;
-        });
-    familyPredicates.push_back([this](VkPhysicalDevice dev,
-                                      VkQueueFamilyProperties prop,
-                                      uint32_t id) {
-        VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(dev, id, *surface,
-                                             &presentSupport);
-        return presentSupport;
-    });
+    std::map<std::string, FamilyPredicate> familyPredicates = {
+        {"main",
+         [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
+             return prop.queueFlags & VK_QUEUE_GRAPHICS_BIT;
+         }},
+        {"secondary", [this](VkPhysicalDevice dev, VkQueueFamilyProperties prop,
+                             uint32_t id) {
+             VkBool32 presentSupport = false;
+             vkGetPhysicalDeviceSurfaceSupportKHR(dev, id, *surface,
+                                                  &presentSupport);
+             return presentSupport;
+         }}};
     if (enableValidationLayers) {
         device = new Device(&physicalDevice, deviceExtensions, familyPredicates,
                             validationLayers);
@@ -383,9 +465,13 @@ bool Renderer::hasStencilComponent(VkFormat format) {
 }
 
 void Renderer::addTexture(Image* texture, const char* name) {
-    this->textures.push_back(new ImageView(device, texture,
-                                           VK_FORMAT_R8G8B8A8_SRGB,
-                                           VK_IMAGE_ASPECT_COLOR_BIT, name));
+    ImageView* view = new ImageView(device, texture, VK_FORMAT_R8G8B8A8_SRGB,
+                                    VK_IMAGE_ASPECT_COLOR_BIT, name);
+    std::string n = name;
+    n.append("_view");
+    setName(getDebugFunctions(device), device, n, VK_OBJECT_TYPE_IMAGE_VIEW,
+            *(view->getView()));
+    this->textures.push_back(view);
 }
 
 Image* Renderer::createSamplerImage(int width, int height) {
@@ -405,9 +491,14 @@ Image* Renderer::createSamplerImage(int width, int height) {
 
 ImageView* Renderer::readTexture(const char* path, const char* name) {
     Image* tex = createTextureImage(path);
+    ImageView* result = new ImageView(device, tex, VK_FORMAT_R8G8B8A8_SRGB,
+                                      VK_IMAGE_ASPECT_COLOR_BIT, name);
+    std::string n = name;
+    n.append("_view");
+    setName(getDebugFunctions(device), device, n, VK_OBJECT_TYPE_IMAGE_VIEW,
+            *(result->getView()));
 
-    return new ImageView(device, tex, VK_FORMAT_R8G8B8A8_SRGB,
-                         VK_IMAGE_ASPECT_COLOR_BIT, name);
+    return result;
 }
 
 Image* Renderer::createTextureImage(const char* path) {
@@ -462,7 +553,7 @@ void Renderer::transitionImageLayout(Image* image, VkImageLayout oldLayout,
     commandBuffer->setImageLayout(image, oldLayout, newLayout);
 
     commandBuffer->end();
-    commandBuffer->submit(device->getQueue(0));
+    commandBuffer->submit(device->getQueue("secondary"));
     delete commandBuffer;
 }
 
@@ -474,7 +565,7 @@ void Renderer::copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
     commandBuffer->copyBufferToImage(buffer, image, {width, height, 1});
 
     commandBuffer->end();
-    commandBuffer->submit(device->getQueue(0));
+    commandBuffer->submit(device->getQueue("secondary"));
     delete commandBuffer;
 }
 
@@ -486,7 +577,7 @@ void Renderer::copyImage(Image* src, VkImageLayout srcLayout, Image* dst,
     commandBuffer->copyImage(src, srcLayout, dst, dstLayout);
 
     commandBuffer->end();
-    commandBuffer->submit(device->getQueue(0));
+    commandBuffer->submit(device->getQueue("secondary"));
     delete commandBuffer;
 }
 
@@ -500,7 +591,7 @@ void Renderer::convertImage(Image* src, VkImageLayout srcImageLayout,
                                 filter);
 
     commandBuffer->end();
-    commandBuffer->submit(device->getQueue(0));
+    commandBuffer->submit(device->getQueue("secondary"));
     delete commandBuffer;
 }
 
@@ -509,6 +600,9 @@ void Renderer::createVertexBuffer(VkDeviceSize size) {
         &physicalDevice, device, size,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    setName(getDebugFunctions(device), device, "main vertex buffer",
+            VK_OBJECT_TYPE_BUFFER, *(vertexBuffer->getBuffer()));
 }
 
 void Renderer::createIndexBuffer(VkDeviceSize size) {
@@ -516,6 +610,8 @@ void Renderer::createIndexBuffer(VkDeviceSize size) {
         &physicalDevice, device, size,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    setName(getDebugFunctions(device), device, "main index buffer",
+            VK_OBJECT_TYPE_BUFFER, *(indexBuffer->getBuffer()));
 }
 
 void Renderer::createUniformBuffers() {
@@ -566,21 +662,28 @@ void Renderer::updateDescriptorSet(ShaderDescriptorSet* descriptor,
 
 void Renderer::createDescriptorSets() {
     size_t j = 0;
+    DebugFunc functions = getDebugFunctions(device);
     for (ImageView* img : textures) {
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             descriptorSets.push_back(
                 new ShaderDescriptorSet(device, pool, shaderLayout));
+            std::string name = "descriptor_";
+            setName(functions, device, name + "3D_" + std::to_string(i),
+                    VK_OBJECT_TYPE_DESCRIPTOR_SET,
+                    *(descriptorSets[i]->getSet()));
 
             guiDescriptorSets.push_back(
                 new ShaderDescriptorSet(device, guiPool, guiShaderLayout));
+            setName(functions, device, name + "Gui_" + std::to_string(i),
+                    VK_OBJECT_TYPE_DESCRIPTOR_SET,
+                    *(guiDescriptorSets[i]->getSet()));
 
-            // God this is so cursed why
             updateDescriptorSet(descriptorSets[j + i], img, textureSampler,
                                 uniformBuffers[i]);
             updateDescriptorSet(guiDescriptorSets[j + i], img, guiSampler,
                                 guiUniformBuffers[i]);
         }
-        j += 2;
+        j += MAX_FRAMES_IN_FLIGHT;
     }
 }
 
@@ -609,9 +712,9 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
             ImageView* texture = e->getTexture();
             if (lastModel != model) {
                 model->toVertexBuffer()->copyTo(
-                    vertexBuffer, device->getQueue(0), commandPool);
+                    vertexBuffer, device->getQueue("main"), commandPool);
                 model->toIndicesBuffer()->copyTo(
-                    indexBuffer, device->getQueue(0), commandPool);
+                    indexBuffer, device->getQueue("main"), commandPool);
                 commandBuffer->bindVertexBuffers(vertexBuffer, 1);
                 commandBuffer->bindIndexBuffer(indexBuffer);
             }
@@ -631,9 +734,9 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
 
     commandBuffer->bindPipeline(guiPipeline);
 
-    guiModel->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue(0),
+    guiModel->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue("main"),
                                        commandPool);
-    guiModel->toIndicesBuffer()->copyTo(indexBuffer, device->getQueue(0),
+    guiModel->toIndicesBuffer()->copyTo(indexBuffer, device->getQueue("main"),
                                         commandPool);
     commandBuffer->bindVertexBuffers(vertexBuffer, 1);
     commandBuffer->bindIndexBuffer(indexBuffer);
@@ -752,7 +855,7 @@ void Renderer::drawFrame() {
     recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
 
     commandBuffers[currentFrame]->submit(
-        device->getQueue(0), imageAvailableSemaphores[currentFrame],
+        device->getQueue("main"), imageAvailableSemaphores[currentFrame],
         renderFinishedSemaphores[currentFrame], inFlightFences[currentFrame]);
 
     VkPresentInfoKHR presentInfo{};
@@ -768,8 +871,8 @@ void Renderer::drawFrame() {
 
     presentInfo.pImageIndices = &imageIndex;
 
-    result =
-        vkQueuePresentKHR(*(device->getQueue(1)->getQueue()), &presentInfo);
+    result = vkQueuePresentKHR(*(device->getQueue("main")->getQueue()),
+                               &presentInfo);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
         window->hasResized()) {
@@ -783,19 +886,22 @@ void Renderer::drawFrame() {
 }
 
 bool Renderer::isDeviceSuitable(VkPhysicalDevice device) {
-    std::vector<FamilyPredicate> familyPredicates = {
-        [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
-            return prop.queueFlags & VK_QUEUE_GRAPHICS_BIT;
-        },
-        [this](VkPhysicalDevice dev, VkQueueFamilyProperties prop,
-               uint32_t id) {
-            VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(dev, id, *surface,
-                                                 &presentSupport);
-            return presentSupport;
-        }};
-    std::vector<uint32_t> families =
-        findQueueFamilies(device, familyPredicates);
+    std::map<std::string, FamilyPredicate> familyPredicates = {
+        {"main",
+         [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
+             return prop.queueFlags & VK_QUEUE_GRAPHICS_BIT;
+         }},
+        {"secondary", [this](VkPhysicalDevice dev, VkQueueFamilyProperties prop,
+                             uint32_t id) {
+             VkBool32 presentSupport = false;
+             vkGetPhysicalDeviceSurfaceSupportKHR(dev, id, *surface,
+                                                  &presentSupport);
+             return presentSupport;
+         }}};
+    std::vector<VkQueueFamilyProperties> fam;
+    getQueueFamilies(device, fam);
+    std::map<std::string, FamilyData> families =
+        findQueueFamilies(device, fam, familyPredicates);
 
     bool extensionsSupported = checkDeviceExtensionSupport(device);
 

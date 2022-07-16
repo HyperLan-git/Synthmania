@@ -3,7 +3,7 @@ Instance::Instance(const char* name, uint32_t version, const char* engineName,
                    uint32_t engineVersion, uint32_t apiVersion,
                    const std::vector<const char*> extensions) {
     instance = new VkInstance();
-    VkApplicationInfo appInfo{};
+    VkApplicationInfo appInfo;
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = name;
     appInfo.applicationVersion = version;
@@ -11,14 +11,14 @@ Instance::Instance(const char* name, uint32_t version, const char* engineName,
     appInfo.engineVersion = engineVersion;
     appInfo.apiVersion = apiVersion;
 
-    VkInstanceCreateInfo createInfo{};
+    VkInstanceCreateInfo createInfo;
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
 
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
 
-    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
     createInfo.enabledLayerCount = 0;
 
     createInfo.pNext = nullptr;
@@ -42,9 +42,9 @@ Instance::Instance(const char* name, uint32_t version, const char* engineName,
 
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = "Hello Triangle";
+    appInfo.pApplicationName = name;
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "No Engine";
+    appInfo.pEngineName = engineName;
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_0;
 

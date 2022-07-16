@@ -55,8 +55,8 @@ void Synthmania::init() {
     addGui(bar);
     for (MidiNote note : partition.notes) {
         std::string name = "Note_";
-        const char *hash = std::to_string(std::hash<MidiNote>()(note)).c_str();
-        name.append(hash);
+        std::string hash = std::to_string(std::hash<MidiNote>()(note));
+        name += hash;
         double totalDuration = note.length / (long double)partition.MPQ / 4.;
         std::vector<double> cutDown = splitDuration(totalDuration);
         short firstDots = 0;
@@ -152,9 +152,8 @@ void Synthmania::init() {
                                       {-2, -.9}, {.2, .2, 1, 1}))
         addGui(g);
 
-    for (Gui *g : printShakingString("ANGERY", renderer, "scary_", "Stupid", 22,
-                                     {0, 0}, .001, {1, 0, 0, 1}))
-        ;  // addGui(g);
+    /*for (Gui *g : printShakingString("ANGERY", renderer, "scary_", "Stupid",
+       22, {0, 0}, .001, {1, 0, 0, 1})) addGui(g);*/
     // Needs to be above everything else
     addGui(precision);
 }
@@ -256,6 +255,8 @@ void Synthmania::setTimeMicros(int64_t time) {
         music->setSampleOffset((getCurrentTimeMicros() + startTime) * 44100. /
                                1000000.f);
 }
+
+#define instanceOf(type, ptr) (dynamic_cast<type *>(ptr) != NULL)
 
 void Synthmania::update() {
     int64_t time_from_start = getCurrentTimeMicros();

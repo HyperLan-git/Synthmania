@@ -1,25 +1,33 @@
 #include "Device.hpp"
 
 #include <iostream>
-std::map<std::string, uint32_t> findQueueFamilies(
-    VkPhysicalDevice device, std::map<std::string, FamilyPredicate> familyPredicates)
-{
-    std::map<std::string, uint32_t> result;
 
+void getQueueFamilies(VkPhysicalDevice physicalDevice,
+                      std::vector<VkQueueFamilyProperties> &queueFamilies) {
     uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount,
                                              nullptr);
 
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+    queueFamilies.resize(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount,
                                              queueFamilies.data());
+}
+
+std::map<std::string, FamilyData> findQueueFamilies(
+    VkPhysicalDevice device, std::vector<VkQueueFamilyProperties> queueFamilies,
+    std::map<std::string, FamilyPredicate> familyPredicates) {
+    std::map<std::string, FamilyData> result;
 
     uint32_t i = 0;
-    for (auto entry : familyPredicates) 
+    for (auto entry : familyPredicates)
         for (i = 0; i < queueFamilies.size(); i++) {
-            const VkQueueFamilyProperties &queueFamily = queueFamilies[i];
-            if(entry.second(device, queueFamily, i)) {
-                result.emplace(entry.first, i);
+            VkQueueFamilyProperties *queueFamily =
+                new VkQueueFamilyProperties(queueFamilies[i]);
+            if (queueFamily->queueCount > 0 &&
+                entry.second(device, *queueFamily, i)) {
+                result.emplace(
+                    entry.first,
+                    FamilyData({.id = i, .properties = queueFamily}));
                 break;
             }
         }
@@ -29,38 +37,32 @@ std::map<std::string, uint32_t> findQueueFamilies(
 
 Device::Device(VkPhysicalDevice *physicalDevice,
                const std::vector<const char *> deviceExtensions,
-               std::vector<FamilyPredicate> familyPredicates,
+               std::map<std::string, FamilyPredicate> familyPredicates,
                const std::vector<const char *> validationLayers) {
     this->queues = {};
     this->device = new VkDevice();
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::map<std::string, uint32_t> queueFamilies =
-        findQueueFamilies(*physicalDevice, familyPredicates);
-    // TODO Get rid of this unique queue nonsense and allocate as many queues as needed
-    std::set<uint32_t> uniqueQueueFamilies = {};
+    std::vector<VkQueueFamilyProperties> families;
+    getQueueFamilies(*physicalDevice, families);
+    std::map<std::string, FamilyData> queueFamilies =
+        findQueueFamilies(*physicalDevice, families, familyPredicates);
 
-    float queuePriority = 1.0f;
-    for (int i = 0; i < queueFamilies.size(); i++)
-    {
-        auto result = uniqueQueueFamilies.emplace(queueFamilies[i]);
-        if (result.second)
-        {
-            int j = 0;
-            for (auto it = uniqueQueueFamilies.begin(); *it != *(result.first);
-                 it++)
-                j++;
-            queuesID[i] = j;
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos = {};
+    std::vector<float *> tabs = {};
+    for (auto &queueFamily : queueFamilies)
+        if (queues.find(queueFamily.first) == queues.end()) {
+            FamilyData data = queueFamily.second;
+            uint32_t count = data.properties->queueCount;
+            float *queuePriorities = new float[count];
+            tabs.push_back(queuePriorities);
+            for (int i = 0; i < count; i++) queuePriorities[i] = 1.f;
+            VkDeviceQueueCreateInfo queueCreateInfo{};
+            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.queueFamilyIndex = queueFamily.second.id;
+            queueCreateInfo.queueCount = count;
+            queueCreateInfo.pQueuePriorities = queuePriorities;
+            queueCreateInfos.push_back(queueCreateInfo);
+            queues.emplace(queueFamily.first, queueFamily.second);
         }
-    }
-
-    for (uint32_t queueFamily : uniqueQueueFamilies) {
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-        queueCreateInfos.push_back(queueCreateInfo);
-    }
 
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
@@ -68,6 +70,8 @@ Device::Device(VkPhysicalDevice *physicalDevice,
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
 
     createInfo.queueCreateInfoCount =
         static_cast<uint32_t>(queueCreateInfos.size());
@@ -83,39 +87,37 @@ Device::Device(VkPhysicalDevice *physicalDevice,
         static_cast<uint32_t>(validationLayers.size());
     createInfo.ppEnabledLayerNames = validationLayers.data();
 
-    if (vkCreateDevice(*physicalDevice, &createInfo, nullptr, device) !=
-        VK_SUCCESS)
-    {
+    if (vkCreateDevice(*physicalDevice, &createInfo, NULL, device) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
+    for (float *p : tabs) delete[] p;
 
-    int i = 0;
-    for (uint32_t family : uniqueQueueFamilies)
-    {
-        std::cout << "family:" << family << std::endl;
-        queues.push_back(new Queue(this, family, 0));
-    }
+    for (auto &entry : queues)
+        for (int i = 0; i < entry.second.properties->queueCount; i++)
+            entry.second.queues.push_back(
+                new Queue(this, entry.second.id, i, entry.first));
 }
 
 VkDevice *Device::getDevice() { return device; }
 
-Queue *Device::getQueue(std::string name)
-{
-    for(Queue* queue : queues) {
-        if (queue->getName().compare(name.c_str()))
-            return queue;
+Queue *Device::getQueue(std::string name) {
+    for (auto entry : queues) {
+        if (entry.first.compare(name.c_str()) == 0)
+            return Queue::getAvailableQueue(entry.second.queues);
     }
     return NULL;
 }
 
 void Device::wait() { vkDeviceWaitIdle(*device); }
 
-Device::~Device()
-{
+Device::~Device() {
     vkDestroyDevice(*device, nullptr);
-    for (Queue *queue : queues)
-    {
-        delete queue;
+    for (auto entry : queues) {
+        for (Queue *queue : entry.second.queues) {
+            delete queue;
+        }
+        entry.second.queues.clear();
     }
     delete device;
 }

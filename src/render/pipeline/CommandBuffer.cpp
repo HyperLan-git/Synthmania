@@ -41,20 +41,24 @@ void CommandBuffer::reset() {
                          /*VkCommandBufferResetFlagBits*/ 0);
 }
 
-void CommandBuffer::submit(Queue *queue) {
-    VkSubmitInfo submitInfo{};
+void CommandBuffer::submit(Queue *queue, bool wait) {
+    VkSubmitInfo submitInfo;
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = buffer;
+    submitInfo.waitSemaphoreCount = 0;
+    submitInfo.signalSemaphoreCount = 0;
+    submitInfo.pNext = NULL;
 
     vkQueueSubmit(*(queue->getQueue()), 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(*(queue->getQueue()));
+    if (wait) vkQueueWaitIdle(*(queue->getQueue()));
 }
 
 void CommandBuffer::submit(Queue *queue, Semaphore *waitSemaphore,
                            Semaphore *finishedSemaphore, Fence *fence) {
-    VkSubmitInfo submitInfo{};
+    VkSubmitInfo submitInfo;
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.pNext = NULL;
 
     VkPipelineStageFlags waitStages[] = {
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
@@ -131,7 +135,7 @@ void CommandBuffer::endRenderPass() { vkCmdEndRenderPass(*buffer); }
 
 void CommandBuffer::setImageLayout(Image *image, VkImageLayout oldLayout,
                                    VkImageLayout newLayout) {
-    VkImageMemoryBarrier barrier{};
+    VkImageMemoryBarrier barrier;
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.oldLayout = oldLayout;
     barrier.newLayout = newLayout;
@@ -143,6 +147,7 @@ void CommandBuffer::setImageLayout(Image *image, VkImageLayout oldLayout,
     barrier.subresourceRange.levelCount = 1;
     barrier.subresourceRange.baseArrayLayer = 0;
     barrier.subresourceRange.layerCount = 1;
+    barrier.pNext = NULL;
 
     VkPipelineStageFlags sourceStage;
     VkPipelineStageFlags destinationStage;
@@ -195,7 +200,7 @@ void CommandBuffer::setImageLayout(Image *image, VkImageLayout oldLayout,
 
 void CommandBuffer::copyBufferToImage(Buffer *srcBuffer, Image *image,
                                       VkExtent3D imageExtent) {
-    VkBufferImageCopy region{};
+    VkBufferImageCopy region;
     region.bufferOffset = 0;
     region.bufferRowLength = 0;
     region.bufferImageHeight = 0;

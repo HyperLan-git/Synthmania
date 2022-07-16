@@ -10,7 +10,6 @@ ShaderDescriptorPool::ShaderDescriptorPool(Device *device,
         poolSizes[i].type = types[i];
         poolSizes[i].descriptorCount = count;
     }
-    std::cout << "count=" << count << std::endl;
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = count;

@@ -9,6 +9,7 @@
 class Semaphore {
    public:
     Semaphore(Device *device);
+    Semaphore(Device *device, uint64_t initialValue, uint64_t signal);
 
     VkSemaphore *getSemaphore();
 

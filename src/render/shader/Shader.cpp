@@ -27,6 +27,8 @@ Shader::Shader(const char* mainFunction, Device* device,
 
 VkPipelineShaderStageCreateInfo Shader::toPipeline() { return info; }
 
+VkShaderModule* Shader::getModule() { return module; }
+
 Shader::~Shader() {
     vkDestroyShaderModule(*(this->device->getDevice()), *(this->module),
                           nullptr);

@@ -57,7 +57,7 @@ class CommandBuffer {
 
     void submit(Queue *queue, Semaphore *waitSemaphore,
                 Semaphore *finishedSemaphore, Fence *fence);
-    void submit(Queue *queue);
+    void submit(Queue *queue, bool wait = true);
 
     ~CommandBuffer();
 
