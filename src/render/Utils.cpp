@@ -197,3 +197,23 @@ void beginSection(DebugFunc debugFunctions, std::string name,
     debugFunctions.begin(*(buffer->getBuffer()), &info);
 #endif
 }
+
+void sortGuis(std::vector<Gui*>& guis, GuiOrderFunction comparator) {
+    // I'm gonna use bubble sort cause brain empty
+    for (int i = 0; i < guis.size() - 1; i++)
+        for (int j = 0; j < guis.size() - i - 1; j++) {
+            int cmp = comparator(guis[j], guis[j + 1]);
+            if (cmp > 0) {
+                double tmp = guis[j]->getPosition().z;
+                guis[j]->setZ(guis[j + 1]->getPosition().z);
+                guis[j + 1]->setZ(tmp);
+                Gui* p = guis[j];
+                guis[j] = guis[j + 1];
+                guis[j + 1] = p;
+            }
+        }
+}
+
+int cmpGuisByTexture(Gui* gui, Gui* gui2) {
+    return gui2->getTexture() - gui->getTexture();
+}

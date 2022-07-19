@@ -34,6 +34,8 @@ void main() {
     v.y *= size.y;
     v.xyz += pos;
     v = ubo.proj * ubo.view * ubo.model * v;
+    //v.x = v.x/2;
+    //v.y = v.y/2;
     gl_Position = v;
     fragTexCoord = inTexCoord;
 }

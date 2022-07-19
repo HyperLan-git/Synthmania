@@ -5,8 +5,9 @@ AudioPluginHandler::AudioPluginHandler(std::string path, AudioHandler* handler,
     this->host = new SimplePluginHost(path, handler->getSampleRate(), 1024,
                                       false, synthdata);
 
-	synth_thread = std::thread(synthThread, new SynthParams{host, handler, 3, 1024});
-	gui_thread = std::thread(guiThread, this);
+    synth_thread =
+        std::thread(synthThread, new SynthParams{host, handler, 3, 1024});
+    gui_thread = std::thread(guiThread, this);
 }
 
 void AudioPluginHandler::noteOn(unsigned char pitch, unsigned char velocity) {
@@ -74,7 +75,7 @@ int synthThread(void* arg) {
         source->queueBuffers(buffers, params->buffers);
         handler->addSource(source);
         source->play();
-        while (true) {  // hehe *burp*
+        while (host->isActive()) {  // hehe *burp*
             source->play();
             int proc = source->getProcessedBuffers();
             while (proc--) {

@@ -3,6 +3,7 @@
 class Instance;
 
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -18,11 +19,10 @@ class Instance {
    public:
     Instance(const char* name, uint32_t version, const char* engineName,
              uint32_t engineVersion, uint32_t apiVersion,
-             const std::vector<const char*> extensions);
-    Instance(const char* name, uint32_t version, const char* engineName,
-             uint32_t engineVersion, uint32_t apiVersion,
              const std::vector<const char*> extensions,
-             const std::vector<const char*> validationLayers);
+             const std::vector<const char*> validationLayers =
+                 std::vector<const char*>(),
+             std::string logFile = "a.log");
 
     VkSurfaceKHR* createSurface(Window* window);
     void destroySurface(VkSurfaceKHR* surface);
@@ -37,4 +37,5 @@ class Instance {
    private:
     VkInstance* instance;
     VkDebugUtilsMessengerEXT* debugMessenger;
+    std::ofstream log;
 };

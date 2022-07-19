@@ -56,7 +56,8 @@ class CommandBuffer {
     void draw(uint32_t count);
 
     void submit(Queue *queue, Semaphore *waitSemaphore,
-                Semaphore *finishedSemaphore, Fence *fence);
+                VkPipelineStageFlags waitStage, Semaphore *finishedSemaphore,
+                Fence *fence);
     void submit(Queue *queue, bool wait = true);
 
     ~CommandBuffer();

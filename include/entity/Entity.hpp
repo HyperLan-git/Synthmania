@@ -7,7 +7,7 @@ struct EntityData;
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-#include "Image.hpp"
+#include "ImageView.hpp"
 #include "Model.hpp"
 
 struct ShaderData {

@@ -55,13 +55,13 @@ void CommandBuffer::submit(Queue *queue, bool wait) {
 }
 
 void CommandBuffer::submit(Queue *queue, Semaphore *waitSemaphore,
+                           VkPipelineStageFlags waitStage,
                            Semaphore *finishedSemaphore, Fence *fence) {
     VkSubmitInfo submitInfo;
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.pNext = NULL;
 
-    VkPipelineStageFlags waitStages[] = {
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    VkPipelineStageFlags waitStages[] = {waitStage};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphore->getSemaphore();
     submitInfo.pWaitDstStageMask = waitStages;

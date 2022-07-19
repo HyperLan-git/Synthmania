@@ -25,8 +25,6 @@ class Synthmania;
 #include "Note.hpp"
 #include "Precision.hpp"
 #include "Renderer.hpp"
-#include "ShakingGui.hpp"
-#include "TemporaryGui.hpp"
 #include "Window.hpp"
 
 #define HIT_TIME 1500000
@@ -44,7 +42,7 @@ std::vector<Gui *> printShadowedString(std::string text, Renderer *renderer,
 
 std::vector<Gui *> printShakingString(std::string text, Renderer *renderer,
                                       std::string entityNames, std::string font,
-                                      double size, glm::vec2 pos, double shake,
+                                      double size, glm::vec2 pos, float shake,
                                       glm::vec4 color = {0, 0, 0, 1});
 
 class Synthmania : public Game {

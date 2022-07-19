@@ -24,3 +24,9 @@ ShaderData* ParentedGui::getShaderData() const {
     data->size = sizeof(GuiData);
     return data;
 }
+
+glm::vec2 ParentedGui::getRealPosition() const {
+    glm::vec3 result = position;
+    result += this->parent->getPosition();
+    return {result.x, result.y};
+}

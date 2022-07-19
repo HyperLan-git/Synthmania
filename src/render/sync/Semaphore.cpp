@@ -6,6 +6,7 @@ Semaphore::Semaphore(Device *device) {
     semaphoreInfo.flags = 0;
     semaphoreInfo.pNext = NULL;
 
+    type = VK_SEMAPHORE_TYPE_BINARY;
     semaphore = new VkSemaphore();
 
     if (vkCreateSemaphore(*(device->getDevice()), &semaphoreInfo, nullptr,
@@ -15,10 +16,10 @@ Semaphore::Semaphore(Device *device) {
     this->device = device;
 }
 
-Semaphore::Semaphore(Device *device, uint64_t initialValue, uint64_t signal) {
+Semaphore::Semaphore(Device *device, uint64_t initialValue) {
     VkSemaphoreTypeCreateInfo info;
     info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
-    info.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
+    type = VK_SEMAPHORE_TYPE_TIMELINE;
     info.initialValue = initialValue;
     info.pNext = NULL;
 
@@ -26,6 +27,7 @@ Semaphore::Semaphore(Device *device, uint64_t initialValue, uint64_t signal) {
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     semaphoreInfo.pNext = &info;
 
+    info.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
     semaphore = new VkSemaphore();
 
     if (vkCreateSemaphore(*(device->getDevice()), &semaphoreInfo, nullptr,
@@ -34,6 +36,8 @@ Semaphore::Semaphore(Device *device, uint64_t initialValue, uint64_t signal) {
     }
     this->device = device;
 }
+
+VkSemaphoreType Semaphore::getType() { return type; }
 
 VkSemaphore *Semaphore::getSemaphore() { return semaphore; }
 

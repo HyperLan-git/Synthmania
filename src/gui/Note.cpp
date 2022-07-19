@@ -53,7 +53,9 @@ Note::Note(const char* name, int64_t time, unsigned char pitch,
     this->duration = duration * MPQ * 4;
     this->kill_moment = time + HIT_WINDOW;
     glm::vec2 temp = getSizeAndLocForNote(duration);
-    this->graphicalPosition.y = temp.x;
+    GraphicalEffect* e =
+        new GraphicalEffect(applyOffset, new float[]{0, temp.x});
+    this->effects.push_back(e);
     this->size = {temp.y, temp.y};
     this->pitch = pitch;
 }

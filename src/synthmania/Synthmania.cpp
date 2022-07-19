@@ -53,6 +53,7 @@ void Synthmania::init() {
     bar->setPosition({-1.4f, bar->getPosition().y});
     bar->setSize({0.25f, 1.f});
     addGui(bar);
+    std::vector<Gui *> tempNotes;
     for (MidiNote note : partition.notes) {
         std::string name = "Note_";
         std::string hash = std::to_string(std::hash<MidiNote>()(note));
@@ -86,7 +87,6 @@ void Synthmania::init() {
                 addGui(readability);
             }
         }
-        addGui(n);
 
         double p = .2;
         for (int i = 0; i < firstDots; i++) {
@@ -94,7 +94,7 @@ void Synthmania::init() {
                 getTextureByName(textures, "dot"), name.c_str(), n);
             dot->setSize({.05, .05});
             dot->setPosition({p, 0});
-            addGui(dot);
+            tempNotes.push_back(dot);
             p += .2;
         }
 
@@ -105,7 +105,7 @@ void Synthmania::init() {
                 getTextureByName(textures, "sharp"), sharpName.c_str(), n);
             sharp->setPosition({-0.25, 0});
             sharp->setSize({0.25, 0.25});
-            addGui(sharp);
+            tempNotes.push_back(sharp);
         }
         uint64_t last = note.timestamp;
         uint64_t t = note.timestamp + cutDown[0] * partition.MPQ * 4;
@@ -119,20 +119,28 @@ void Synthmania::init() {
                 name2.c_str(), n);
             glm::vec2 temp = getSizeAndLocForNote(d);
             p->setPosition({(t - note.timestamp) / 300000.f, 0});
-            p->setGraphicalPosition({0, temp.x});
+            p->addEffect(
+                new GraphicalEffect(applyOffset, new float[]{0, temp.x}));
             p->setSize({temp.y, temp.y});
-            addGui(p);
+            tempNotes.push_back(p);
             ParentedGui *arc = new ParentedGui(
                 getTextureByName(textures, "arc"), name2.c_str(), n);
             arc->setPosition(
                 {(((t + last) / 2) - note.timestamp) / 300000.f, 0});
-            arc->setGraphicalPosition({0, temp.x - .15});
+            arc->addEffect(new GraphicalEffect(applyOffset,
+                                               new float[]{0, temp.x - .15f}));
             arc->setSize({(t - last) / 350000.f, .15f});
-            addGui(arc);
+            tempNotes.push_back(arc);
             last = t;
             t += d * partition.MPQ * 4;
         }
     }
+    std::vector<Gui *> tmp;
+    for (Note *note : notes) tmp.push_back(note);
+    sortGuis(tmp, cmpGuisByTexture);
+    sortGuis(tempNotes, cmpGuisByTexture);
+    for (Gui *note : tmp) addGui(note);
+    for (Gui *gui : tempNotes) addGui(gui);
     music = NULL;
     if (c.audio.compare("None") != 0) {
         std::string wav = songFolder;
@@ -209,14 +217,14 @@ void Synthmania::noteHit(Note *note) {
     int i = 0;
     for (Text t :
          renderer->createText(text, "Stupid", 11,
-                              {-2, (double)(line->getGraphicalPosition().y +
+                              {-2, (double)(-.25 + line->getPosition().y +
                                             line->getSize().y / 2.)})) {
         std::string name = "hit_";
         name.append(std::to_string((size_t)note));
         name.append("_");
         name.append(std::to_string(i++));
-        TemporaryGui *gui = new TemporaryGui(t.character.texture, name.c_str(),
-                                             time, time + HIT_TIME);
+        Gui *gui = new Gui(t.character.texture, name.c_str());
+        gui->addEffect(new GraphicalEffect(applyTemp));
         gui->setColor({.3, 1, .3, 1});
         gui->setPosition(t.pos);
         gui->setSize(t.size);
@@ -234,14 +242,14 @@ void Synthmania::noteMiss(Note *note) {
     int i = 0;
     for (Text t :
          renderer->createText(text, "Stupid", 11,
-                              {-2, (double)(line->getGraphicalPosition().y +
+                              {-2, (double)(-.25 + line->getPosition().y +
                                             line->getSize().y / 2.)})) {
         std::string name = "miss_";
         name.append(std::to_string((size_t)note));
         name.append("_");
         name.append(std::to_string(i++));
-        TemporaryGui *gui = new TemporaryGui(t.character.texture, name.c_str(),
-                                             time, time + HIT_TIME);
+        Gui *gui = new Gui(t.character.texture, name.c_str());
+        gui->addEffect(new GraphicalEffect(applyTemp));
         gui->setColor({1, 0, 0, 1});
         gui->setPosition(t.pos);
         gui->setSize(t.size);
@@ -268,11 +276,13 @@ void Synthmania::update() {
     }
     plugin->update(time_from_start);
     std::vector<Gui *> toDestroy;
-    for (Gui *g : guis)
-        if (g->update(time_from_start)) {
+    for (Gui *g : guis) {
+        if (g->update(time_from_start) || g->isDestroyed()) {
             g->setDestroyed();
             toDestroy.push_back(g);
         }
+        g->updateGraphics(time_from_start);
+    }
     for (Gui *g : toDestroy) {
         for (auto iter = notes.begin(); iter != notes.end(); iter++)
             if (g == *iter) {
@@ -387,7 +397,7 @@ std::vector<Gui *> printShadowedString(std::string text, Renderer *renderer,
                                        std::string entityNames,
                                        std::string font, double size,
                                        glm::vec2 pos, glm::vec4 color) {
-    std::vector<Gui *> result;
+    std::vector<Gui *> result, result2;
     glm::vec2 shadowPos = pos;
     shadowPos += glm::vec2({.0005 * size, .0005 * size});
     std::string shadowName = entityNames;
@@ -402,20 +412,26 @@ std::vector<Gui *> printShadowedString(std::string text, Renderer *renderer,
     for (Gui *g :
          printString(text, renderer, entityNames, font, size, pos, color))
         result.push_back(g);
-    return result;
+    for (int i = 0; i < result.size() / 2; i++) {
+        result2.push_back(result[i]);
+        result2.push_back(result[i + result.size() / 2]);
+    }
+
+    return result2;
 }
 
 std::vector<Gui *> printShakingString(std::string text, Renderer *renderer,
                                       std::string entityNames, std::string font,
-                                      double size, glm::vec2 pos, double shake,
+                                      double size, glm::vec2 pos, float shake,
                                       glm::vec4 color) {
     std::vector<Gui *> result;
     int i = 0;
     for (Text t : renderer->createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
-        ShakingGui *gui =
-            new ShakingGui(t.character.texture, name.c_str(), shake * size);
+        Gui *gui = new Gui(t.character.texture, name.c_str());
+        gui->addEffect(new GraphicalEffect(applyShaking,
+                                           new float[]{shake * (float)size}));
         gui->setColor(color);
         gui->setPosition(t.pos);
         gui->setSize(t.size);

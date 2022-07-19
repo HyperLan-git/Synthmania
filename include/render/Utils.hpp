@@ -12,6 +12,7 @@
 
 #include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
+#include "Gui.hpp"
 #include "ImageView.hpp"
 #include "Window.hpp"
 
@@ -95,3 +96,9 @@ void beginSection(DebugFunc debugFunctions, std::string name,
  * @param buffer command buffer which contains the section
  */
 void endSection(DebugFunc debugFunctions, CommandBuffer* buffer);
+
+typedef int (*GuiOrderFunction)(Gui*, Gui*);
+
+void sortGuis(std::vector<Gui*>& guis, GuiOrderFunction comparator);
+
+int cmpGuisByTexture(Gui* gui, Gui* gui2);

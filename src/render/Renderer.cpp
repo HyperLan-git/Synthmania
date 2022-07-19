@@ -747,13 +747,15 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     std::vector<Gui*> guis = game->getGuis();
     for (auto iter = guis.begin(); iter != guis.end(); iter++) {
         Gui* g = *iter;
+        if (g->getRealPosition().x + g->getGraphicalPosition().x >
+            2. + g->getSize().x)
+            continue;
         ImageView* texture = g->getTexture();
         if (texture == NULL) texture = getTextureByName(textures, "missing");
         if (lastTexture != texture) {
             size_t idx = 0;
-            for (idx = 0; idx < textures.size(); idx++) {
+            for (idx = 0; idx < textures.size(); idx++)
                 if (textures[idx] == texture) break;
-            }
             if (idx >= textures.size()) {
                 std::string err = "Texture ";
                 err.append(texture->getName());
@@ -844,9 +846,8 @@ void Renderer::drawFrame() {
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreateSwapchain();
         return;
-    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
         throw std::runtime_error("failed to acquire swap chain image!");
-    }
 
     updateUniformBuffer(currentFrame);
 
@@ -856,6 +857,7 @@ void Renderer::drawFrame() {
 
     commandBuffers[currentFrame]->submit(
         device->getQueue("main"), imageAvailableSemaphores[currentFrame],
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
         renderFinishedSemaphores[currentFrame], inFlightFences[currentFrame]);
 
     VkPresentInfoKHR presentInfo{};
@@ -948,9 +950,8 @@ std::vector<const char*> Renderer::getRequiredExtensions() {
     std::vector<const char*> extensions(glfwExtensions,
                                         glfwExtensions + glfwExtensionCount);
 
-    if (enableValidationLayers) {
+    if (enableValidationLayers)
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-    }
 
     return extensions;
 }

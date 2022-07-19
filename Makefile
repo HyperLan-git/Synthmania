@@ -16,8 +16,7 @@ ifeq ($(OS),Windows_NT)
 IDIRS += -I mingw-std-threads
 endif
 
-DEBUG = -fsanitize=address
-CFLAGS = -std=c++17 -O3 $(VSTOBJ) -g
+CFLAGS = -std=c++17 -O3 $(VSTOBJ)
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype
 ifeq ($(OS),Windows_NT)
 LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lalut -lwinmm -lfreetype
@@ -26,32 +25,24 @@ endif
 OBJDIR = bin/obj
 LIBS = obj/tiny_obj_loader.h stb/stb_image.h
 
-SRC = $(shell find src -type f -name '*.cpp' | sed -z 's/\n/ /g')
-OBJ = $(SRC:.cpp=.o)
+SRCFOLDER = src
+SRC = $(shell find $(SRCFOLDER) -type f -name '*.cpp' | sed -z 's/\n/ /g')
+OBJ = $(SRC:$(SRCFOLDER)/%.cpp=$(OBJDIR)/%.o)
 
 # Testing files
 MIDISRC = $(wildcard src/midi/*.cpp) test/miditest.cpp
 AUDIOSRC = $(wildcard src/audio/*.cpp) test/audiotest.cpp
 JSONSRC = $(wildcard src/json/*.cpp) test/jsontest.cpp
 VSTSRC = $(wildcard src/audio/*.cpp) test/vsttest.cpp
-GSRC = test/graphicstest.cpp $(wildcard src/render/*.cpp) $(wildcard src/render/*/*.cpp)\
+GSRC = test/graphicstest.cpp $(wildcard src/render/*.cpp) $(wildcard src/render/*/*.cpp) \
 				$(wildcard src/entity/*.cpp) $(wildcard src/gui/*.cpp) $(wildcard src/json/*.cpp) src/synthmania/Game.cpp
 
-Synthmania: shader $(VSTLIB)
-	d=$$(date +%s) ; \
-	make $(OBJ) ; \
-	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(LDFLAGS) $(VSTFLAGS) \
-	&& echo "Build took $$(($$(date +%s)-d)) seconds"
+Synthmania: shader $(VSTLIB) $(OBJ)
+	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 
-
-debug: shader $(VSTLIB)
-	d=$$(date +%s) ; \
-	make $(OBJ) ; \
-	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(LDFLAGS) $(VSTFLAGS) $(DEBUG) \
-	&& echo "Build took $$(($$(date +%s)-d)) seconds"
-
-%.o: %.cpp
-	g++ $(CFLAGS) -c $< $(LDFLAGS) -o $@
+$(OBJDIR)/%.o: $(SRCFOLDER)/%.cpp
+	@mkdir -p '$(@D)'
+	g++ $(CFLAGS) -c $< $(LDFLAGS) $(DEBUG) -o $@
 
 .PHONY: test clean shader obj
 
@@ -71,7 +62,7 @@ graphics:
 	g++ $(CFLAGS) -o bin/GraphicsTest $(GSRC) $(LDFLAGS)
 
 vst: $(VSTLIB)
-	g++ $(CFLAGS) -o bin/VstTest $(VSTSRC) $(VSTOBJ) $(VSTLIB) $(VSTFLAGS) $(LDFLAGS) -fsanitize=address -DNDEBUG
+	g++ $(CFLAGS) -o bin/VstTest $(VSTSRC) $(VSTOBJ) $(VSTLIB) $(VSTFLAGS) $(LDFLAGS) -DNDEBUG
 
 shader:
 	glslc shader/gui.vert -o bin/vert_gui.spv

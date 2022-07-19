@@ -46,11 +46,17 @@ Device::Device(VkPhysicalDevice *physicalDevice,
     std::map<std::string, FamilyData> queueFamilies =
         findQueueFamilies(*physicalDevice, families, familyPredicates);
 
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos = {};
-    std::vector<float *> tabs = {};
-    for (auto &queueFamily : queueFamilies)
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::vector<float *> tabs;
+    std::vector<FamilyData> createdFamilies;
+    for (auto &queueFamily : queueFamilies) {
+        for (FamilyData &data : createdFamilies)
+            if (data.id == queueFamily.second.id) {
+                queues.emplace(queueFamily.first, data);
+                continue;
+            }
         if (queues.find(queueFamily.first) == queues.end()) {
-            FamilyData data = queueFamily.second;
+            FamilyData &data = queueFamily.second;
             uint32_t count = data.properties->queueCount;
             float *queuePriorities = new float[count];
             tabs.push_back(queuePriorities);
@@ -60,9 +66,11 @@ Device::Device(VkPhysicalDevice *physicalDevice,
             queueCreateInfo.queueFamilyIndex = queueFamily.second.id;
             queueCreateInfo.queueCount = count;
             queueCreateInfo.pQueuePriorities = queuePriorities;
-            queueCreateInfos.push_back(queueCreateInfo);
+            queueCreateInfos.emplace_back(queueCreateInfo);
             queues.emplace(queueFamily.first, queueFamily.second);
+            createdFamilies.push_back(queueFamily.second);
         }
+    }
 
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
@@ -88,9 +96,9 @@ Device::Device(VkPhysicalDevice *physicalDevice,
     createInfo.ppEnabledLayerNames = validationLayers.data();
 
     if (vkCreateDevice(*physicalDevice, &createInfo, NULL, device) !=
-        VK_SUCCESS) {
+        VK_SUCCESS)
         throw std::runtime_error("failed to create logical device!");
-    }
+
     for (float *p : tabs) delete[] p;
 
     for (auto &entry : queues)

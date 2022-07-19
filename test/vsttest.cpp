@@ -18,6 +18,8 @@ int audiorun(void* arg) {
     try {
         E* e = (E*)arg;
         SimplePluginHost* host = e->host;
+        while (!(host->isVisible())) host->update();
+        host->update();
         auto* handler = e->handler;
 
         std::vector<std::string> devices = getDevices();
@@ -53,6 +55,10 @@ int audiorun(void* arg) {
                 source->queueBuffer(b);
             }
         }
+        std::ofstream file("bin/synth.dat",
+                           std::ofstream::out | std::ofstream::binary);
+        host->savePluginData(file);
+        file.close();
         host->stop();
         delete[] buffers;
         delete handler;
@@ -68,9 +74,11 @@ int guirun(void* arg) {
     do {
         try {
             host->handleMessages();
+            std::cout << "gg\n";
             errored = false;
         } catch (std::exception e) {
-            std::cerr << e.what() << std::endl;
+            std::cerr << "error: " << e.what() << std::endl;
+            std::cout << "error: " << e.what() << std::endl;
             errored = true;
         }
     } while (errored);
@@ -90,12 +98,12 @@ int main() {
     thrd_create(&thread, audiorun, new E{handler, &test});
     thrd_create(&thread2, guirun, &test);
 
-    while (test.isVisible())
-        ;
-    // Program never ends
-    // Oh well do I even care lol
-    thrd_join(thread, &result);
+    while (test.isActive()) thrd_yield();
+
+    std::cout << "t2\n";
     thrd_join(thread, &result2);
+    std::cout << "t1\n";
+    thrd_join(thread, &result);
 
     return result | result2;
 }
