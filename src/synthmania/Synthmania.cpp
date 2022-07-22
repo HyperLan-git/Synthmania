@@ -317,6 +317,7 @@ void Synthmania::update() {
                 break;
             }
     }
+    if (mod != NULL) mod->update(time_from_start);
     // TODO refactor this shit the game should not be handling note logic
     // Or should it ? *vsauce music plays*
     // Accshually, if I only check a few notes (the first 5 in array for
@@ -399,6 +400,7 @@ TrackPartition Synthmania::getPartition() { return partition; }
 AudioPluginHandler *Synthmania::getPluginHandler() { return plugin; }
 
 Synthmania::~Synthmania() {
+    if (mod != NULL) delete mod;
     delete plugin;
     delete audio;
 

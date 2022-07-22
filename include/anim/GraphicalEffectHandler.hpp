@@ -25,7 +25,7 @@ class GraphicalEffectHandler {
      */
     virtual size_t updateUBO(void*& ubo, int64_t time) = 0;
 
-    virtual ~GraphicalEffectHandler() = 0;
+    virtual ~GraphicalEffectHandler() = default;
 
    protected:
     Synthmania* game;

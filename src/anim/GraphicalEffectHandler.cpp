@@ -1,5 +1,5 @@
 #include "GraphicalEffectHandler.hpp"
 
-GraphicalEffectHandler::GraphicalEffectHandler(Synthmania* game) {
+extern "C" GraphicalEffectHandler::GraphicalEffectHandler(Synthmania* game) {
     this->game = game;
 }
