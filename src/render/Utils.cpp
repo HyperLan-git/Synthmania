@@ -215,5 +215,21 @@ void sortGuis(std::vector<Gui*>& guis, GuiOrderFunction comparator) {
 }
 
 int cmpGuisByTexture(Gui* gui, Gui* gui2) {
-    return gui2->getTexture() - gui->getTexture();
+    return gui->getTexture() - gui2->getTexture();
+}
+
+void* loadShared(std::string file) {
+#ifdef WIN32
+    return LoadLibraryA(file.c_str());
+#else
+    return dlopen(file.c_str(), RTLD_LAZY);
+#endif
+}
+
+void* getFunction(void* shared, const char* fct) {
+#ifdef WIN32
+    return GetProcAddress(shared, fct);
+#else
+    return dlsym(shared, fct);
+#endif
 }

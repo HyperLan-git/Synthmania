@@ -22,12 +22,13 @@ class Game;
 #include "JsonHandler.hpp"
 #include "MidiHandler.hpp"
 #include "Precision.hpp"
-#include "Renderer.hpp"
 #include "Window.hpp"
+
+class Renderer;
 
 class Game {
    public:
-    Game(int width, int height, const char *title);
+    Game();
 
     virtual void init() = 0;  // Called after textures are loaded
 
@@ -37,6 +38,9 @@ class Game {
     std::map<std::string, std::string> readTextures(std::string file);
     std::map<std::string, std::string> getTextures();
 
+    void setRenderer(Renderer *renderer);
+    void setWindow(Window *window);
+
     Renderer *getRenderer();
 
     std::vector<Entity *> getEntities();
@@ -44,8 +48,10 @@ class Game {
 
     Window *getWindow();
 
-    void addGui(Gui *gui);
-    void addEntity(Entity *entity);
+    virtual size_t updateUBO(void *&ubo);
+
+    virtual void addGui(Gui *gui);
+    virtual void addEntity(Entity *entity);
 
     int64_t getCurrentTimeMicros();
     virtual void setTimeMicros(int64_t time);

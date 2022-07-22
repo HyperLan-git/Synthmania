@@ -1,5 +1,10 @@
 #pragma once
 
+#ifndef WIN32
+#include <dlfcn.h>
+#else
+#include <libloaderapi.h>
+#endif
 #include <vulkan/vulkan.h>
 
 #include <algorithm>
@@ -99,6 +104,41 @@ void endSection(DebugFunc debugFunctions, CommandBuffer* buffer);
 
 typedef int (*GuiOrderFunction)(Gui*, Gui*);
 
+/**
+ * @brief This function exists to preserve Z-ordering among guis
+ * (it is necessary to handle transparency because I didn't think of anything
+ * better)
+ *
+ * @param guis the vector to sort
+ * @param comparator the ordering function
+ */
 void sortGuis(std::vector<Gui*>& guis, GuiOrderFunction comparator);
 
+/**
+ * @brief Compares guis' pointers to textures in order to sort them and get less
+ * overhead while rendering
+ *
+ * @param gui First element to sort
+ * @param gui2 Second element to sort
+ * @return int texture1 - texture2
+ */
 int cmpGuisByTexture(Gui* gui, Gui* gui2);
+
+/**
+ * @brief This will return a pointer to a dynamic library handle, use
+ * getFunction to get its contents
+ *
+ * @param file filename
+ * @return void* Pointer to a dl handle
+ */
+void* loadShared(std::string file);
+
+/**
+ * @brief gets a pointer to a specified function in the library returned by
+ * loadShared
+ *
+ * @param shared a handle returned by loadShared
+ * @param fct the function name
+ * @return void* a pointer to the function
+ */
+void* getFunction(void* shared, const char* fct);

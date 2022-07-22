@@ -21,6 +21,7 @@ class Synthmania;
 #include "Game.hpp"
 #include "Gui.hpp"
 #include "JsonHandler.hpp"
+#include "Judgement.hpp"
 #include "MidiHandler.hpp"
 #include "Note.hpp"
 #include "Precision.hpp"
@@ -60,6 +61,13 @@ class Synthmania : public Game {
     void noteHit(Note *note);
     void noteMiss(Note *note);
 
+    Chart getChart();
+    TrackPartition getPartition();
+
+    virtual size_t updateUBO(void *&ubo);
+
+    virtual void addGui(Gui *gui);
+
     ~Synthmania();
 
     static void keyCallback(GLFWwindow *win, int key, int scancode, int action,
@@ -70,6 +78,9 @@ class Synthmania : public Game {
     AudioHandler *audio;
     AudioPluginHandler *plugin;
     TrackPartition partition;
+    Chart chart;
+    Diff diff;
+    GraphicalEffectHandler *mod = NULL;
 
     std::vector<Note *> notes;
     AudioSource *music;

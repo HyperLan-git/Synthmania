@@ -37,14 +37,28 @@ VSTSRC = $(wildcard src/audio/*.cpp) test/vsttest.cpp
 GSRC = test/graphicstest.cpp $(wildcard src/render/*.cpp) $(wildcard src/render/*/*.cpp) \
 				$(wildcard src/entity/*.cpp) $(wildcard src/gui/*.cpp) $(wildcard src/json/*.cpp) src/synthmania/Game.cpp
 
-Synthmania: shader $(VSTLIB) $(OBJ)
-	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
+MODULEDIR = module
+
+Synthmania: shader $(VSTLIB)
+	make $(OBJ)
+	g++ $(CFLAGS) -rdynamic -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 
 $(OBJDIR)/%.o: $(SRCFOLDER)/%.cpp
 	@mkdir -p '$(@D)'
 	g++ $(CFLAGS) -c $< $(LDFLAGS) $(DEBUG) -o $@
 
-.PHONY: test clean shader obj
+.PHONY: test clean shader obj module
+
+module: $(MODULEDIR)/$(MOD)
+ifndef MOD
+	$(error Try again with the mod name : make module MOD=<modname>)
+else
+	g++ $(CFLAGS) -fPIC -shared -rdynamic $(shell find $(MODULEDIR) -name '*.cpp') -I $(MODULEDIR) \
+			$(LDFLAGS) $(VSTFLAGS) -o bin/$(MOD).so
+endif
+
+$(MODULEDIR)/$(MOD):
+	$(error No module folder found ! Put your source code in $(MODULEDIR)/$(MOD))
 
 test: Synthmania
 	./bin/Synthmania
@@ -74,5 +88,4 @@ $(VSTLIB):
 	make -C ../SimplePluginHost
 
 clean:
-	rm -f $(OBJ)
 	rm -rf bin/*

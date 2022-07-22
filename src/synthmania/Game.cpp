@@ -1,8 +1,8 @@
 #include "Game.hpp"
 
-Game::Game(int width, int height, const char *title) {
-    window = new Window(width, height, title);
-    renderer = new Renderer(this, window);
+#include "Renderer.hpp"
+
+Game::Game() {
     textures = std::map<std::string, std::string>();
     textures.emplace("missing", "resources/textures/missing.jpg");
     const char *list =
@@ -48,9 +48,14 @@ int64_t Game::getCurrentTimeMicros() {
            (int64_t)this->startTime - (int64_t)relativeTime;
 }
 
+void Game::setRenderer(Renderer *renderer) { this->renderer = renderer; }
+void Game::setWindow(Window *window) { this->window = window; }
+
 Window *Game::getWindow() { return this->window; }
 
 Renderer *Game::getRenderer() { return renderer; }
+
+size_t Game::updateUBO(void *&ubo) { return sizeof(UniformBufferObject); }
 
 void Game::addEntity(Entity *entity) { entities.push_back(entity); }
 

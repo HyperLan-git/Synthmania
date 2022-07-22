@@ -2,7 +2,6 @@
 
 class Note;
 
-#include "Game.hpp"
 #include "ImageView.hpp"
 #include "PartitionNotation.hpp"
 #include "Utils.hpp"

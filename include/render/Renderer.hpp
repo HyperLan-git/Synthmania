@@ -43,6 +43,7 @@ class Renderer;
 #include "Fence.hpp"
 #include "Font.hpp"
 #include "Framebuffer.hpp"
+#include "GraphicalEffectHandler.hpp"
 #include "Gui.hpp"
 #include "Image.hpp"
 #include "ImageView.hpp"
@@ -170,6 +171,8 @@ class Renderer {
     double startTime = 0;
 
     Model* guiModel;
+
+    GraphicalEffectHandler* graphicsHandler;
 
     void initWindow();
 

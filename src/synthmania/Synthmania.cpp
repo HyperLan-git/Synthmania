@@ -1,8 +1,7 @@
 #include "Synthmania.hpp"
 // TODO fix the white half note being slightly misplaced to the right
 
-Synthmania::Synthmania(std::string song, std::string skin)
-    : Game(1920, 1080, "Synthmania") {
+Synthmania::Synthmania(std::string song, std::string skin) {
     this->songFolder = song;
     this->skin = skin;
     handler = new MidiHandler();
@@ -16,17 +15,33 @@ Synthmania::Synthmania(std::string song, std::string skin)
 void Synthmania::init() {
     std::string json = songFolder;
     json.append("/sdata.json");
-    Chart c = readChart(json.c_str());
-    Diff d = c.diffs[0];
-    this->startTime = c.offset;
+    chart = readChart(json.c_str());
+    diff = chart.diffs[0];
+    this->startTime = chart.offset;
+    if (chart.animation.compare("None") != 0) {
+        void *shared = loadShared(songFolder + "/" + chart.animation);
+        char *e = dlerror();
+        if (e != NULL) {
+            std::cout << "Error while loading anim ! " << e << "\n";
+        } else {
+            GraphicalEffectHandler *(*f)(Synthmania *) =
+                (GraphicalEffectHandler * (*)(Synthmania *))
+                    getFunction(shared, "getEffectHandler");
+            char *e = dlerror();
+            if (e != NULL)
+                std::cout << "Error while loading anim ! " << e << "\n";
+            else
+                this->mod = f(this);  // Shit
+        }
+    }
     std::string path = songFolder;
     path.append("/");
-    path.append(d.midi);
+    path.append(diff.midi);
     partition = handler->readMidi(path.c_str());
     std::string pdata = songFolder;
     pdata.append("/");
-    pdata.append(c.plugindata);
-    if (c.plugindata.compare("None") == 0) pdata = "None";
+    pdata.append(chart.plugindata);
+    if (chart.plugindata.compare("None") == 0) pdata = "None";
     plugin = new AudioPluginHandler("./plugins/Vital.vst3", audio, pdata);
     Model *model =
         new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
@@ -142,19 +157,19 @@ void Synthmania::init() {
     for (Gui *note : tmp) addGui(note);
     for (Gui *gui : tempNotes) addGui(gui);
     music = NULL;
-    if (c.audio.compare("None") != 0) {
+    if (chart.audio.compare("None") != 0) {
         std::string wav = songFolder;
         wav.append("/");
-        wav.append(c.audio);
+        wav.append(chart.audio);
         AudioBuffer *buffer = new AudioBuffer(wav.c_str());
 
         audio->addSound("song", buffer);
         music = audio->playSound("song");
         music->setGain(.5f);
     }
-    std::string text = c.name;
+    std::string text = chart.name;
     text.append(" by ");
-    text.append(c.artist);
+    text.append(chart.artist);
 
     for (Gui *g : printShadowedString(text, renderer, "title_", "Stupid", 11,
                                       {-2, -.9}, {.2, .2, 1, 1}))
@@ -230,6 +245,11 @@ void Synthmania::noteHit(Note *note) {
         gui->setSize(t.size);
         addGui(gui);
     }
+}
+
+void Synthmania::addGui(Gui *gui) {
+    Game::addGui(gui);
+    if (mod != NULL) mod->onSpawn(gui);
 }
 
 void Synthmania::noteMiss(Note *note) {
@@ -366,6 +386,15 @@ void Synthmania::update() {
     }
     // thrd_yield();
 }
+
+size_t Synthmania::updateUBO(void *&ubo) {
+    if (mod != NULL) return mod->updateUBO(ubo, getCurrentTimeMicros());
+    return sizeof(UniformBufferObject);
+}
+
+Chart Synthmania::getChart() { return chart; }
+
+TrackPartition Synthmania::getPartition() { return partition; }
 
 AudioPluginHandler *Synthmania::getPluginHandler() { return plugin; }
 

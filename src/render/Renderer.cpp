@@ -800,10 +800,8 @@ void Renderer::drawGui(Gui* gui, CommandBuffer* commandBuffer) {
 
 void Renderer::updateUniformBuffer(uint32_t currentImage) {
     double time_from_start = game->getCurrentTimeMicros() / 1000000.;
-    float x = cos(time_from_start * 2 / 3) / 2,
-          y = sin(time_from_start * 5 / 3) / 2;  // Lissajous :)
+    float x = 0, y = 0;
 
-    x = y = 0;
     float ratio =
         swapchain->getExtent().width / (float)swapchain->getExtent().height;
     UniformBufferObject ubo{};
@@ -814,11 +812,13 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
                                 ratio, 0.1f, 10.0f);
     ubo.proj[1][1] *= -1;  // Invert y axis cause I like my y axis positive up
 
+    void* p = &ubo;
+
     void *data = NULL, *data2 = NULL;
     vkMapMemory(*(device->getDevice()),
                 *(uniformBuffers[currentImage]->getMemory()->getMemory()), 0,
                 sizeof(ubo), 0, &data);
-    memcpy(data, &ubo, sizeof(ubo));
+    memcpy(data, p, sizeof(ubo));
     vkUnmapMemory(*(device->getDevice()),
                   *(uniformBuffers[currentImage]->getMemory()->getMemory()));
 
@@ -826,10 +826,12 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     ubo.view = glm::mat4(1.f);
     ubo.proj = glm::orthoLH_ZO<float>(-ratio, ratio, -1, 1, 0.f, 1.f);
 
+    p = &ubo;
+    size_t sz = game->updateUBO(p);
     vkMapMemory(*(device->getDevice()),
                 *(guiUniformBuffers[currentImage]->getMemory()->getMemory()), 0,
-                sizeof(ubo), 0, &data2);
-    memcpy(data2, &ubo, sizeof(ubo));
+                sz, 0, &data2);
+    memcpy(data2, p, sz);
     vkUnmapMemory(*(device->getDevice()),
                   *(guiUniformBuffers[currentImage]->getMemory()->getMemory()));
 }
