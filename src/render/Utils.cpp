@@ -148,20 +148,20 @@ ImageView* getTextureByName(std::vector<ImageView*> textures,
     return getTextureByName(textures, "missing");
 }
 
-DebugFunc getDebugFunctions(Device* device) {
+DebugFunc getDebugFunctions(Instance* instance) {
     DebugFunc result;
 #ifndef NDEBUG
-    VkDevice d = *(device->getDevice());
-    result.begin = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(
-        d, "vkCmdBeginDebugUtilsLabelEXT");
-    result.end = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetDeviceProcAddr(
-        d, "vkCmdEndDebugUtilsLabelEXT");
-    result.insert = (PFN_vkCmdInsertDebugUtilsLabelEXT)vkGetDeviceProcAddr(
-        d, "vkCmdInsertDebugUtilsLabelEXT");
-    result.setName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(
-        d, "vkSetDebugUtilsObjectNameEXT");
-    result.setTag = (PFN_vkSetDebugUtilsObjectTagEXT)vkGetDeviceProcAddr(
-        d, "vkSetDebugUtilsObjectTagEXT");
+    VkInstance i = *(instance->getInstance());
+    result.begin = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(
+        i, "vkCmdBeginDebugUtilsLabelEXT");
+    result.end = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(
+        i, "vkCmdEndDebugUtilsLabelEXT");
+    result.insert = (PFN_vkCmdInsertDebugUtilsLabelEXT)vkGetInstanceProcAddr(
+        i, "vkCmdInsertDebugUtilsLabelEXT");
+    result.setName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(
+        i, "vkSetDebugUtilsObjectNameEXT");
+    result.setTag = (PFN_vkSetDebugUtilsObjectTagEXT)vkGetInstanceProcAddr(
+        i, "vkSetDebugUtilsObjectTagEXT");
 #else
     result.begin = NULL;
     result.end = NULL;
@@ -173,7 +173,7 @@ DebugFunc getDebugFunctions(Device* device) {
     return result;
 }
 
-void setName(DebugFunc debugFunctions, Device* device, std::string name,
+void setName(DebugFunc debugFunctions, Device* device, const std::string& name,
              VkObjectType type, void* obj) {
 #ifndef NDEBUG
     VkDebugUtilsObjectNameInfoEXT info;
@@ -182,6 +182,7 @@ void setName(DebugFunc debugFunctions, Device* device, std::string name,
     info.objectType = type;
     info.pObjectName = name.c_str();
     info.pNext = NULL;
+    VkDevice d = *(device->getDevice());
     debugFunctions.setName(*(device->getDevice()), &info);
 #endif
 }
@@ -219,16 +220,16 @@ int cmpGuisByTexture(Gui* gui, Gui* gui2) {
 }
 
 void* loadShared(std::string file) {
-#ifdef WIN32
-    return LoadLibraryA(file.c_str());
+#ifdef _WIN32
+    return (void*)LoadLibraryA(file.c_str());
 #else
     return dlopen(file.c_str(), RTLD_LAZY);
 #endif
 }
 
 void* getFunction(void* shared, const char* fct) {
-#ifdef WIN32
-    return GetProcAddress(shared, fct);
+#ifdef _WIN32
+    return (void*)GetProcAddress((HMODULE)shared, fct);
 #else
     return dlsym(shared, fct);
 #endif

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <dlfcn.h>
 #else
 #include <libloaderapi.h>
@@ -66,7 +66,7 @@ struct DebugFunc {
  * @return DebugFunc useful debug functions that may be used for naming vulkan
  * objects, for instance
  */
-DebugFunc getDebugFunctions(Device* device);
+DebugFunc getDebugFunctions(Instance* instance);
 
 /**
  * @brief Set a vulkan object's name for debugging purposes, will do nothing if
@@ -78,7 +78,7 @@ DebugFunc getDebugFunctions(Device* device);
  * @param type the object's type
  * @param obj the pointer to the vulkan object
  */
-void setName(DebugFunc debugFunctions, Device* device, std::string name,
+void setName(DebugFunc debugFunctions, Device* device, const std::string& name,
              VkObjectType type, void* obj);
 
 /**

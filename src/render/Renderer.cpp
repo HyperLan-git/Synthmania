@@ -17,12 +17,12 @@ void Renderer::initVulkan() {
     pickPhysicalDevice();
     createLogicalDevice();
     // TODO make a function called setAllNames
-    DebugFunc functions = getDebugFunctions(device);
+    DebugFunc functions = getDebugFunctions(instance);
     // Error for some reason
     /*setName(functions, device, "GPU", VK_OBJECT_TYPE_PHYSICAL_DEVICE,
-            physicalDevice);*/
+            physicalDevice);
     setName(functions, device, "Instance", VK_OBJECT_TYPE_INSTANCE,
-            *(instance->getInstance()));
+     *(instance->getInstance()));*/
     setName(functions, device, "mainSurface", VK_OBJECT_TYPE_SURFACE_KHR,
             *surface);
     setName(functions, device, "Device", VK_OBJECT_TYPE_DEVICE,
@@ -348,7 +348,7 @@ void Renderer::createGraphicsPipeline() {
                                     VK_SHADER_STAGE_GEOMETRY_BIT);
     Shader* fragShader = new Shader("main", device, fragShaderCode,
                                     VK_SHADER_STAGE_FRAGMENT_BIT);
-    DebugFunc functions = getDebugFunctions(device);
+    DebugFunc functions = getDebugFunctions(instance);
     setName(functions, device, "3D vertex shader", VK_OBJECT_TYPE_SHADER_MODULE,
             *(vertShader->getModule()));
     setName(functions, device, "3D geometry shader",
@@ -405,7 +405,7 @@ void Renderer::createGuiPipeline() {
     Shader* fragShader = new Shader("main", device, fragShaderCode,
                                     VK_SHADER_STAGE_FRAGMENT_BIT);
 
-    DebugFunc functions = getDebugFunctions(device);
+    DebugFunc functions = getDebugFunctions(instance);
     setName(functions, device, "2D vertex shader", VK_OBJECT_TYPE_SHADER_MODULE,
             *(vertShader->getModule()));
     setName(functions, device, "2D geom shader", VK_OBJECT_TYPE_SHADER_MODULE,
@@ -469,7 +469,7 @@ void Renderer::addTexture(Image* texture, const char* name) {
                                     VK_IMAGE_ASPECT_COLOR_BIT, name);
     std::string n = name;
     n.append("_view");
-    setName(getDebugFunctions(device), device, n, VK_OBJECT_TYPE_IMAGE_VIEW,
+    setName(getDebugFunctions(instance), device, n, VK_OBJECT_TYPE_IMAGE_VIEW,
             *(view->getView()));
     this->textures.push_back(view);
 }
@@ -495,7 +495,7 @@ ImageView* Renderer::readTexture(const char* path, const char* name) {
                                       VK_IMAGE_ASPECT_COLOR_BIT, name);
     std::string n = name;
     n.append("_view");
-    setName(getDebugFunctions(device), device, n, VK_OBJECT_TYPE_IMAGE_VIEW,
+    setName(getDebugFunctions(instance), device, n, VK_OBJECT_TYPE_IMAGE_VIEW,
             *(result->getView()));
 
     return result;
@@ -601,7 +601,7 @@ void Renderer::createVertexBuffer(VkDeviceSize size) {
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    setName(getDebugFunctions(device), device, "main vertex buffer",
+    setName(getDebugFunctions(instance), device, "main vertex buffer",
             VK_OBJECT_TYPE_BUFFER, *(vertexBuffer->getBuffer()));
 }
 
@@ -610,7 +610,7 @@ void Renderer::createIndexBuffer(VkDeviceSize size) {
         &physicalDevice, device, size,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    setName(getDebugFunctions(device), device, "main index buffer",
+    setName(getDebugFunctions(instance), device, "main index buffer",
             VK_OBJECT_TYPE_BUFFER, *(indexBuffer->getBuffer()));
 }
 
@@ -662,7 +662,7 @@ void Renderer::updateDescriptorSet(ShaderDescriptorSet* descriptor,
 
 void Renderer::createDescriptorSets() {
     size_t j = 0;
-    DebugFunc functions = getDebugFunctions(device);
+    DebugFunc functions = getDebugFunctions(instance);
     for (ImageView* img : textures) {
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             descriptorSets.push_back(

@@ -1,9 +1,10 @@
 #include <iostream>
 
 class SimplePluginHost;
+#include <thread>
+
 #include "AudioHandler.hpp"
 #include "SimplePluginHost.hpp"
-#include "threads.h"
 
 #define BUFFERS 4
 #define BUFFERSIZE 700
@@ -92,18 +93,15 @@ int main() {
                           BUFFERSIZE, true,
                           "./resources/songs/Aegleseeker/synth1.dat");
 
-    thrd_t thread, thread2;
+    std::thread thread(audiorun, new E{handler, &test}), thread2(guirun, &test);
     int result, result2;
 
-    thrd_create(&thread, audiorun, new E{handler, &test});
-    thrd_create(&thread2, guirun, &test);
-
-    while (test.isActive()) thrd_yield();
+    while (test.isActive()) std::this_thread::yield();
 
     std::cout << "t2\n";
-    thrd_join(thread, &result2);
-    std::cout << "t1\n";
-    thrd_join(thread, &result);
+
+    thread.join();
+    thread2.join();
 
     return result | result2;
 }

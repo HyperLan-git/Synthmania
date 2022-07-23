@@ -1,13 +1,14 @@
 VSTFLAGS = -L../SimplePluginHost/export/lib -l:libSimplePluginHost.a
 ifeq ($(OS),Windows_NT)
-VSTFLAGS = -L../SimplePluginHost/Builds/VisualStudio2019/x64/Release/Static\ Library -l:SimplePluginHost.lib
+VSTFLAGS = -L../SimplePluginHost/Builds/VisualStudio2022/x64/Release/Static\ Library -l:SimplePluginHost.lib
 endif
 VSTHEADERS = ../SimplePluginHost/export/include
 VSTOBJ = $(wildcard ../SimplePluginHost/Builds/LinuxMakefile/build/intermediate/*.o)
-VSTLIB = ../SimplePluginHost/export/lib/libSimplePluginHost.a
 ifeq ($(OS),Windows_NT)
-VSTLIB = ../SimplePluginHost/export/lib/SimplePluginHost.lib
+VSTOBJ = 
 endif
+VSTLIB = ../SimplePluginHost/export/lib/libSimplePluginHost.a
+
 IDIRS = $(addprefix -I ,$(shell find include -type d | sed -z 's/\n/ /g'))\
 			-I libremidi/include/ -I stb -I obj -I $(VSTHEADERS) \
 			-I /usr/include/freetype2/
@@ -35,7 +36,8 @@ AUDIOSRC = $(wildcard src/audio/*.cpp) test/audiotest.cpp
 JSONSRC = $(wildcard src/json/*.cpp) test/jsontest.cpp
 VSTSRC = $(wildcard src/audio/*.cpp) test/vsttest.cpp
 GSRC = test/graphicstest.cpp $(wildcard src/render/*.cpp) $(wildcard src/render/*/*.cpp) \
-				$(wildcard src/entity/*.cpp) $(wildcard src/gui/*.cpp) $(wildcard src/json/*.cpp) src/synthmania/Game.cpp
+				$(wildcard src/entity/*.cpp) $(wildcard src/gui/*.cpp) \
+				$(wildcard src/anim/*.cpp) $(wildcard src/json/*.cpp) src/synthmania/Game.cpp
 
 MODULEDIR = module
 
