@@ -15,8 +15,6 @@ class Game;
 #include <iostream>
 #include <stdexcept>
 
-#include "AudioHandler.hpp"
-#include "AudioPluginHandler.hpp"
 #include "Entity.hpp"
 #include "Gui.hpp"
 #include "JsonHandler.hpp"

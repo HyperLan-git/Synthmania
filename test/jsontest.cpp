@@ -4,7 +4,7 @@
 #include "JsonHandler.hpp"
 
 int main() {
-    Chart c = readChart("resources/songs/ETEA/sdata.json");
+    Chart c = readChart("resources/songs/examplesong/sdata.json");
     std::cout << "chart : \ntitle : " << c.name << "\nartist : " << c.artist
               << "\naudio : " << c.audio << "\noffset : " << c.offset
               << "\nanimation : " << c.animation << "\ndiffs :\n";

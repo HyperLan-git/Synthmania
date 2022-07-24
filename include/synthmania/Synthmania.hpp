@@ -16,7 +16,10 @@ class Synthmania;
 #include <stdexcept>
 
 #include "AudioHandler.hpp"
+#ifndef NOVST
+#pragma warn aaaaaaaa
 #include "AudioPluginHandler.hpp"
+#endif
 #include "Entity.hpp"
 #include "Game.hpp"
 #include "Gui.hpp"
@@ -54,7 +57,9 @@ class Synthmania : public Game {
 
     virtual void update();
 
+#ifndef NOVST
     AudioPluginHandler *getPluginHandler();
+#endif
 
     virtual void setTimeMicros(int64_t time);
 
@@ -76,7 +81,9 @@ class Synthmania : public Game {
    private:
     MidiHandler *handler;
     AudioHandler *audio;
+#ifndef NOVST
     AudioPluginHandler *plugin;
+#endif
     TrackPartition partition;
     Chart chart;
     Diff diff;

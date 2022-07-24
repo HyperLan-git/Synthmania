@@ -2,22 +2,26 @@ VSTFLAGS = -L../SimplePluginHost/export/lib -l:libSimplePluginHost.a
 ifeq ($(OS),Windows_NT)
 VSTFLAGS = -L../SimplePluginHost/Builds/VisualStudio2022/x64/Release/Static\ Library -l:SimplePluginHost.lib
 endif
-VSTHEADERS = ../SimplePluginHost/export/include
+VSTHEADERS = -I ../SimplePluginHost/export/include
 VSTOBJ = $(wildcard ../SimplePluginHost/Builds/LinuxMakefile/build/intermediate/*.o)
 ifeq ($(OS),Windows_NT)
 VSTOBJ = 
 endif
 VSTLIB = ../SimplePluginHost/export/lib/libSimplePluginHost.a
-
-IDIRS = $(addprefix -I ,$(shell find include -type d | sed -z 's/\n/ /g'))\
-			-I libremidi/include/ -I stb -I obj -I $(VSTHEADERS) \
-			-I /usr/include/freetype2/
-
-ifeq ($(OS),Windows_NT)
-IDIRS += -I mingw-std-threads
+ifeq ($(NO_VST), 1)
+VSTLIB =
+VSTFLAGS =
+VSTHEADERS =
 endif
 
-CFLAGS = -std=c++17 -O3 $(VSTOBJ)
+IDIRS = $(addprefix -I ,$(shell find include -type d | sed -z 's/\n/ /g'))\
+			-I libremidi/include/ -I stb -I obj $(VSTHEADERS)
+
+ifeq ($(OS),Windows_NT)
+IDIRS += -I ./mingw-std-threads
+endif
+
+CFLAGS = -std=c++17 -O3 $(VSTOBJ) -D NDEBUG
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype
 ifeq ($(OS),Windows_NT)
 LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lalut -lwinmm -lfreetype
@@ -28,6 +32,10 @@ LIBS = obj/tiny_obj_loader.h stb/stb_image.h
 
 SRCFOLDER = src
 SRC = $(shell find $(SRCFOLDER) -type f -name '*.cpp' | sed -z 's/\n/ /g')
+ifeq ($(NO_VST), 1)
+SRC = $(shell find $(SRCFOLDER) -type f -name '*.cpp' -not -name 'AudioPluginHandler.cpp'\
+			| sed -z 's/\n/ /g')
+endif
 OBJ = $(SRC:$(SRCFOLDER)/%.cpp=$(OBJDIR)/%.o)
 
 # Testing files
@@ -43,11 +51,16 @@ MODULEDIR = module
 
 Synthmania: shader $(VSTLIB)
 	make $(OBJ)
-	g++ $(CFLAGS) -rdynamic -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
+#	-rdynamic
+	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 
 $(OBJDIR)/%.o: $(SRCFOLDER)/%.cpp
 	@mkdir -p '$(@D)'
+ifeq ($(NO_VST), 1)
+	g++ $(CFLAGS) -D NOVST -c $< $(LDFLAGS) $(DEBUG) -o $@
+else
 	g++ $(CFLAGS) -c $< $(LDFLAGS) $(DEBUG) -o $@
+endif
 
 .PHONY: test clean shader obj module
 
@@ -87,7 +100,9 @@ shader:
 	glslc shader/def.frag -o bin/frag.spv
 
 $(VSTLIB):
+ifndef NO_VST
 	make -C ../SimplePluginHost
+endif
 
 clean:
 	rm -rf bin/*
