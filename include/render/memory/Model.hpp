@@ -32,6 +32,7 @@ struct std::hash<Vertex> {
     size_t operator()(Vertex const& vertex) const;
 };
 
+// TODO this shouldn't be here
 struct UniformBufferObject {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
