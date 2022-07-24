@@ -20,14 +20,14 @@ void Synthmania::init() {
     this->startTime = chart.offset;
     if (chart.animation.compare("None") != 0) {
         void *shared = loadShared(songFolder + "/" + chart.animation);
-        char *e = dlerror();
+        char *e = NULL;  // TODO dlerror();
         if (e != NULL) {
             std::cout << "Error while loading anim ! " << e << "\n";
         } else {
             GraphicalEffectHandler *(*f)(Synthmania *) =
                 (GraphicalEffectHandler * (*)(Synthmania *))
                     getFunction(shared, "getEffectHandler");
-            char *e = dlerror();
+            char *e = NULL;  // TODO dlerror();
             if (e != NULL)
                 std::cout << "Error while loading anim ! " << e << "\n";
             else
@@ -42,7 +42,9 @@ void Synthmania::init() {
     pdata.append("/");
     pdata.append(chart.plugindata);
     if (chart.plugindata.compare("None") == 0) pdata = "None";
+#ifndef NOVST
     plugin = new AudioPluginHandler("./plugins/Vital.vst3", audio, pdata);
+#endif
     Model *model =
         new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
                   renderer->getDevice());
@@ -223,8 +225,10 @@ void Synthmania::noteHit(Note *note) {
     prec->setPosition({0, 0.9f});
     addGui(prec);
     delta = std::clamp<int64_t>(delta, 0, note->getTotalDuration() / 2);
+#ifndef NOVST
     plugin->playNote(note->getPitch(), 90,
                      time + note->getTotalDuration() - delta);
+#endif
     note->setStatus(HIT);
     note->kill(time + note->getTotalDuration());
 
@@ -294,7 +298,9 @@ void Synthmania::update() {
             if (note->getTime() <= time_from_start) noteHit(note);
         }
     }
+#ifndef NOVST
     plugin->update(time_from_start);
+#endif
     std::vector<Gui *> toDestroy;
     for (Gui *g : guis) {
         if (g->update(time_from_start) || g->isDestroyed()) {
@@ -397,11 +403,15 @@ Chart Synthmania::getChart() { return chart; }
 
 TrackPartition Synthmania::getPartition() { return partition; }
 
+#ifndef NOVST
 AudioPluginHandler *Synthmania::getPluginHandler() { return plugin; }
+#endif
 
 Synthmania::~Synthmania() {
     if (mod != NULL) delete mod;
+#ifndef NOVST
     delete plugin;
+#endif
     delete audio;
 
     delete handler;

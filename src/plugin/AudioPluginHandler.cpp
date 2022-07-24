@@ -1,4 +1,5 @@
 #include "AudioPluginHandler.hpp"
+#ifndef NOVST
 
 AudioPluginHandler::AudioPluginHandler(std::string path, AudioHandler* handler,
                                        std::string synthdata) {
@@ -112,3 +113,4 @@ int guiThread(void* arg) {
     } while (errored);
     return 0;
 }
+#endif

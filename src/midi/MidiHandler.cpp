@@ -12,7 +12,7 @@ size_t std::hash<libremidi::message>::operator()(
 
 MidiHandler::MidiHandler() {
     start_time = micros();
-    openPort(0);
+    if (getMidiPorts().size() > 0) openPort(0);
 }
 
 std::vector<std::string> MidiHandler::getMidiPorts() {

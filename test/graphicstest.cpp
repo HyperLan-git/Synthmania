@@ -19,7 +19,7 @@ class Test : public Game {
         addGui(g);
         int i = 0;
         for (Text t :
-             renderer->createText("Hello", "Stupid", 11, glm::vec2({0, 0}))) {
+             renderer->createText("Hello", "Stupid", 55, glm::vec2({-1, 0}))) {
             std::string name = "hi";
             name.append(std::to_string(i++));
             Gui* gui = new Gui(t.character.texture, name.c_str());

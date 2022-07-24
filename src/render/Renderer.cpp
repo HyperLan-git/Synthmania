@@ -107,33 +107,44 @@ Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
     FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL);
     unsigned int w = glyphSlot->bitmap.width + 2,
                  h = glyphSlot->bitmap.rows + 2;
-    uint8_t buffer[w * h * 4] = {0};
 
     uint8_t* bitmap = glyphSlot->bitmap.buffer;
-
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-            if (y == 0 || y == h - 1 || x == 0 || x == w - 1) {
-                buffer[(x + y * w) * 4 + 3] = 0;
-                continue;
-            }
-            uint8_t value = bitmap[(x - 1) + (y - 1) * (w - 2)];
-            buffer[(x + y * w) * 4 + 3] = value;
-        }
-    }
 
     Image* image =
         new Image(&physicalDevice, device, w, h, VK_FORMAT_R8G8B8A8_SRGB,
                   VK_IMAGE_TILING_LINEAR,  // Fricking tiling
                   VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
+                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    // TODO put all that in image class
+    VkImageSubresource sub;
+    sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    sub.mipLevel = 0;
+    sub.arrayLayer = 0;
+    VkSubresourceLayout layout;
+    vkGetImageSubresourceLayout(*(device->getDevice()), *(image->getImage()),
+                                &sub, &layout);
+    uint8_t buffer[layout.rowPitch * h] = {0};
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            if (y == 0 || y == h - 1 || x == 0 || x == w - 1) {
+                buffer[(x + y * layout.rowPitch / 4) * 4 + 3] = 0;
+                continue;
+            }
+            uint8_t value =
+                bitmap[(x - 1) + (y - 1) * (glyphSlot->bitmap.pitch)];
+            buffer[(x + y * layout.rowPitch / 4) * 4 + 3] = value;
+        }
+    }
 
     transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     void* d;
     vkMapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()), 0,
-                w * h * 4, 0, &d);
-    memcpy(d, buffer, w * h * 4);
+                layout.rowPitch * h, 0, &d);
+    memcpy(d, buffer, layout.rowPitch * h);
     vkUnmapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()));
     return image;
 }
