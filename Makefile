@@ -2,7 +2,7 @@ VSTFLAGS = -L../SimplePluginHost/export/lib -l:libSimplePluginHost.a
 ifeq ($(OS),Windows_NT)
 VSTFLAGS = -L../SimplePluginHost/Builds/VisualStudio2022/x64/Release/Static\ Library -l:SimplePluginHost.lib
 endif
-VSTHEADERS = -I ../SimplePluginHost/export/include
+VSTINCLUDE = -I ../SimplePluginHost/export/include
 VSTOBJ = $(wildcard ../SimplePluginHost/Builds/LinuxMakefile/build/intermediate/*.o)
 ifeq ($(OS),Windows_NT)
 VSTOBJ = 
@@ -11,11 +11,11 @@ VSTLIB = ../SimplePluginHost/export/lib/libSimplePluginHost.a
 ifeq ($(NO_VST), 1)
 VSTLIB =
 VSTFLAGS =
-VSTHEADERS =
+VSTINCLUDE =
 endif
 
 IDIRS = $(addprefix -I ,$(shell find include -type d | sed -z 's/\n/ /g'))\
-			-I libremidi/include/ -I stb -I obj $(VSTHEADERS)
+			-I libremidi/include/ -I stb -I obj $(VSTINCLUDE)
 
 ifeq ($(OS),Windows_NT)
 IDIRS += -I ./mingw-std-threads

@@ -12,6 +12,7 @@ Renderer::Renderer(Game* game, Window* window) {
 }
 
 void Renderer::initVulkan() {
+    if (!glfwVulkanSupported()) throw std::runtime_error("Cannot use vulkan !");
     createInstance();
     surface = instance->createSurface(window);
     pickPhysicalDevice();
@@ -959,6 +960,9 @@ std::vector<const char*> Renderer::getRequiredExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+    if (glfwExtensions == NULL)
+        std::cerr << "GLFW API unavailable" << std::endl;
 
     std::vector<const char*> extensions(glfwExtensions,
                                         glfwExtensions + glfwExtensionCount);
