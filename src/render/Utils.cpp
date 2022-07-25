@@ -15,7 +15,8 @@ uint32_t findMemoryType(VkPhysicalDevice* physicalDevice, uint32_t typeFilter,
 
     throw std::runtime_error(
         "failed to find suitable memory type! properties flag : " +
-        std::to_string(properties));
+        std::to_string(properties) +
+        " type filter : " + std::to_string(typeFilter));
 }
 
 std::vector<char> readFile(const std::string& filename) {

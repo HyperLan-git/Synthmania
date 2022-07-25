@@ -17,6 +17,7 @@ glm::vec2 Gui::getGraphicalPosition() const { return graphicalPosition; }
 float Gui::getRotation() const { return (rotation - ((int)rotation / (M_PI))); }
 glm::vec2 Gui::getSize() const { return size; }
 glm::vec4 Gui::getColor() const { return color; }
+int Gui::getNegate() const { return negate; }
 
 void Gui::setPosition(glm::vec2 pos) {
     this->position = glm::vec3(pos.x, pos.y, position.z);
@@ -27,6 +28,8 @@ void Gui::setZ(float z) { this->position.z = z; }
 void Gui::setSize(glm::vec2 size) { this->size = size; }
 
 void Gui::setColor(glm::vec4 color) { this->color = color; }
+
+void Gui::setNegate(int negate) { this->negate = negate; }
 
 bool Gui::update(int64_t time) { return false; }
 
@@ -55,7 +58,12 @@ ShaderData* Gui::getShaderData() const {
     edata->rot = rotation;
     edata->size = size;
     edata->color = color;
+    if (negate) edata->color.a *= -1;
     data->data = edata;
     data->size = sizeof(GuiData);
     return data;
+}
+
+Gui::~Gui() {
+    for (GraphicalEffect* e : this->effects) delete e;
 }

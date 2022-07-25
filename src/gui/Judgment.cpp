@@ -31,17 +31,3 @@ bool Judgement::update(int64_t time) {
 
     return false;
 }
-
-ShaderData* Judgement::getShaderData() const {
-    ShaderData* data = new ShaderData();
-    GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
-    glm::vec3 p = glm::vec3(graphicalPosition, 0);
-    p += position;
-    edata->pos = p;
-    edata->rot = rotation;
-    edata->size = size;
-    edata->color = color;
-    data->data = edata;
-    data->size = sizeof(GuiData);
-    return data;
-}

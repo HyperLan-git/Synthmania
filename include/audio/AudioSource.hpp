@@ -50,7 +50,7 @@ class AudioSource {
     bool destroyOnFinished();
 
     void queueBuffers(AudioBuffer* buffers, int nb);
-    AudioBuffer* unqueueBuffers(int nb);
+    ALuint* unqueueBuffers(int nb);
 
     void queueBuffer(AudioBuffer* buffer);
 

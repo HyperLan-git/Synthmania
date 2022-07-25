@@ -49,21 +49,25 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
     descriptorWrites->descriptorType = type;
     descriptorWrites->descriptorCount = 1;
 
-    if (bInfo != nullptr) descriptorWrites->pBufferInfo = bInfo;
-    if (iInfo != nullptr) descriptorWrites->pImageInfo = iInfo;
+    if (bInfo != NULL) descriptorWrites->pBufferInfo = bInfo;
+    if (iInfo != NULL) descriptorWrites->pImageInfo = iInfo;
 
-    if (writeDescriptor == nullptr) {
+    if (writeDescriptor == NULL) {
         this->writeDescriptor = descriptorWrites;
     } else {
         writeDescriptor->pNext = descriptorWrites;
     }
     vkUpdateDescriptorSets(*(device->getDevice()), 1, descriptorWrites, 0,
-                           nullptr);
+                           NULL);
 }
 
 VkDescriptorSet *ShaderDescriptorSet::getSet() const { return set; }
 
 ShaderDescriptorSet::~ShaderDescriptorSet() {
+    if (writeDescriptor != NULL) {
+        if (writeDescriptor->pNext != NULL) delete writeDescriptor->pNext;
+        delete writeDescriptor;
+    }
     vkFreeDescriptorSets(*(device->getDevice()), *(pool->getPool()), 1, set);
     delete set;
 }

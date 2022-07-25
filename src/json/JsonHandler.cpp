@@ -19,7 +19,7 @@ Chart readChart(const char* json) {
     c.plugin = t->get<std::string>("plugin", str);
     c.plugindata = t->get<std::string>("plugindata", str);
     if (c.audio.compare("None") != 0) c.offset = t->get<uint64_t>("offset", n);
-    tree diffs = t->get_child("diffs");  // TODO handle exceptions
+    tree diffs = t->get_child("diffs", tree());
     for (auto elem : diffs) {
         tree diff = elem.second;
         Diff d;

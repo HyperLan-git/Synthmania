@@ -110,6 +110,9 @@ class Renderer {
     VkPhysicalDevice* getPhysicalDevice();
     Device* getDevice();
 
+    void loadGuiShaders(std::string vShader, std::string fShader,
+                        VkDeviceSize guiUBOSize);
+
     ~Renderer();
 
    private:
@@ -172,7 +175,9 @@ class Renderer {
 
     Model* guiModel;
 
-    GraphicalEffectHandler* graphicsHandler;
+    VkDeviceSize guiUBOSize = sizeof(UniformBufferObject);
+    std::string guiVertShader = "bin/vert_gui.spv",
+                guiFragShader = "bin/frag.spv";
 
     void initWindow();
 

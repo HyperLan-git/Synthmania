@@ -43,9 +43,7 @@ class Note : public PartitionNotation {
 
     virtual bool update(int64_t time);
 
-    virtual ShaderData* getShaderData() const;
-
-    virtual ~Note() = default;
+    virtual ShaderData* getShaderData() const { return Gui::getShaderData(); }
 
    private:
     int64_t totalDuration, duration;

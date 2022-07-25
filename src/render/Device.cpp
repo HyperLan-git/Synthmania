@@ -30,6 +30,7 @@ std::map<std::string, FamilyData> findQueueFamilies(
                     FamilyData({.id = i, .properties = queueFamily}));
                 break;
             }
+            delete queueFamily;
         }
 
     return result;
@@ -50,12 +51,14 @@ Device::Device(VkPhysicalDevice *physicalDevice,
     std::vector<float *> tabs;
     std::vector<FamilyData> createdFamilies;
     for (auto &queueFamily : queueFamilies) {
+        bool c = false;
         for (FamilyData &data : createdFamilies)
             if (data.id == queueFamily.second.id) {
                 queues.emplace(queueFamily.first, data);
-                continue;
+                c = true;
+                break;
             }
-        if (queues.find(queueFamily.first) == queues.end()) {
+        if (!c && queues.find(queueFamily.first) == queues.end()) {
             FamilyData &data = queueFamily.second;
             uint32_t count = data.properties->queueCount;
             float *queuePriorities = new float[count];
@@ -69,7 +72,8 @@ Device::Device(VkPhysicalDevice *physicalDevice,
             queueCreateInfos.emplace_back(queueCreateInfo);
             queues.emplace(queueFamily.first, queueFamily.second);
             createdFamilies.push_back(queueFamily.second);
-        }
+        } else
+            delete queueFamily.second.properties;
     }
 
     VkPhysicalDeviceFeatures deviceFeatures{};
@@ -121,11 +125,13 @@ void Device::wait() { vkDeviceWaitIdle(*device); }
 
 Device::~Device() {
     vkDestroyDevice(*device, nullptr);
+    std::set<VkQueueFamilyProperties *> got;
     for (auto entry : queues) {
-        for (Queue *queue : entry.second.queues) {
-            delete queue;
+        if (got.find(entry.second.properties) == got.end()) {
+            delete entry.second.properties;
+            got.emplace(entry.second.properties);
         }
-        entry.second.queues.clear();
+        for (Queue *queue : entry.second.queues) delete queue;
     }
     delete device;
 }

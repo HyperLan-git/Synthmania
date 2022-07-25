@@ -12,11 +12,12 @@ class Gui;
 #include "Image.hpp"
 #include "Model.hpp"
 
+#define ALIGN(type) alignas(sizeof(type)) type
 struct GuiData {
-    alignas(16) glm::vec3 pos;
-    alignas(4) float rot;
-    alignas(8) glm::vec2 size;
-    alignas(16) glm::vec4 color;
+    alignas(sizeof(float) * 4) glm::vec3 pos;
+    ALIGN(float) rot;
+    alignas(sizeof(float) * 2) glm::vec2 size;
+    alignas(sizeof(float) * 4) glm::vec4 color;
 };
 
 class Gui {
@@ -31,11 +32,13 @@ class Gui {
     float getRotation() const;
     glm::vec2 getSize() const;
     glm::vec4 getColor() const;
+    int getNegate() const;
 
     void setPosition(glm::vec2 pos);
     void setZ(float z);
     void setSize(glm::vec2 size);
     void setColor(glm::vec4 color);
+    void setNegate(int negate);
 
     void addEffect(GraphicalEffect* effect);
 
@@ -51,7 +54,7 @@ class Gui {
     // Data for the shader, will depend on the shader
     virtual ShaderData* getShaderData() const;
 
-    virtual ~Gui() = default;
+    virtual ~Gui();
 
    protected:
     ImageView* texture;
@@ -60,6 +63,7 @@ class Gui {
     float rotation = 0;
     glm::vec2 size = {1, 1};
     glm::vec4 color = {1, 1, 1, 1};
+    int negate = false;
     const char* name;
     std::vector<GraphicalEffect*> effects;
     bool destroyed = false;

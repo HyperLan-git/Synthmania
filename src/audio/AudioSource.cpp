@@ -70,12 +70,10 @@ void AudioSource::queueBuffer(AudioBuffer* buffer) {
     alSourceQueueBuffers(sourceID, 1, &b);
 }
 
-AudioBuffer* AudioSource::unqueueBuffers(int nb) {
-    unsigned int buffers[nb];
+ALuint* AudioSource::unqueueBuffers(int nb) {
+    ALuint* buffers = new ALuint[nb];
     alSourceUnqueueBuffers(sourceID, nb, buffers);
-    AudioBuffer* ret = new AudioBuffer[nb];
-    for (int i = 0; i < nb; i++) ret[i].setBuffer(buffers[i]);
-    return ret;
+    return buffers;
 }
 
 ALfloat AudioSource::getSourcef(ALenum param) {

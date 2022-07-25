@@ -56,6 +56,7 @@ Window *Game::getWindow() { return this->window; }
 Renderer *Game::getRenderer() { return renderer; }
 
 size_t Game::updateUBO(void *&ubo) { return sizeof(UniformBufferObject); }
+void Game::freeUBO(void *&ubo) {}
 
 void Game::addEntity(Entity *entity) { entities.push_back(entity); }
 

@@ -43,7 +43,7 @@ std::vector<Image*> createImagesForSwapchain(Device* device,
                                              VkExtent2D extent) {
     std::vector<Image*> swapChainImages;
     vkGetSwapchainImagesKHR(*(device->getDevice()), swapchain, imageCount,
-                            nullptr);
+                            NULL);
     VkImage* images = new VkImage[*imageCount];
     vkGetSwapchainImagesKHR(*(device->getDevice()), swapchain, imageCount,
                             images);
@@ -55,7 +55,7 @@ std::vector<Image*> createImagesForSwapchain(Device* device,
 Image::Image(Device* device, VkImage* image, VkExtent2D extent) {
     this->device = device;
     this->image = image;
-    this->memory = nullptr;  // TODO find a way to get associated memory
+    this->memory = NULL;  // TODO find a way to get associated memory
     this->extent = {extent.width, extent.height, 1};
 }
 
@@ -66,7 +66,9 @@ Memory* Image::getMemory() { return memory; }
 VkExtent3D Image::getExtent() { return extent; }
 
 Image::~Image() {
-    vkDestroyImage(*(device->getDevice()), *image, nullptr);
-    delete image;
-    if (memory != nullptr) delete memory;  // Again I wish I could do that
+    if (memory != NULL) {
+        vkDestroyImage(*(device->getDevice()), *image, NULL);
+        delete image;
+        delete memory;  // Again I wish I could do that
+    }
 }

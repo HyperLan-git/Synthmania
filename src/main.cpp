@@ -1,5 +1,6 @@
 #include "Synthmania.hpp"
-// TODO mysterious segfault at end of program hihii~ :)
+// TODO mysterious segfault at end of program but only when using juce lol
+// hihii~ :)
 int main(int argc, char **argv) {
     std::string path = "resources/songs/ETEA";
     std::string skin = "resources/textures";

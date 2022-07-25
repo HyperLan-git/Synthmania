@@ -21,8 +21,6 @@ class ParentedGui : public Gui {
 
     virtual ShaderData* getShaderData() const;
 
-    virtual ~ParentedGui() = default;
-
    private:
     Gui* parent;
 };

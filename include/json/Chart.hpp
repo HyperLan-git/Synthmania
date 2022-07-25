@@ -9,6 +9,6 @@ struct Diff {
 
 struct Chart {
     std::vector<Diff> diffs;
-    std::string songFolder, name, artist, audio, animation, plugin, plugindata;
+    std::string name, artist, audio, animation, plugin, plugindata;
     uint64_t offset;
 };

@@ -14,9 +14,7 @@ class Precision : public Gui {
 
     virtual bool update(int64_t time);
 
-    virtual ShaderData* getShaderData() const;
-
-    virtual ~Precision() = default;
+    virtual ShaderData* getShaderData() const { return Gui::getShaderData(); }
 
    private:
     int64_t hit_time;

@@ -40,17 +40,3 @@ bool PartitionNotation::update(int64_t time) {
     this->position.x = (this->time - time) / 300000. - 1.4f;
     return false;
 }
-
-ShaderData* PartitionNotation::getShaderData() const {
-    ShaderData* data = new ShaderData();
-    GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
-    glm::vec3 p = glm::vec3(graphicalPosition, 0);
-    p += position;
-    edata->pos = p;
-    edata->rot = rotation;
-    edata->size = size;
-    edata->color = color;
-    data->data = edata;
-    data->size = sizeof(GuiData);
-    return data;
-}

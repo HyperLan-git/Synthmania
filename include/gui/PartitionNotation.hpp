@@ -18,9 +18,7 @@ class PartitionNotation : public Gui {
 
     virtual bool update(int64_t time);
 
-    virtual ShaderData* getShaderData() const;
-
-    virtual ~PartitionNotation() = default;
+    virtual ShaderData* getShaderData() const { return Gui::getShaderData(); }
 
    protected:
     int64_t time;

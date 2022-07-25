@@ -30,19 +30,19 @@ class GraphicalEffectHandler {
      * @brief Gets the vertex shader code (if you don't know how to write
      * glsl then learn right now or else)
      *
-     * @return A pointer to valid glsl code else NULL if you don't know what
-     * you're doing (just like me !)
+     * @return A string containing path to a valid spv file else an empty string
+     * if you don't know what you're doing (just like me !)
      */
-    virtual const char* getVertShaderCode() = 0;
+    virtual const std::string getVertShaderCode() = 0;
 
     /**
      * @brief Gets the fragment shader code (if you don't know how to write
      * glsl then learn right now or else)
      *
-     * @return A pointer to valid glsl code else NULL if you don't know what
-     * you're doing (just like me !)
+     * @return A string containing path to a valid spv file else an empty string
+     * if you don't know what you're doing (just like me !)
      */
-    virtual const char* getFragShaderCode() = 0;
+    virtual const std::string getFragShaderCode() = 0;
 
     /**
      * @brief This function gets called every frame after elements ingame are
@@ -62,7 +62,8 @@ class GraphicalEffectHandler {
     virtual size_t getUBOSize() = 0;
 
     /**
-     * @brief Updates UBO for the current frame
+     * @brief Updates UBO for the current frame, you can replace the pointer
+     * without causing errors or memory leaks
      *
      * @param ubo The pointer to uniforms
      * @param time Current time in micros
@@ -74,12 +75,13 @@ class GraphicalEffectHandler {
     virtual size_t updateUBO(void*& ubo, int64_t time) = 0;
 
     /**
-     * @brief Do nothing if you did not replace ubo
+     * @brief Do nothing if you did not replace ubo, else free or delete the
+     * pointer in order to avoid memory leaks
      *
      * @param ubo The pointer as you left it at the end of updateUBO(void*&,
      * int64_t)
      */
-    virtual void freeUBO(void*& ubo);
+    virtual void freeUBO(void*& ubo) = 0;
 
     virtual ~GraphicalEffectHandler() = default;
 

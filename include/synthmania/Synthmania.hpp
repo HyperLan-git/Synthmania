@@ -69,7 +69,11 @@ class Synthmania : public Game {
     Chart getChart();
     TrackPartition getPartition();
 
+    std::string getSongFolder();
+
     virtual size_t updateUBO(void *&ubo);
+
+    virtual void freeUBO(void *&ubo);
 
     virtual void addGui(Gui *gui);
 

@@ -4,17 +4,21 @@ extern "C" class DefaultEmptyAnimLib : public GraphicalEffectHandler {
    public:
     DefaultEmptyAnimLib(Synthmania* game) : GraphicalEffectHandler(game) {}
 
-    const char* getVertShaderCode() override { return NULL; }
+    std::string getVertShaderCode() override { return std::string(); }
 
-    const char* getFragShaderCode() override { return NULL; }
+    std::string getFragShaderCode() override { return std::string(); }
 
     void onSpawn(Gui* g) override {}
 
     void update(int64_t time) override {}
 
-    size_t updateUBO(void*& ubo, int64_t time) override {
+    VkDeviceSize updateUBO(void*& ubo, int64_t time) override {
         return sizeof(UniformBufferObject);
     }
+
+    VkDeviceSize getUBOSize() override { return sizeof(UniformBufferObject); }
+
+    void freeUBO(void*& ubo) override {}
 
     ~DefaultEmptyAnimLib() = default;
 };

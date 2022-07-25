@@ -33,6 +33,12 @@ void Synthmania::init() {
             else
                 this->mod = f(this);  // Shit
         }
+        std::string v = this->mod->getVertShaderCode(),
+                    f = this->mod->getFragShaderCode();
+        VkDeviceSize UBOSize = this->mod->getUBOSize();
+        if (!v.empty() || !f.empty()) {
+            renderer->loadGuiShaders(v, f, UBOSize);
+        }
     }
     std::string path = songFolder;
     path.append("/");
@@ -49,7 +55,8 @@ void Synthmania::init() {
         new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
                   renderer->getDevice());
     std::vector<ImageView *> textures = renderer->getTextures();
-    Entity *e = new Entity(model, getTextureByName(textures, "room"), "Bob");
+    renderer->models Entity *e =
+        new Entity(model, getTextureByName(textures, "room"), "Bob");
     entities.push_back(e);
     Gui *part = new Gui(getTextureByName(textures, "partition"), "partition"),
         *bg = new Gui(getTextureByName(textures, "partition"), "bg"),
@@ -245,6 +252,7 @@ void Synthmania::noteHit(Note *note) {
         Gui *gui = new Gui(t.character.texture, name.c_str());
         gui->addEffect(new GraphicalEffect(applyTemp));
         gui->setColor({.3, 1, .3, 1});
+        gui->setNegate(true);
         gui->setPosition(t.pos);
         gui->setSize(t.size);
         addGui(gui);
@@ -275,6 +283,7 @@ void Synthmania::noteMiss(Note *note) {
         Gui *gui = new Gui(t.character.texture, name.c_str());
         gui->addEffect(new GraphicalEffect(applyTemp));
         gui->setColor({1, 0, 0, 1});
+        gui->setNegate(true);
         gui->setPosition(t.pos);
         gui->setSize(t.size);
         addGui(gui);
@@ -399,6 +408,10 @@ size_t Synthmania::updateUBO(void *&ubo) {
     return sizeof(UniformBufferObject);
 }
 
+void Synthmania::freeUBO(void *&ubo) {
+    if (mod != NULL) mod->freeUBO(ubo);
+}
+
 Chart Synthmania::getChart() { return chart; }
 
 TrackPartition Synthmania::getPartition() { return partition; }
@@ -406,6 +419,8 @@ TrackPartition Synthmania::getPartition() { return partition; }
 #ifndef NOVST
 AudioPluginHandler *Synthmania::getPluginHandler() { return plugin; }
 #endif
+
+std::string Synthmania::getSongFolder() { return songFolder; }
 
 Synthmania::~Synthmania() {
     if (mod != NULL) delete mod;
@@ -427,6 +442,7 @@ std::vector<Gui *> printString(std::string text, Renderer *renderer,
         name.append(std::to_string(i++));
         Gui *gui = new Gui(t.character.texture, name.c_str());
         gui->setColor(color);
+        gui->setNegate(1);
         gui->setPosition(t.pos);
         gui->setSize(t.size);
         result.push_back(gui);
@@ -474,6 +490,7 @@ std::vector<Gui *> printShakingString(std::string text, Renderer *renderer,
         gui->addEffect(new GraphicalEffect(applyShaking,
                                            new float[]{shake * (float)size}));
         gui->setColor(color);
+        gui->setNegate(true);
         gui->setPosition(t.pos);
         gui->setSize(t.size);
         result.push_back(gui);

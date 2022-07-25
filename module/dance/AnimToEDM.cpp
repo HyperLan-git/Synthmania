@@ -1,37 +1,5 @@
 #include "GraphicalEffectHandler.hpp"
 
-// We do a bit of trolling
-const char VERT[] =
-    "#version 450\n"
-    "layout(binding = 0) uniform UniformBufferObject {"
-    "mat4 model; mat4 view; mat4 proj; vec4 color;} ubo;"
-    "layout(location = 0) in vec3 inPosition;"
-    "layout(location = 1) in vec2 inTexCoord;"
-    "layout(location = 0) out vec2 fragTexCoord;"
-    "layout(location = 1) out vec4 color;"
-    "layout(push_constant) uniform PushConstants {"
-    "vec3 position;float rotation;vec2 size;vec4 color;} constants;"
-    "void main() {"
-    "vec4 v, c = constants.color;"
-    "c.r *= ubo.color.r;c.g *= ubo.color.g;c.b *= ubo.color.b;"
-    "c.a *= ubo.color.a;"
-    "color = c;"
-    "vec3 pos = constants.position;"
-    "vec2 size = constants.size;"
-    "float rotation = constants.rotation;"
-    "v = vec4(inPosition.x, inPosition.y, 0, 1.0);"
-    "float c = cos(rotation), s = sin(rotation);"
-    "float temp = v.x;"
-    "v.x = v.x * c - v.y * s;"
-    "v.y = temp * s + v.y * c;"
-    "v.x *= size.x;"
-    "v.y *= size.y;"
-    "v.xyz += pos;"
-    "v = ubo.proj * ubo.view * ubo.model * v;"
-    "gl_Position = v;"
-    "fragTexCoord = inTexCoord;"
-    "}";
-
 struct UniformBufferObject2 {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
@@ -69,7 +37,6 @@ glm::vec3 hsv2rgb(glm::vec3 hsv) {
             rgb.g = hsv.z;
             rgb.b = t;
             break;
-
         case 3:
             rgb.r = p;
             rgb.g = q;
@@ -93,11 +60,13 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
    public:
     AnimToEDM(Synthmania* game) : GraphicalEffectHandler(game) {}
 
-    const char* getVertShaderCode() override { return VERT; }
+    const std::string getVertShaderCode() override {
+        return (game->getSongFolder() + "/v_shader.spv");
+    }
 
-    const char* getFragShaderCode() override { return NULL; }
+    const std::string getFragShaderCode() override { return std::string(); }
 
-    virtual size_t getUBOSize() { return sizeof(UniformBufferObject2); }
+    virtual VkDeviceSize getUBOSize() { return sizeof(UniformBufferObject2); }
 
     void onSpawn(Gui* g) override {}
 
@@ -122,11 +91,13 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
         result->view = u->view;
         result->view = u->view;
         result->proj = u->proj;
-        u->color =
-            glm::vec4(hsv2rgb(glm::vec3((time % (MPQ * 4)) * 360, 1, 1)), 1);
-        ubo = u;
+        result->color = glm::vec4(
+            hsv2rgb(glm::vec3((time % (MPQ * 4)) / MPQ / 5. * 360, .5, 1)), 1);
+        ubo = result;
         return sizeof(UniformBufferObject2);
     }
+
+    void freeUBO(void*& ubo) { delete (UniformBufferObject2*)ubo; }
 
     ~AnimToEDM() = default;
 };

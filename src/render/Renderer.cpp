@@ -100,7 +100,7 @@ void Renderer::initVulkan() {
                 VK_OBJECT_TYPE_FENCE, *(inFlightFences[i]->getFence()));
     }
 }
-// TODO put text shit elsewhere
+// TODO put text related shit elsewhere
 Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
     FT_GlyphSlot glyphSlot = face->glyph;
     FT_UInt i = FT_Get_Char_Index(face, character);
@@ -240,6 +240,10 @@ Renderer::~Renderer() {
         delete guiUniformBuffers[i];
     }
 
+    for (int i = 0; i < guiDescriptorSets.size(); i++)
+        delete guiDescriptorSets[i];
+    for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
+
     delete pool;
     delete guiPool;
 
@@ -267,6 +271,7 @@ Renderer::~Renderer() {
         delete inFlightFences[i];
     }
 
+    for (CommandBuffer* b : commandBuffers) delete b;
     delete commandPool;
 
     delete device;
@@ -313,27 +318,23 @@ void Renderer::createInstance() {
 
 void Renderer::pickPhysicalDevice() {
     uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(*(instance->getInstance()), &deviceCount,
-                               nullptr);
+    vkEnumeratePhysicalDevices(*(instance->getInstance()), &deviceCount, NULL);
 
-    if (deviceCount == 0) {
+    if (deviceCount == 0)
         throw std::runtime_error("failed to find GPUs with Vulkan support!");
-    }
 
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(*(instance->getInstance()), &deviceCount,
                                devices.data());
 
-    for (const auto& device : devices) {
+    for (const auto& device : devices)
         if (isDeviceSuitable(device)) {
             physicalDevice = device;
             break;
         }
-    }
 
-    if (physicalDevice == VK_NULL_HANDLE) {
+    if (physicalDevice == VK_NULL_HANDLE)
         throw std::runtime_error("failed to find a suitable GPU!");
-    }
 }
 
 void Renderer::createGraphicsPipeline() {
@@ -406,9 +407,9 @@ void Renderer::createGuiPipeline() {
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     guiShaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
-    auto vertShaderCode = readFile("bin/vert_gui.spv");
+    auto vertShaderCode = readFile(guiVertShader);
     auto geomShaderCode = readFile("bin/geom.spv");
-    auto fragShaderCode = readFile("bin/frag.spv");
+    auto fragShaderCode = readFile(guiFragShader);
 
     Shader* vertShader =
         new Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
@@ -641,7 +642,7 @@ void Renderer::createUniformBuffers() {
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
         guiUniformBuffers.push_back(
-            new Buffer(&physicalDevice, device, bufferSize,
+            new Buffer(&physicalDevice, device, guiUBOSize,
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
@@ -662,10 +663,10 @@ void Renderer::updateDescriptorSet(ShaderDescriptorSet* descriptor,
 
     descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 0,
                              VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo,
-                             nullptr);
+                             NULL);
 
     descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
-                             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nullptr,
+                             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NULL,
                              imageInfo);
 
     delete imageInfo;
@@ -697,6 +698,36 @@ void Renderer::createDescriptorSets() {
         }
         j += MAX_FRAMES_IN_FLIGHT;
     }
+}
+
+void Renderer::loadGuiShaders(std::string vShader, std::string fShader,
+                              VkDeviceSize guiUBOSize) {
+    this->guiUBOSize = guiUBOSize;
+    if (!vShader.empty()) this->guiVertShader = vShader;
+    if (!fShader.empty()) this->guiFragShader = fShader;
+
+    device->wait();
+    for (int i = 0; i < guiDescriptorSets.size(); i++)
+        delete guiDescriptorSets[i];
+    guiDescriptorSets.clear();
+    for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
+    descriptorSets.clear();
+    delete pool;
+    delete guiPool;
+
+    uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * this->textures.size();
+    std::vector<VkDescriptorType> types(type_sz);
+    for (size_t i = 0; i < textures.size(); i++) {
+        types[2 * i] = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        types[2 * i + 1] = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    }
+    VkDescriptorType* tp = types.data();
+
+    pool = new ShaderDescriptorPool(device, tp, type_sz);
+    guiPool = new ShaderDescriptorPool(device, tp, type_sz);
+    createDescriptorSets();
+
+    recreateSwapchain();
 }
 
 void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
@@ -846,6 +877,7 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     memcpy(data2, p, sz);
     vkUnmapMemory(*(device->getDevice()),
                   *(guiUniformBuffers[currentImage]->getMemory()->getMemory()));
+    game->freeUBO(p);
 }
 
 void Renderer::drawFrame() {
@@ -931,6 +963,8 @@ bool Renderer::isDeviceSuitable(VkPhysicalDevice device) {
 
     VkPhysicalDeviceFeatures supportedFeatures;
     vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
+    for (auto entry : families) delete entry.second.properties;
 
     return families.size() == familyPredicates.size() && extensionsSupported &&
            swapChainAdequate && supportedFeatures.samplerAnisotropy &&

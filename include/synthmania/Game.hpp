@@ -47,6 +47,7 @@ class Game {
     Window *getWindow();
 
     virtual size_t updateUBO(void *&ubo);
+    virtual void freeUBO(void *&ubo);
 
     virtual void addGui(Gui *gui);
     virtual void addEntity(Entity *entity);

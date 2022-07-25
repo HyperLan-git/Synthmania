@@ -54,7 +54,14 @@ void AudioPluginHandler::update(int64_t time) {
 
 SimplePluginHost* AudioPluginHandler::getHost() { return host; }
 
-AudioPluginHandler::~AudioPluginHandler() { delete host; }
+AudioPluginHandler::~AudioPluginHandler() {
+    host->stop();
+    std::cout << "hey" << std::endl;
+    gui_thread.join();
+    std::cout << "hey2" << std::endl;
+    synth_thread.join();
+    delete host;
+}
 
 int synthThread(void* arg) {
     try {
@@ -80,23 +87,30 @@ int synthThread(void* arg) {
             source->play();
             int proc = source->getProcessedBuffers();
             while (proc--) {
-                AudioBuffer* b = source->unqueueBuffers(1);
+                ALuint* id = source->unqueueBuffers(1);
+                AudioBuffer* b;
+                for (int i = 0; i < params->bufferSize; i++)
+                    if (buffers[i].getBuffer() == *id) {
+                        b = buffers + i;
+                        break;
+                    }
                 const float** channels = host->update();
+                if (channels == NULL) break;
                 for (int j = 0; j < params->bufferSize; j++) {
                     buf[j] = channels[j % 2][j] * 32767;  // LEFT / RIGHT
                 }
                 b->write(AL_FORMAT_STEREO16, buf,
                          params->bufferSize * sizeof(short), sampleRate);
                 source->queueBuffer(b);
+                delete[] id;
             }
         }
-        host->stop();
         delete params;
         delete[] buffers;
-        delete source;
     } catch (std::exception e) {
         std::cerr << e.what() << std::endl;
     }
+    std::cout << "finish2" << std::endl;
     return 0;
 }
 int guiThread(void* arg) {
@@ -111,6 +125,7 @@ int guiThread(void* arg) {
             errored = true;
         }
     } while (errored);
+    std::cout << "finish" << std::endl;
     return 0;
 }
 #endif

@@ -102,9 +102,9 @@ Swapchain::~Swapchain() {
 
     delete renderPass;
 
-    for (auto imageView : imageViews) {
-        delete imageView;
-    }
+    delete[] images[0]->getImage();
+    for (auto img : images) delete img;
+    for (auto imageView : imageViews) delete imageView;
 
     vkDestroySwapchainKHR(*(device->getDevice()), *swapchain, nullptr);
     delete swapchain;

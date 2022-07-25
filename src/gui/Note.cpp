@@ -60,20 +60,6 @@ Note::Note(const char* name, int64_t time, unsigned char pitch,
     this->pitch = pitch;
 }
 
-ShaderData* Note::getShaderData() const {
-    ShaderData* data = new ShaderData();
-    GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
-    glm::vec3 p = glm::vec3(graphicalPosition, 0);
-    p += position;
-    edata->pos = p;
-    edata->rot = rotation;
-    edata->size = size;
-    edata->color = color;
-    data->data = edata;
-    data->size = sizeof(GuiData);
-    return data;
-}
-
 void Note::setStatus(NoteStatus status) {
     this->status = status;
     switch (status) {
@@ -81,12 +67,15 @@ void Note::setStatus(NoteStatus status) {
             color = {1, 1, 1, 1};
             break;
         case HIT:
+            negate = 1;
             color = {.1, .5, .1, ALPHA_HIT};
             break;
         case FINISHED:
+            negate = 1;
             color = {0, 1, 0, ALPHA_HIT};
             break;
         default:
+            negate = 1;
             color = {1, 0, 0, ALPHA_HIT};
     }
 }

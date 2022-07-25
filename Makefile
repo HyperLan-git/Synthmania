@@ -52,7 +52,11 @@ MODULEDIR = module
 Synthmania: shader $(VSTLIB)
 	make $(OBJ)
 #	-rdynamic
+ifeq ($(OS),Windows_NT)
 	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
+else
+	g++ $(CFLAGS) -rdynamic -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
+endif
 
 $(OBJDIR)/%.o: $(SRCFOLDER)/%.cpp
 	@mkdir -p '$(@D)'
@@ -68,8 +72,8 @@ module: $(MODULEDIR)/$(MOD)
 ifndef MOD
 	$(error Try again with the mod name : make module MOD=<modname>)
 else
-	g++ $(CFLAGS) -fPIC -shared -rdynamic $(shell find $(MODULEDIR) -name '*.cpp') -I $(MODULEDIR) \
-			$(LDFLAGS) $(VSTFLAGS) -o bin/$(MOD).so
+	g++ $(CFLAGS) -fPIC -shared -rdynamic $(shell find $(MODULEDIR)/$(MOD) -name '*.cpp') -I $(MODULEDIR)/$(MOD) \
+			$(LDFLAGS) $(VSTFLAGS) $(DEBUG) -o bin/$(MOD).so
 endif
 
 $(MODULEDIR)/$(MOD):
@@ -94,6 +98,7 @@ vst: $(VSTLIB)
 	g++ $(CFLAGS) -o bin/VstTest $(VSTSRC) $(VSTOBJ) $(VSTLIB) $(VSTFLAGS) $(LDFLAGS) -DNDEBUG
 
 shader:
+	glslc shader/edm.vert -o bin/vert_edm.spv
 	glslc shader/gui.vert -o bin/vert_gui.spv
 	glslc shader/def.vert -o bin/vert.spv
 	glslc shader/def.geom -o bin/geom.spv
