@@ -128,7 +128,7 @@ Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
     vkGetImageSubresourceLayout(*(device->getDevice()), *(image->getImage()),
                                 &sub, &layout);
     uint8_t buffer[layout.rowPitch * h] = {0};
-    for (int y = 0; y < h; ++y) {
+    for (int y = 0; y < h; ++y)
         for (int x = 0; x < w; ++x) {
             if (y == 0 || y == h - 1 || x == 0 || x == w - 1) {
                 buffer[(x + y * layout.rowPitch / 4) * 4 + 3] = 0;
@@ -138,7 +138,6 @@ Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
                 bitmap[(x - 1) + (y - 1) * (glyphSlot->bitmap.pitch)];
             buffer[(x + y * layout.rowPitch / 4) * 4 + 3] = value;
         }
-    }
 
     transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -742,8 +741,8 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->beginRenderPass(swapchain, imageIndex, clearValues.data(),
                                    2);
 
-    Model* lastModel = nullptr;
-    ImageView* lastTexture = nullptr;
+    Model* lastModel = NULL;
+    ImageView* lastTexture = NULL;
     std::vector<Entity*> entities = game->getEntities();
     if (!entities.empty()) {
         commandBuffer->bindPipeline(graphicsPipeline);
@@ -858,13 +857,16 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     void* p = &ubo;
 
     void *data = NULL, *data2 = NULL;
-    vkMapMemory(*(device->getDevice()),
-                *(uniformBuffers[currentImage]->getMemory()->getMemory()), 0,
-                sizeof(ubo), 0, &data);
-    memcpy(data, p, sizeof(ubo));
-    vkUnmapMemory(*(device->getDevice()),
-                  *(uniformBuffers[currentImage]->getMemory()->getMemory()));
-
+    if (!game->getEntities().empty()) {
+        vkMapMemory(*(device->getDevice()),
+                    *(uniformBuffers[currentImage]->getMemory()->getMemory()),
+                    0, sizeof(ubo), 0, &data);
+        memcpy(data, p, sizeof(ubo));
+        vkUnmapMemory(
+            *(device->getDevice()),
+            *(uniformBuffers[currentImage]->getMemory()->getMemory()));
+    }
+    if (game->getGuis().empty()) return;
     ubo.model = glm::mat4(1.f);
     ubo.view = glm::mat4(1.f);
     ubo.proj = glm::orthoLH_ZO<float>(-ratio, ratio, -1, 1, 0.f, 1.f);
@@ -877,7 +879,18 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     memcpy(data2, p, sz);
     vkUnmapMemory(*(device->getDevice()),
                   *(guiUniformBuffers[currentImage]->getMemory()->getMemory()));
-    game->freeUBO(p);
+    if (p != &ubo) game->freeUBO(p);
+}
+
+glm::vec2 Renderer::getVirtPos(glm::vec2 realPos) {
+    float ratio =
+        swapchain->getExtent().width / (float)swapchain->getExtent().height;
+    glm::vec2 result = realPos;
+    result.y /= swapchain->getExtent().height / 2.f;
+    result.x /= swapchain->getExtent().width / 2.f / ratio;
+    result.x -= ratio;
+    result.y -= 1;
+    return result;
 }
 
 void Renderer::drawFrame() {

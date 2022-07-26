@@ -5,6 +5,8 @@ class GraphicalEffectHandler;
 #include "GraphicalEffect.hpp"
 #include "Synthmania.hpp"
 
+// TODO rename this to modchart handler or some shit
+
 /**
  * @brief Returns your Graphics handler for this mod
  */

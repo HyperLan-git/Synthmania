@@ -36,7 +36,7 @@ class Entity {
 
     virtual ShaderData* getShaderData() const;
 
-    ~Entity();
+    virtual ~Entity();
 
    protected:
     Model* model;

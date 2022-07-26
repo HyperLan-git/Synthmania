@@ -56,9 +56,7 @@ SimplePluginHost* AudioPluginHandler::getHost() { return host; }
 
 AudioPluginHandler::~AudioPluginHandler() {
     host->stop();
-    std::cout << "hey" << std::endl;
     gui_thread.join();
-    std::cout << "hey2" << std::endl;
     synth_thread.join();
     delete host;
 }
@@ -110,7 +108,6 @@ int synthThread(void* arg) {
     } catch (std::exception e) {
         std::cerr << e.what() << std::endl;
     }
-    std::cout << "finish2" << std::endl;
     return 0;
 }
 int guiThread(void* arg) {
@@ -125,7 +122,6 @@ int guiThread(void* arg) {
             errored = true;
         }
     } while (errored);
-    std::cout << "finish" << std::endl;
     return 0;
 }
 #endif

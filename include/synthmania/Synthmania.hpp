@@ -51,9 +51,9 @@ std::vector<Gui *> printShakingString(std::string text, Renderer *renderer,
 
 class Synthmania : public Game {
    public:
-    Synthmania(std::string songfolder, std::string skin);
+    Synthmania(std::string skin);
 
-    virtual void init();
+    void loadSong(std::string songFolder);
 
     virtual void update();
 
@@ -71,6 +71,8 @@ class Synthmania : public Game {
 
     std::string getSongFolder();
 
+    virtual void resetScene();
+
     virtual size_t updateUBO(void *&ubo);
 
     virtual void freeUBO(void *&ubo);
@@ -86,7 +88,7 @@ class Synthmania : public Game {
     MidiHandler *handler;
     AudioHandler *audio;
 #ifndef NOVST
-    AudioPluginHandler *plugin;
+    AudioPluginHandler *plugin = NULL;
 #endif
     TrackPartition partition;
     Chart chart;

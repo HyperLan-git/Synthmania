@@ -5,6 +5,10 @@ class Window;
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+
 #include "Instance.hpp"
 
 class Window {
@@ -26,7 +30,13 @@ class Window {
                            VkSurfaceKHR *surface);
 
     void setWindowUserPointer(void *pointer);
+
     void setKeycallback(GLFWkeyfun fun);
+    void setMousecallback(GLFWmousebuttonfun fun);
+
+    glm::vec2 getCursorPos();
+
+    bool mousePressed(int button = GLFW_MOUSE_BUTTON_LEFT);
 
     ~Window();
 

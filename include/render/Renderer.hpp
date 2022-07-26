@@ -113,6 +113,8 @@ class Renderer {
     void loadGuiShaders(std::string vShader, std::string fShader,
                         VkDeviceSize guiUBOSize);
 
+    glm::vec2 getVirtPos(glm::vec2 realPos);
+
     ~Renderer();
 
    private:

@@ -1,5 +1,7 @@
 {
     "missing": "missing.jpg",
+    "button": "button.png",
+    "button-pressed": "button-pressed.png",
     "partition": "partition.png",
     "judgement_line": "judgement.png",
     "precision": "precision.png",

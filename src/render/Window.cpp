@@ -2,12 +2,11 @@
 
 // This is the only time I will do that
 // I prefer having all header related stuff in headers
-#include "Synthmania.hpp"
+#include "Game.hpp"
 
 static void framebufferResizeCallback(GLFWwindow *window, int width,
                                       int height) {
-    Synthmania *game =
-        reinterpret_cast<Synthmania *>(glfwGetWindowUserPointer(window));
+    Game *game = reinterpret_cast<Game *>(glfwGetWindowUserPointer(window));
     game->getWindow()->onResize();
 }
 
@@ -49,3 +48,17 @@ void Window::setWindowUserPointer(void *pointer) {
 }
 
 void Window::setKeycallback(GLFWkeyfun fun) { glfwSetKeyCallback(window, fun); }
+
+void Window::setMousecallback(GLFWmousebuttonfun fun) {
+    glfwSetMouseButtonCallback(window, fun);
+}
+
+glm::vec2 Window::getCursorPos() {
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    return glm::vec2(x, y);
+}
+
+bool Window::mousePressed(int button) {
+    return glfwGetMouseButton(window, button);
+}

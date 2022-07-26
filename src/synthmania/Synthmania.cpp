@@ -1,23 +1,24 @@
 #include "Synthmania.hpp"
 // TODO fix the white half note being slightly misplaced to the right
 
-Synthmania::Synthmania(std::string song, std::string skin) {
-    this->songFolder = song;
+Synthmania::Synthmania(std::string skin) {
     this->skin = skin;
     handler = new MidiHandler();
     textures = readTextures(std::string(skin).append("/skin.json"));
     for (auto &elem : textures)
         elem.second = std::string(skin).append("/").append(elem.second);
     audio = new AudioHandler();
-    if (!autoPlay) keyFunction = Synthmania::keyCallback;
 }
 
-void Synthmania::init() {
+void Synthmania::loadSong(std::string songFolder) {
+    window->setKeycallback(Synthmania::keyCallback);
+    this->songFolder = songFolder;
     std::string json = songFolder;
     json.append("/sdata.json");
     chart = readChart(json.c_str());
     diff = chart.diffs[0];
     this->startTime = chart.offset;
+    // TODO could be in a function
     if (chart.animation.compare("None") != 0) {
         void *shared = loadShared(songFolder + "/" + chart.animation);
         char *e = NULL;  // TODO dlerror();
@@ -36,9 +37,7 @@ void Synthmania::init() {
         std::string v = this->mod->getVertShaderCode(),
                     f = this->mod->getFragShaderCode();
         VkDeviceSize UBOSize = this->mod->getUBOSize();
-        if (!v.empty() || !f.empty()) {
-            renderer->loadGuiShaders(v, f, UBOSize);
-        }
+        if (!v.empty() || !f.empty()) renderer->loadGuiShaders(v, f, UBOSize);
     }
     std::string path = songFolder;
     path.append("/");
@@ -55,9 +54,9 @@ void Synthmania::init() {
         new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
                   renderer->getDevice());
     std::vector<ImageView *> textures = renderer->getTextures();
-    renderer->models Entity *e =
+    Entity *la_creatura76 =
         new Entity(model, getTextureByName(textures, "room"), "Bob");
-    entities.push_back(e);
+    entities.push_back(la_creatura76);
     Gui *part = new Gui(getTextureByName(textures, "partition"), "partition"),
         *bg = new Gui(getTextureByName(textures, "partition"), "bg"),
         *key = new Gui(getTextureByName(textures, "sol_key"), "key"),
@@ -195,10 +194,16 @@ void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
     Synthmania *game = (Synthmania *)glfwGetWindowUserPointer(win);
     Window *window = game->getWindow();
     if (game == NULL || action != GLFW_PRESS) return;
+
+    if (key == GLFW_KEY_TAB) {
+        game->autoPlay = !game->autoPlay;
+        return;
+    }
     if (key == GLFW_KEY_RIGHT) {
         game->setTimeMicros(game->getCurrentTimeMicros() + 2000000);
         return;
     }
+    if (game->autoPlay) return;
     int k = 0;
     int keys[] = {GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_X, GLFW_KEY_D,
                   GLFW_KEY_C, GLFW_KEY_V, GLFW_KEY_G, GLFW_KEY_B,
@@ -207,7 +212,7 @@ void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
         if (keys[k] == key) break;
     }
     for (Note *note : game->notes) {
-        // This is osu for now
+        // This is ADOFAI for now
         if (  // note->getPitch() == k &&
             note->getStatus() == WAITING &&
             std::abs(note->getTime() - game->getCurrentTimeMicros()) <
@@ -297,18 +302,24 @@ void Synthmania::setTimeMicros(int64_t time) {
                                1000000.f);
 }
 
-#define instanceOf(type, ptr) (dynamic_cast<type *>(ptr) != NULL)
+void Synthmania::resetScene() {
+    Game::resetScene();
+    notes.clear();
+    if (mod != NULL) {
+        delete mod;
+        mod = NULL;
+    }
+}
 
 void Synthmania::update() {
     int64_t time_from_start = getCurrentTimeMicros();
     // std::cout << std::dec << time_from_start << " ";
-    if (autoPlay) {
-        for (Note *note : notes) {
+    if (autoPlay)
+        for (Note *note : notes)
             if (note->getTime() <= time_from_start) noteHit(note);
-        }
-    }
+
 #ifndef NOVST
-    plugin->update(time_from_start);
+    if (plugin != NULL) plugin->update(time_from_start);
 #endif
     std::vector<Gui *> toDestroy;
     for (Gui *g : guis) {

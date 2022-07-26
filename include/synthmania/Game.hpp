@@ -18,6 +18,7 @@ class Game;
 #include "Entity.hpp"
 #include "Gui.hpp"
 #include "JsonHandler.hpp"
+#include "Menu.hpp"
 #include "MidiHandler.hpp"
 #include "Precision.hpp"
 #include "Window.hpp"
@@ -28,7 +29,7 @@ class Game {
    public:
     Game();
 
-    virtual void init() = 0;  // Called after textures are loaded
+    void init();
 
     void run();
     virtual void update() = 0;
@@ -43,6 +44,9 @@ class Game {
 
     std::vector<Entity *> getEntities();
     std::vector<Gui *> getGuis();
+
+    virtual void resetScene();
+    virtual void loadMenu(std::string menu);
 
     Window *getWindow();
 
@@ -71,4 +75,8 @@ class Game {
 
     std::vector<Entity *> entities;
     std::vector<Gui *> guis;
+
+    // What will I serve you today sir ?
+    Menu *menu = NULL;
+    std::map<std::string, Menu *> menus;
 };

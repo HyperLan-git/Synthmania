@@ -1,5 +1,6 @@
 #include "Game.hpp"
 
+#include "MainMenu.hpp"
 #include "Renderer.hpp"
 
 Game::Game() {
@@ -13,15 +14,48 @@ Game::Game() {
     fontsToLoad.emplace("resources/fonts/Stupid.ttf", chars);
 }
 
-void Game::run() {
+void Game::init() {
     renderer->loadTextures(textures, fontsToLoad);
     window->setWindowUserPointer(this);
-    init();
-    if (keyFunction != NULL) window->setKeycallback(keyFunction);
+    this->menus.emplace("main", new MainMenu(this));
+}
+
+void Game::resetScene() {
+    if (menu == NULL)
+        for (Gui *g : guis) delete g;
+    guis.clear();
+    menu = NULL;
+    // TODO
+    for (Entity *e : entities) delete e;
+    entities.clear();
+    begTime = std::chrono::high_resolution_clock::now();
+    setTimeMicros(0);
+}
+
+void Game::loadMenu(std::string m) {
+    this->menu = this->menus[m];
+    menu->show();
+}
+
+void Game::run() {
     setTimeMicros(-this->startTime);
     while (!window->shouldClose()) {
         glfwPollEvents();
+        glm::vec2 pos = renderer->getVirtPos(window->getCursorPos());
+
+        if (menu != NULL) {
+            bool pressed = window->mousePressed();
+            for (Button *b : menu->getButtons())
+                if (!pressed)
+                    b->onReleased();
+                else if (b->isInside(pos) && pressed) {
+                    b->onPressed();
+                    menu->onPressed(b);
+                    break;
+                }
+        }
         update();
+        if (menu != NULL) menu->update(getCurrentTimeMicros());
         renderer->render();
     }
 }
@@ -60,11 +94,14 @@ void Game::freeUBO(void *&ubo) {}
 
 void Game::addEntity(Entity *entity) { entities.push_back(entity); }
 
+float prevZ = 0.9999f;
+
 void Game::addGui(Gui *gui) {
     if (guis.empty()) {
         gui->setZ(0.9999f);
+        prevZ = 0.9999f;
     } else {
-        gui->setZ((*--guis.end())->getPosition().z - 0.00001f);
+        gui->setZ(prevZ -= 0.00001f);
     }
     this->guis.push_back(gui);
 }
@@ -73,8 +110,9 @@ std::vector<Entity *> Game::getEntities() { return entities; }
 std::vector<Gui *> Game::getGuis() { return guis; }
 
 Game::~Game() {
-    for (Entity *e : entities) delete e;
-    for (Gui *g : guis) delete g;
+    resetScene();
+
+    for (auto entry : menus) delete entry.second;
 
     delete renderer;
     delete window;
