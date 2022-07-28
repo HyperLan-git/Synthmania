@@ -1,7 +1,6 @@
 #version 450
 
 layout(binding = 0) uniform UniformBufferObject {
-    mat4 model;
     mat4 view;
     mat4 proj;
 } ubo;
@@ -33,7 +32,7 @@ void main() {
     v.x *= size.x;
     v.y *= size.y;
     v.xyz += pos;
-    v = ubo.proj * ubo.view * ubo.model * v;
+    v = ubo.proj * ubo.view * v;
     //v.x = v.x/2;
     //v.y = v.y/2;
     gl_Position = v;

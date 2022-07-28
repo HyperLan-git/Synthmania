@@ -26,15 +26,14 @@ void Renderer::initVulkan() {
      *(instance->getInstance()));*/
     setName(functions, device, "mainSurface", VK_OBJECT_TYPE_SURFACE_KHR,
             *surface);
-    setName(functions, device, "Device", VK_OBJECT_TYPE_DEVICE,
-            *(device->getDevice()));
     setName(functions, device, "secondaryQueue", VK_OBJECT_TYPE_QUEUE,
             *(device->getQueue("secondary")->getQueue()));
     setName(functions, device, "mainQueue", VK_OBJECT_TYPE_QUEUE,
             *(device->getQueue("main")->getQueue()));
-    swapchain = new Swapchain(device, &physicalDevice, window, surface);
-    setName(functions, device, "Swapchain", VK_OBJECT_TYPE_SWAPCHAIN_KHR,
-            *(swapchain->getSwapchain()));
+    commandPool = new CommandPool(physicalDevice, device);
+    setName(functions, device, "Command Pool", VK_OBJECT_TYPE_COMMAND_POOL,
+            *(commandPool->getPool()));
+    createSwapchain();
     int i = 0;
     for (Framebuffer* f : swapchain->getFramebuffers()) {
         std::string name = "Framebuffer_";
@@ -48,14 +47,11 @@ void Renderer::initVulkan() {
     createGraphicsPipeline();
 
     createGuiPipeline();
-    commandPool = new CommandPool(physicalDevice, device);
-    setName(functions, device, "Command Pool", VK_OBJECT_TYPE_COMMAND_POOL,
-            *(commandPool->getPool()));
     guiModel = new Model({{{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
                           {{0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
                           {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}},
                           {{-0.5f, 0.5f, 0.0f}, {0.0f, 1.0f}}},
-                         {3, 0, 2, 0, 1, 2}, &physicalDevice, device);
+                         {0, 2, 3, 0, 1, 2}, &physicalDevice, device);
     setName(functions, device, "Gui index buffer", VK_OBJECT_TYPE_BUFFER,
             *(guiModel->toIndicesBuffer()->getBuffer()));
     setName(functions, device, "Gui vertex buffer", VK_OBJECT_TYPE_BUFFER,
@@ -100,6 +96,55 @@ void Renderer::initVulkan() {
                 VK_OBJECT_TYPE_FENCE, *(inFlightFences[i]->getFence()));
     }
 }
+
+void Renderer::createSwapchain() {
+    DebugFunc functions = getDebugFunctions(instance);
+    swapchain = new Swapchain(device, &physicalDevice, window, surface);
+    setName(functions, device, "Swapchain", VK_OBJECT_TYPE_SWAPCHAIN_KHR,
+            *(swapchain->getSwapchain()));
+    uint32_t w, h;
+    window->getFramebufferSize(&w, &h);
+    w *= 1.5;
+    h *= 1.5;
+    renderImage = new Image(
+        &physicalDevice, device, w, h, VK_FORMAT_R8G8B8A8_SRGB,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    renderImageView =
+        new ImageView(device, renderImage, VK_FORMAT_R8G8B8A8_SRGB,
+                      VK_IMAGE_ASPECT_COLOR_BIT, "render");
+    setName(functions, device, "render image", VK_OBJECT_TYPE_IMAGE,
+            *(renderImage->getImage()));
+    setName(functions, device, "render image view", VK_OBJECT_TYPE_IMAGE_VIEW,
+            *(renderImageView->getView()));
+    VkFormat depthFormat = findDepthFormat(physicalDevice);
+
+    depthImage = new Image(&physicalDevice, device, w, h, depthFormat,
+                           VK_IMAGE_TILING_OPTIMAL,
+                           VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    depthImageView = new ImageView(device, depthImage, depthFormat,
+                                   VK_IMAGE_ASPECT_DEPTH_BIT, "depth image");
+    setName(functions, device, "depth image", VK_OBJECT_TYPE_IMAGE,
+            *(depthImage->getImage()));
+    setName(functions, device, "depth image view", VK_OBJECT_TYPE_IMAGE_VIEW,
+            *(depthImageView->getView()));
+
+    renderPass =
+        new RenderPass(&physicalDevice, device, VK_FORMAT_R8G8B8A8_SRGB);
+    setName(functions, device, "render pass", VK_OBJECT_TYPE_RENDER_PASS,
+            *(renderPass->getPass()));
+
+    framebuffer = new Framebuffer(device, renderPass, {w, h},
+                                  {renderImageView, depthImageView});
+    setName(functions, device, "framebuffer", VK_OBJECT_TYPE_FRAMEBUFFER,
+            *(framebuffer->getFramebuffer()));
+
+    transitionImageLayout(renderImage, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+}
+
 // TODO put text related shit elsewhere
 Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
     FT_GlyphSlot glyphSlot = face->glyph;
@@ -172,6 +217,7 @@ void Renderer::loadFonts(
             chr.width = f->glyph->bitmap.width + 2;
             chr.height = f->glyph->bitmap.rows + 2;
             chr.advance = f->glyph->linearHoriAdvance / 65536;
+            chr.vAdvance = f->glyph->linearVertAdvance / 65536;
             chr.offsetTop = f->glyph->bitmap_top;
             chr.offsetLeft = f->glyph->bitmap_left;
             font.characters.emplace(c, chr);
@@ -189,7 +235,7 @@ Character Renderer::getCharacter(std::string fontName, unsigned long code) {
         if (fontName.compare(f.name) != 0) continue;
         return f.characters[code];
     }
-    return Character({0, 0, 0, 0, 0, 0, NULL});
+    return Character({0, 0, 0, 0, 0, 0, 0, NULL});
 }
 
 void Renderer::loadTextures(
@@ -218,6 +264,8 @@ VkPhysicalDevice* Renderer::getPhysicalDevice() { return &physicalDevice; }
 Device* Renderer::getDevice() { return device; }
 
 void Renderer::setStartTime(double start) { this->startTime = start; }
+
+void Renderer::addModel(Model* model) { models.push_back(model); }
 
 std::vector<ImageView*> Renderer::getTextures() { return textures; }
 
@@ -283,13 +331,19 @@ void Renderer::recreateSwapchain() {
     uint32_t width = 0, height = 0;
     window->getFramebufferSize(&width, &height);
     while (width == 0 || height == 0) {
-        window->getFramebufferSize(&width, &height);
         glfwWaitEvents();
+        window->getFramebufferSize(&width, &height);
     }
 
     device->wait();
 
     delete swapchain;
+    delete renderImageView;
+    delete renderImage;
+    delete depthImage;
+    delete depthImageView;
+    delete renderPass;
+    delete framebuffer;
     delete graphicsPipeline;
     delete graphicsPipelineLayout;
     delete guiPipeline;
@@ -298,14 +352,14 @@ void Renderer::recreateSwapchain() {
     delete shaderLayout;
     delete guiShaderLayout;
 
-    swapchain = new Swapchain(device, &physicalDevice, window, surface);
+    createSwapchain();
     createGraphicsPipeline();
     createGuiPipeline();
 }
 
 void Renderer::createInstance() {
     uint32_t ver = VK_MAKE_VERSION(1, 0, 0);
-    const char *appName = "Synthmania", *engineName = "No Engine";
+    const char *appName = "Synthmania", *engineName = "Rebind";
     if (enableValidationLayers)
         instance =
             new Instance(appName, ver, engineName, ver, VK_API_VERSION_1_0,
@@ -350,9 +404,9 @@ void Renderer::createGraphicsPipeline() {
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     shaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
-    auto vertShaderCode = readFile("bin/vert.spv");
-    auto geomShaderCode = readFile("bin/geom.spv");
-    auto fragShaderCode = readFile("bin/frag.spv");
+    auto vertShaderCode = readFile("bin/def.vert.spv");
+    auto geomShaderCode = readFile("bin/def.geom.spv");
+    auto fragShaderCode = readFile("bin/def.frag.spv");
 
     Shader* vertShader =
         new Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
@@ -368,8 +422,8 @@ void Renderer::createGraphicsPipeline() {
     setName(functions, device, "3D fragment shader",
             VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader->getModule()));
     VkPushConstantRange* range = new VkPushConstantRange();
-    range->offset = 0;
     range->size = sizeof(EntityData);
+    range->offset = 0;
     range->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
@@ -407,7 +461,7 @@ void Renderer::createGuiPipeline() {
     guiShaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
     auto vertShaderCode = readFile(guiVertShader);
-    auto geomShaderCode = readFile("bin/geom.spv");
+    auto geomShaderCode = readFile(guiGeomShader);
     auto fragShaderCode = readFile(guiFragShader);
 
     Shader* vertShader =
@@ -429,10 +483,9 @@ void Renderer::createGuiPipeline() {
     range->size = sizeof(GuiData);
     range->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-    VkPipelineShaderStageCreateInfo shaderStages[] = {
-        vertShader->toPipeline(),
-        // geomShader->toPipeline(),
-        fragShader->toPipeline()};
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
+                                                      geomShader->toPipeline(),
+                                                      fragShader->toPipeline()};
 
     guiPipelineLayout = new PipelineLayout(device, guiShaderLayout, 1, range);
     setName(functions, device, "2D pipeline layout",
@@ -440,7 +493,7 @@ void Renderer::createGuiPipeline() {
 
     guiPipeline =
         new Pipeline(device, guiPipelineLayout, swapchain->getRenderPass(),
-                     shaderStages, 2, swapchain->getExtent());
+                     shaderStages, 3, swapchain->getExtent());
     setName(functions, device, "2D pipeline", VK_OBJECT_TYPE_PIPELINE,
             *(guiPipeline->getPipeline()));
     delete range;
@@ -462,13 +515,11 @@ void Renderer::createLogicalDevice() {
                                                   &presentSupport);
              return presentSupport;
          }}};
-    if (enableValidationLayers) {
-        device = new Device(&physicalDevice, deviceExtensions, familyPredicates,
-                            validationLayers);
-    } else {
-        device =
-            new Device(&physicalDevice, deviceExtensions, familyPredicates);
-    }
+    device = new Device(&physicalDevice, deviceExtensions, familyPredicates,
+                        (enableValidationLayers ? validationLayers
+                                                : std::vector<const char*>()));
+    setName(getDebugFunctions(instance), device, "Device",
+            VK_OBJECT_TYPE_DEVICE, *(device->getDevice()));
 }
 
 bool Renderer::hasStencilComponent(VkFormat format) {
@@ -699,10 +750,11 @@ void Renderer::createDescriptorSets() {
     }
 }
 
-void Renderer::loadGuiShaders(std::string vShader, std::string fShader,
-                              VkDeviceSize guiUBOSize) {
+void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
+                              std::string fShader, VkDeviceSize guiUBOSize) {
     this->guiUBOSize = guiUBOSize;
     if (!vShader.empty()) this->guiVertShader = vShader;
+    if (!gShader.empty()) this->guiGeomShader = gShader;
     if (!fShader.empty()) this->guiFragShader = fShader;
 
     device->wait();
@@ -730,16 +782,18 @@ void Renderer::loadGuiShaders(std::string vShader, std::string fShader,
 }
 
 void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
-                                   uint32_t imageIndex) {
+                                   RenderPass* renderPass,
+                                   Framebuffer* framebuffer,
+                                   VkExtent2D extent) {
     commandBuffer->reset();
     commandBuffer->begin();
 
     std::vector<VkClearValue> clearValues = {VkClearValue(), VkClearValue()};
-    clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+    clearValues[0].color = {{1.0f, 1.0f, 1.0f, 0.0f}};
     clearValues[1].depthStencil = {1.0f, 0};
 
-    commandBuffer->beginRenderPass(swapchain, imageIndex, clearValues.data(),
-                                   2);
+    commandBuffer->beginRenderPass(renderPass, framebuffer, extent,
+                                   clearValues.data(), 2);
 
     Model* lastModel = NULL;
     ImageView* lastTexture = NULL;
@@ -796,6 +850,7 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
         if (texture == NULL) texture = getTextureByName(textures, "missing");
         if (lastTexture != texture) {
             size_t idx = 0;
+            // TODO I should have a map instead
             for (idx = 0; idx < textures.size(); idx++)
                 if (textures[idx] == texture) break;
             if (idx >= textures.size()) {
@@ -847,12 +902,11 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     float ratio =
         swapchain->getExtent().width / (float)swapchain->getExtent().height;
     UniformBufferObject ubo{};
-    ubo.model = glm::mat4(1.0f);
     ubo.view = glm::lookAt(glm::vec3(x, y, 1.0f), glm::vec3(x, y, 0.0f),
                            glm::vec3(0.0f, -1.0f, 0.0f));
     ubo.proj = glm::perspective(glm::radians(90.0f),  // MASTER FOV
                                 ratio, 0.1f, 10.0f);
-    ubo.proj[1][1] *= -1;  // Invert y axis cause I like my y axis positive up
+    ubo.proj[1][1] *= -1;  // Invert y axis lul
 
     void* p = &ubo;
 
@@ -867,7 +921,6 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
             *(uniformBuffers[currentImage]->getMemory()->getMemory()));
     }
     if (game->getGuis().empty()) return;
-    ubo.model = glm::mat4(1.f);
     ubo.view = glm::mat4(1.f);
     ubo.proj = glm::orthoLH_ZO<float>(-ratio, ratio, -1, 1, 0.f, 1.f);
 
@@ -912,7 +965,9 @@ void Renderer::drawFrame() {
 
     inFlightFences[currentFrame]->reset();
 
-    recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+    recordCommandBuffer(
+        commandBuffers[currentFrame], swapchain->getRenderPass(),
+        swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());
 
     commandBuffers[currentFrame]->submit(
         device->getQueue("main"), imageAvailableSemaphores[currentFrame],
@@ -1034,6 +1089,25 @@ std::vector<Text> Renderer::createText(std::string text, std::string fontName,
         t.size = {(double)c.width / conv, (double)c.height / conv};
         result.push_back(t);
         start.x += (c.advance) / conv;
+    }
+    return result;
+}
+
+std::vector<Text> Renderer::createVerticalText(std::string text,
+                                               std::string fontName,
+                                               double size, glm::vec2 start) {
+    std::vector<Text> result;
+    double conv = 64. * FONT_SIZE / size;
+    for (int i = 0; i < text.size(); i++) {
+        Character c = getCharacter(fontName, (unsigned long)text[i]);
+        Text t;
+        t.character = c;
+        t.pos = {
+            start.x + (double)c.width / conv / 2 - c.offsetLeft / conv * 0.7,
+            start.y + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7};
+        t.size = {(double)c.width / conv, (double)c.height / conv};
+        result.push_back(t);
+        start.y += (c.vAdvance) / conv;
     }
     return result;
 }

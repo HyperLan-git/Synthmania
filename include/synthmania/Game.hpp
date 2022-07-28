@@ -15,6 +15,7 @@ class Game;
 #include <iostream>
 #include <stdexcept>
 
+#include "AudioHandler.hpp"
 #include "Entity.hpp"
 #include "Gui.hpp"
 #include "JsonHandler.hpp"
@@ -56,6 +57,8 @@ class Game {
     virtual void addGui(Gui *gui);
     virtual void addEntity(Entity *entity);
 
+    void playSound(std::string sound);
+
     int64_t getCurrentTimeMicros();
     virtual void setTimeMicros(int64_t time);
 
@@ -65,6 +68,8 @@ class Game {
     GLFWkeyfun keyFunction = NULL;
     Window *window;
     Renderer *renderer;
+
+    AudioHandler *audio;
 
     std::chrono::_V2::system_clock::time_point begTime =
         std::chrono::high_resolution_clock::now();

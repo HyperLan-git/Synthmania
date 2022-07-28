@@ -1,7 +1,6 @@
 #include "GraphicalEffectHandler.hpp"
 
 struct UniformBufferObject2 {
-    alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
     alignas(16) glm::vec4 color;
@@ -64,7 +63,13 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
         return (game->getSongFolder() + "/v_shader.spv");
     }
 
-    const std::string getFragShaderCode() override { return std::string(); }
+    const std::string getGeomShaderCode() override {
+        return (game->getSongFolder() + "/g_shader.spv");
+    }
+
+    const std::string getFragShaderCode() override {
+        return (game->getSongFolder() + "/f_shader.spv");
+    }
 
     virtual VkDeviceSize getUBOSize() { return sizeof(UniformBufferObject2); }
 
@@ -87,7 +92,6 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
             (float)(progress * (progress - 1) * .1f) * (odd ? 1 : -1),
             glm::vec3(0, 0, 1));
         u->view[0][0] = u->view[1][1] = zoom;
-        result->model = u->model;
         result->view = u->view;
         result->view = u->view;
         result->proj = u->proj;

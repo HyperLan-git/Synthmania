@@ -1,7 +1,6 @@
 #version 450
 
 layout(binding = 0) uniform UniformBufferObject {
-    mat4 model;
     mat4 view;
     mat4 proj;
 } ubo;
@@ -36,12 +35,12 @@ void main() {
     vec4 rot = constants.rotation,
         rot2 = vec4(-rot.xyz, rot.w);
     v = vec4(inPosition.x, inPosition.y, inPosition.z, 0.0);
-    size = vec3(1, 1, 1);
+    size = vec3(0);
     v.xyz *= size;
     v = quat_mult(quat_mult(rot, v), rot2);
     v.xyz += pos;
     v.w = 1;
-    v = ubo.proj * ubo.view * ubo.model * v;
+    v = ubo.proj * ubo.view * v;
     gl_Position = v;
     fragTexCoord = inTexCoord;
 }

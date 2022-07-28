@@ -79,15 +79,31 @@ int synthThread(void* arg) {
                              params->bufferSize * sizeof(short), sampleRate);
         }
         source->queueBuffers(buffers, params->buffers);
+        int err;
+        if ((err = alGetError()) != AL_NO_ERROR)
+            std::cerr << "OpenAL error when queuing buffers:" << err
+                      << std::endl;
         handler->addSource(source);
         source->play();
+        if ((err = alGetError()) != AL_NO_ERROR)
+            std::cerr << "OpenAL error when playing source:" << err
+                      << std::endl;
+        AudioBuffer* b;
         while (host->isActive()) {  // hehe *burp*
             source->play();
+            if ((err = alGetError()) != AL_NO_ERROR)
+                std::cerr << "OpenAL error when playing source:" << err
+                          << std::endl;
             int proc = source->getProcessedBuffers();
+            if ((err = alGetError()) != AL_NO_ERROR)
+                std::cerr << "OpenAL error when getting processed buffers:"
+                          << err << std::endl;
             while (proc--) {
                 ALuint* id = source->unqueueBuffers(1);
-                AudioBuffer* b;
-                for (int i = 0; i < params->bufferSize; i++)
+                if ((err = alGetError()) != AL_NO_ERROR)
+                    std::cerr << "OpenAL error when unqueuing buffers:" << err
+                              << std::endl;
+                for (int i = 0; i < params->buffers; i++)
                     if (buffers[i].getBuffer() == *id) {
                         b = buffers + i;
                         break;
@@ -99,12 +115,22 @@ int synthThread(void* arg) {
                 }
                 b->write(AL_FORMAT_STEREO16, buf,
                          params->bufferSize * sizeof(short), sampleRate);
+                if ((err = alGetError()) != AL_NO_ERROR)
+                    std::cerr << "OpenAL error when writing to buffers:" << err
+                              << std::endl;
                 source->queueBuffer(b);
+                if ((err = alGetError()) != AL_NO_ERROR)
+                    std::cerr << "OpenAL error when queuing buffers:" << err
+                              << std::endl;
                 delete[] id;
             }
         }
-        delete params;
+        // TODO I guess I can't beat every leak...
+        //  ALuint id = b->getBuffer();
+        //  if (alIsBuffer(id)) alDeleteBuffers(1, &id);
+        for (int i = 0; i < params->buffers; i++) buffers[i].setBuffer(0);
         delete[] buffers;
+        delete params;
     } catch (std::exception e) {
         std::cerr << e.what() << std::endl;
     }

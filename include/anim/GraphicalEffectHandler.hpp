@@ -38,6 +38,15 @@ class GraphicalEffectHandler {
     virtual const std::string getVertShaderCode() = 0;
 
     /**
+     * @brief Gets the geometry shader code (if you don't know how to write
+     * glsl then learn right now or else)
+     *
+     * @return A string containing path to a valid spv file else an empty string
+     * if you don't know what you're doing (just like me !)
+     */
+    virtual const std::string getGeomShaderCode() = 0;
+
+    /**
      * @brief Gets the fragment shader code (if you don't know how to write
      * glsl then learn right now or else)
      *

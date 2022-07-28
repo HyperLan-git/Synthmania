@@ -68,7 +68,7 @@ class Renderer;
 // Font texture sizes
 const unsigned long FONT_SIZE = 128;
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
+const int MAX_FRAMES_IN_FLIGHT = 3;
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
@@ -95,6 +95,7 @@ class Renderer {
     Renderer(Game* theGame, Window* window);
 
     void render();
+
     void loadTextures(std::map<std::string, std::string> textures,
                       std::map<std::string, std::vector<unsigned long>> fonts);
 
@@ -104,14 +105,18 @@ class Renderer {
 
     std::vector<Text> createText(std::string text, std::string fontName,
                                  double size, glm::vec2 start);
+    std::vector<Text> createVerticalText(std::string text, std::string fontName,
+                                         double size, glm::vec2 start);
 
     void setStartTime(double start);
 
     VkPhysicalDevice* getPhysicalDevice();
     Device* getDevice();
 
-    void loadGuiShaders(std::string vShader, std::string fShader,
-                        VkDeviceSize guiUBOSize);
+    void addModel(Model* m);
+
+    void loadGuiShaders(std::string vShader, std::string gShader,
+                        std::string fShader, VkDeviceSize guiUBOSize);
 
     glm::vec2 getVirtPos(glm::vec2 realPos);
 
@@ -129,6 +134,14 @@ class Renderer {
     Device* device = NULL;
 
     Swapchain* swapchain = NULL;
+
+    Image* renderImage = NULL;
+    ImageView* renderImageView = NULL;
+    Image* depthImage = NULL;
+    ImageView* depthImageView = NULL;
+    RenderPass* renderPass = NULL;
+    Framebuffer* framebuffer = NULL;
+    CommandBuffer* renderCommandBuffer = NULL;
 
     ShaderDescriptorSetLayout* shaderLayout = NULL;
     ShaderDescriptorSetLayout* guiShaderLayout = NULL;
@@ -178,12 +191,15 @@ class Renderer {
     Model* guiModel;
 
     VkDeviceSize guiUBOSize = sizeof(UniformBufferObject);
-    std::string guiVertShader = "bin/vert_gui.spv",
-                guiFragShader = "bin/frag.spv";
+    std::string guiVertShader = "bin/gui.vert.spv",
+                guiGeomShader = "bin/def.geom.spv",
+                guiFragShader = "bin/def.frag.spv";
 
     void initWindow();
 
     void initVulkan();
+
+    void createSwapchain();
     void recreateSwapchain();
 
     void createInstance();
@@ -237,7 +253,9 @@ class Renderer {
     void createUniformBuffers();
     void createDescriptorSets();
 
-    void recordCommandBuffer(CommandBuffer* commandBuffer, uint32_t imageIndex);
+    void recordCommandBuffer(CommandBuffer* commandBuffer,
+                             RenderPass* renderPass, Framebuffer* framebuffer,
+                             VkExtent2D extent);
     void updateUniformBuffer(uint32_t currentImage);
     void drawFrame();
     void drawEntity(Entity* entity, CommandBuffer* commandBuffer);

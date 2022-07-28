@@ -16,8 +16,18 @@ bool Button::isInside(glm::vec2 position) {
            position.y >= (this->position.y - this->size.y / 2);
 }
 
-void Button::onPressed() { this->texture = pressedTexture; }
+bool Button::isPressed() { return pressed; }
 
-void Button::onReleased() { this->texture = normalTexture; }
+void Button::onPressed() {
+    if (pressed) return;
+    this->texture = pressedTexture;
+    pressed = true;
+}
+
+void Button::onReleased() {
+    if (!pressed) return;
+    this->texture = normalTexture;
+    pressed = false;
+}
 
 Button::~Button() {}

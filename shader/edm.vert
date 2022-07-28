@@ -1,10 +1,10 @@
 #version 450
 
 layout(binding = 0) uniform UniformBufferObject {
-    mat4 model;
     mat4 view;
     mat4 proj;
     vec4 color;
+    vec4 ambientColor;
 } ubo;
 
 layout(location = 0) in vec3 inPosition;
@@ -38,7 +38,7 @@ void main() {
     v.x *= size.x;
     v.y *= size.y;
     v.xyz += pos;
-    v = ubo.proj * ubo.view * ubo.model * v;
+    v = ubo.proj * ubo.view * v;
     gl_Position = v;
     fragTexCoord = inTexCoord;
 }

@@ -2,18 +2,29 @@
 
 AudioSource::AudioSource(bool destroyOnFinished) {
     alGenSources(1, &sourceID);
-    // alSourcei(sourceID, AL_BUFFER, 0);
+    int err;
+    if ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when creating source:" << err << std::endl;
+    alSourcei(sourceID, AL_BUFFER, 0);
+    if ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when filling source:" << err << std::endl;
     destroy = destroyOnFinished;
 }
 
-AudioSource::AudioSource(AudioBuffer data, bool destroyOnFinished)
+AudioSource::AudioSource(AudioBuffer& data, bool destroyOnFinished)
     : AudioSource(destroyOnFinished) {
     setBuffer(data);
 }
 
-void AudioSource::setBuffer(AudioBuffer data) {
+void AudioSource::setBuffer(AudioBuffer& data) {
     alSourcei(sourceID, AL_BUFFER, data.getBuffer());
 }
+
+void AudioSource::setDestroyOnFinished(bool destroy) {
+    this->destroy = destroy;
+}
+
+void AudioSource::rewind() { alSourceRewind(sourceID); }
 
 void AudioSource::play() {
     if (getState() != AL_PLAYING) alSourcePlay(sourceID);
@@ -96,7 +107,7 @@ glm::vec3 AudioSource::getSource3f(ALenum param) {
 
 void AudioSource::setSampleOffset(ALfloat value) {
     ALenum state = getState();
-    alSourceRewind(sourceID);
+    rewind();
     setSourcef(AL_SAMPLE_OFFSET, value);
     if (state == AL_PLAYING) alSourcePlay(sourceID);
 }
@@ -117,4 +128,9 @@ void AudioSource::setSourcei(ALenum param, ALint value) {
     alSourcei(sourceID, param, value);
 }
 
-AudioSource::~AudioSource() { alDeleteSources(1, &sourceID); }
+AudioSource::~AudioSource() {
+    alDeleteSources(1, &sourceID);
+    int err;
+    if ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when deleting source:" << err << std::endl;
+}

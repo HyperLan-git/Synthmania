@@ -12,7 +12,7 @@ class RenderPass;
 class RenderPass {
    public:
     RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
-               VkFormat swapChainImageFormat);
+               VkFormat imageFormat);
 
     VkRenderPass *getPass();
 

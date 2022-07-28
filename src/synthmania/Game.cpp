@@ -25,11 +25,8 @@ void Game::resetScene() {
         for (Gui *g : guis) delete g;
     guis.clear();
     menu = NULL;
-    // TODO
     for (Entity *e : entities) delete e;
     entities.clear();
-    begTime = std::chrono::high_resolution_clock::now();
-    setTimeMicros(0);
 }
 
 void Game::loadMenu(std::string m) {
@@ -46,14 +43,19 @@ void Game::run() {
         if (menu != NULL) {
             bool pressed = window->mousePressed();
             for (Button *b : menu->getButtons())
-                if (!pressed)
+                if (!pressed) {
+                    if (b->isPressed() && b->isInside(pos)) {
+                        menu->onPressed(b);
+                        b->onReleased();
+                        break;
+                    }
                     b->onReleased();
-                else if (b->isInside(pos) && pressed) {
+                } else if (b->isInside(pos) && !b->isPressed()) {
                     b->onPressed();
-                    menu->onPressed(b);
                     break;
                 }
         }
+        if (audio != NULL) audio->update();
         update();
         if (menu != NULL) menu->update(getCurrentTimeMicros());
         renderer->render();
@@ -109,10 +111,14 @@ void Game::addGui(Gui *gui) {
 std::vector<Entity *> Game::getEntities() { return entities; }
 std::vector<Gui *> Game::getGuis() { return guis; }
 
+void Game::playSound(std::string sound) { this->audio->playSound(sound); }
+
 Game::~Game() {
     resetScene();
 
     for (auto entry : menus) delete entry.second;
+
+    delete audio;
 
     delete renderer;
     delete window;

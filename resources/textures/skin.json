@@ -1,5 +1,6 @@
 {
     "missing": "missing.jpg",
+    "background": "bg.png",
     "button": "button.png",
     "button-pressed": "button-pressed.png",
     "partition": "partition.png",

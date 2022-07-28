@@ -34,7 +34,6 @@ struct std::hash<Vertex> {
 
 // TODO this shouldn't be here
 struct UniformBufferObject {
-    alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
 };

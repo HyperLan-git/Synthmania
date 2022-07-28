@@ -1,7 +1,13 @@
 #version 450
 
-const int passes = 40;
+const int passes = 20;
 
+layout(binding = 0) uniform UniformBufferObject {
+    mat4 view;
+    mat4 proj;
+    vec4 color;
+    vec4 ambientColor;
+} ubo;
 layout (triangles) in;
 
 layout (triangle_strip, max_vertices = 3 * passes) out;
@@ -47,25 +53,19 @@ float lerp(float progress, float a, float b) {
     return a*p + b*progress;
 }
 
-void draw(int a, int b, float progress, int col) {
+void drawPoint(int a, int b, float progress) {
     geomTexCoord = lerp2(progress, fragTexCoord[a], fragTexCoord[b]);
-    if(col == 0)
-        fColor = lerp4(progress, color[a], color[b]);
-    else if(col == 1)
-        fColor = vec4(1, 0, 0, 1);
-    else
-        fColor = vec4(0, 1, 0, 1);
-    gl_Position = trans(lerp4(progress, gl_in[a].gl_Position, gl_in[b].gl_Position));
+    vec4 col = lerp4(progress, color[a], color[b]);
+    vec4 pos = trans(lerp4(progress, gl_in[a].gl_Position, gl_in[b].gl_Position));
+    gl_Position = pos;
+    fColor = col;
     EmitVertex();
 }
 
-void drawPoint(int a, int b, float progress) {
-    draw(a, b, progress, 0);
-}
-
 void main() {
+    vec4 col = color[0];
     geomTexCoord = fragTexCoord[0];
-    fColor = color[0];
+    fColor = col;
     gl_Position = trans(gl_in[0].gl_Position);
     EmitVertex();
     for(int i = 0; i < passes; i++) {

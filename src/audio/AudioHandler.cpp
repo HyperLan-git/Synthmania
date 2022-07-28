@@ -28,6 +28,9 @@ AudioHandler::AudioHandler(const ALCchar* device) {
     if (!alutInitWithoutContext(NULL, NULL))
         throw std::runtime_error("Couldn't init ALUT !");
     alcGetIntegerv(this->device, ALC_FREQUENCY, 1, &sampleRate);
+    int err;
+    while ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when creating:" << err << std::endl;
 }
 
 AudioHandler::AudioHandler() : AudioHandler(NULL) {}
@@ -61,6 +64,9 @@ bool AudioHandler::update() {
 }
 
 AudioHandler::~AudioHandler() {
+    int err;
+    while ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error this session:" << err << std::endl;
     for (AudioSource* source : sources) delete source;
     for (auto iter = sounds.begin(); iter != sounds.end(); iter++)
         delete (*iter).second;

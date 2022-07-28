@@ -8,7 +8,7 @@
 // This represents relevant data to position a character
 struct Character {
     int offsetLeft, offsetTop;
-    unsigned int width, height, advance;
+    unsigned int width, height, advance, vAdvance;
     unsigned long character;
     ImageView* texture;
 };

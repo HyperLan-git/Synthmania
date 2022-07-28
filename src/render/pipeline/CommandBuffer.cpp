@@ -78,15 +78,15 @@ void CommandBuffer::submit(Queue *queue, Semaphore *waitSemaphore,
     }
 }
 
-void CommandBuffer::beginRenderPass(Swapchain *swapchain, uint32_t imageIndex,
+void CommandBuffer::beginRenderPass(RenderPass *renderPass,
+                                    Framebuffer *framebuffer, VkExtent2D extent,
                                     VkClearValue *clearValues, uint32_t count) {
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = *(swapchain->getRenderPass()->getPass());
-    renderPassInfo.framebuffer =
-        *(swapchain->getFramebuffers()[imageIndex]->getFramebuffer());
+    renderPassInfo.renderPass = *(renderPass->getPass());
+    renderPassInfo.framebuffer = *(framebuffer->getFramebuffer());
     renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = swapchain->getExtent();
+    renderPassInfo.renderArea.extent = extent;
 
     renderPassInfo.clearValueCount = count;
     renderPassInfo.pClearValues = clearValues;

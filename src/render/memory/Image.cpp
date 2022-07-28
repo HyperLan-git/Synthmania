@@ -55,7 +55,7 @@ std::vector<Image*> createImagesForSwapchain(Device* device,
 Image::Image(Device* device, VkImage* image, VkExtent2D extent) {
     this->device = device;
     this->image = image;
-    this->memory = NULL;  // TODO find a way to get associated memory
+    this->memory = NULL;
     this->extent = {extent.width, extent.height, 1};
 }
 

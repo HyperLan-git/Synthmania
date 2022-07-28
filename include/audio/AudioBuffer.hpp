@@ -16,7 +16,7 @@ class AudioBuffer {
    public:
     AudioBuffer();
     AudioBuffer(ALuint id);
-    AudioBuffer(const char* file);
+    AudioBuffer(std::string file);
 
     void write(ALenum format, const ALvoid* data, ALsizei size,
                ALsizei samplerate);

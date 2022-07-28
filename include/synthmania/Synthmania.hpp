@@ -17,7 +17,6 @@ class Synthmania;
 
 #include "AudioHandler.hpp"
 #ifndef NOVST
-#pragma warn aaaaaaaa
 #include "AudioPluginHandler.hpp"
 #endif
 #include "Entity.hpp"
@@ -86,7 +85,6 @@ class Synthmania : public Game {
 
    private:
     MidiHandler *handler;
-    AudioHandler *audio;
 #ifndef NOVST
     AudioPluginHandler *plugin = NULL;
 #endif
@@ -96,8 +94,8 @@ class Synthmania : public Game {
     GraphicalEffectHandler *mod = NULL;
 
     std::vector<Note *> notes;
-    AudioSource *music;
+    AudioSource *music = NULL;
     std::string songFolder, skin;
-    Judgement *line;
+    Judgement *line = NULL;
     bool autoPlay = false;
 };

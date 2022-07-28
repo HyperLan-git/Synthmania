@@ -9,6 +9,7 @@ int main(int argc, char **argv) {
     instance.setRenderer(new Renderer(&instance, instance.getWindow()));
     instance.init();
     instance.loadMenu("main");
+    // instance.loadSong(path);
     instance.run();
 
     return 0;

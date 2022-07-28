@@ -16,10 +16,11 @@ class AudioSource;
 class AudioSource {
    public:
     AudioSource(bool destroyOnFinished = true);
-    AudioSource(AudioBuffer data, bool destroyOnFinished = true);
+    AudioSource(AudioBuffer& data, bool destroyOnFinished = true);
 
-    void setBuffer(AudioBuffer data);
+    void setBuffer(AudioBuffer& data);
 
+    void rewind();
     void play();
 
     ALenum getState();
@@ -48,6 +49,8 @@ class AudioSource {
     ALint getFreq();
 
     bool destroyOnFinished();
+
+    void setDestroyOnFinished(bool destroy);
 
     void queueBuffers(AudioBuffer* buffers, int nb);
     ALuint* unqueueBuffers(int nb);

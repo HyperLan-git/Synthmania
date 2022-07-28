@@ -49,9 +49,14 @@ GSRC = test/graphicstest.cpp $(wildcard src/render/*.cpp) $(wildcard src/render/
 
 MODULEDIR = module
 
+SHADERS = $(wildcard shader/*)
+
+SHADERS_SPV = $(patsubst shader/%.vert, bin/%.vert.spv,\
+				$(patsubst shader/%.frag, bin/%.frag.spv,\
+				$(patsubst shader/%.geom, bin/%.geom.spv, $(SHADERS))))
+
 Synthmania: shader $(VSTLIB)
 	make $(OBJ)
-#	-rdynamic
 ifeq ($(OS),Windows_NT)
 	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 else
@@ -97,12 +102,11 @@ graphics:
 vst: $(VSTLIB)
 	g++ $(CFLAGS) -o bin/VstTest $(VSTSRC) $(VSTOBJ) $(VSTLIB) $(VSTFLAGS) $(LDFLAGS) -DNDEBUG
 
+bin/%.spv: shader/%
+	glslc $< -o $@
+
 shader:
-	glslc shader/edm.vert -o bin/vert_edm.spv
-	glslc shader/gui.vert -o bin/vert_gui.spv
-	glslc shader/def.vert -o bin/vert.spv
-	glslc shader/def.geom -o bin/geom.spv
-	glslc shader/def.frag -o bin/frag.spv
+	make $(SHADERS_SPV)
 
 $(VSTLIB):
 ifndef NO_VST

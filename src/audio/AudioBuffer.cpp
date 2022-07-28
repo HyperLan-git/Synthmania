@@ -2,17 +2,28 @@
 
 #include <AL/alut.h>
 
-AudioBuffer::AudioBuffer() { alGenBuffers(1, &bufferID); }
+AudioBuffer::AudioBuffer() {
+    alGenBuffers(1, &bufferID);
+    int err;
+    if ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when creating buffer:" << err << std::endl;
+}
 
 AudioBuffer::AudioBuffer(ALuint id) { this->bufferID = id; }
 
-AudioBuffer::AudioBuffer(const char* file) {
-    bufferID = alutCreateBufferFromFile(file);
+AudioBuffer::AudioBuffer(std::string file) {
+    bufferID = alutCreateBufferFromFile(file.c_str());
+    if (bufferID == AL_NONE)
+        throw std::runtime_error("Could not read " + file + "\nCause : " +
+                                 alutGetErrorString(alutGetError()));
 }
 
 void AudioBuffer::write(ALenum format, const ALvoid* data, ALsizei size,
                         ALsizei samplerate) {
     alBufferData(bufferID, format, data, size, samplerate);
+    int err;
+    if ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when writing buffer:" << err << std::endl;
 }
 
 ALuint AudioBuffer::getBuffer() { return bufferID; }
@@ -32,8 +43,15 @@ ALint AudioBuffer::getBufferi(ALenum param) {
 }
 
 void AudioBuffer::setBuffer(ALuint id) {
-    alDeleteBuffers(1, &bufferID);
+    int err;
+    if ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when deleting buffer:" << err << std::endl;
     bufferID = id;
 }
 
-AudioBuffer::~AudioBuffer() { alDeleteBuffers(1, &bufferID); }
+AudioBuffer::~AudioBuffer() {
+    if (bufferID != 0) alDeleteBuffers(1, &bufferID);
+    int err;
+    if ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when deleting buffer:" << err << std::endl;
+}

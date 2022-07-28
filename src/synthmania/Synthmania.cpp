@@ -8,6 +8,8 @@ Synthmania::Synthmania(std::string skin) {
     for (auto &elem : textures)
         elem.second = std::string(skin).append("/").append(elem.second);
     audio = new AudioHandler();
+    AudioBuffer *buffer = new AudioBuffer("resources/sounds/click.wav");
+    audio->addSound("click", buffer);
 }
 
 void Synthmania::loadSong(std::string songFolder) {
@@ -23,50 +25,46 @@ void Synthmania::loadSong(std::string songFolder) {
         void *shared = loadShared(songFolder + "/" + chart.animation);
         char *e = NULL;  // TODO dlerror();
         if (e != NULL) {
-            std::cout << "Error while loading anim ! " << e << "\n";
+            std::cerr << "Error while loading anim ! " << e << "\n";
         } else {
             GraphicalEffectHandler *(*f)(Synthmania *) =
                 (GraphicalEffectHandler * (*)(Synthmania *))
                     getFunction(shared, "getEffectHandler");
             char *e = NULL;  // TODO dlerror();
             if (e != NULL)
-                std::cout << "Error while loading anim ! " << e << "\n";
+                std::cerr << "Error while loading anim ! " << e << "\n";
             else
                 this->mod = f(this);  // Shit
         }
         std::string v = this->mod->getVertShaderCode(),
+                    g = this->mod->getGeomShaderCode(),
                     f = this->mod->getFragShaderCode();
         VkDeviceSize UBOSize = this->mod->getUBOSize();
-        if (!v.empty() || !f.empty()) renderer->loadGuiShaders(v, f, UBOSize);
+        if (!v.empty() || !g.empty() || !f.empty())
+            renderer->loadGuiShaders(v, g, f, UBOSize);
     }
     std::string path = songFolder;
     path.append("/");
     path.append(diff.midi);
     partition = handler->readMidi(path.c_str());
-    std::string pdata = songFolder;
-    pdata.append("/");
-    pdata.append(chart.plugindata);
-    if (chart.plugindata.compare("None") == 0) pdata = "None";
-#ifndef NOVST
-    plugin = new AudioPluginHandler("./plugins/Vital.vst3", audio, pdata);
-#endif
     Model *model =
         new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
                   renderer->getDevice());
     std::vector<ImageView *> textures = renderer->getTextures();
     Entity *la_creatura76 =
         new Entity(model, getTextureByName(textures, "room"), "Bob");
+    renderer->addModel(model);
     entities.push_back(la_creatura76);
     Gui *part = new Gui(getTextureByName(textures, "partition"), "partition"),
-        *bg = new Gui(getTextureByName(textures, "partition"), "bg"),
+        *bg = new Gui(getTextureByName(textures, "background"), "bg"),
         *key = new Gui(getTextureByName(textures, "sol_key"), "key"),
         *precision =
             new Gui(getTextureByName(textures, "precision"), "precision");
     addGui(bg);
     addGui(part);
     addGui(key);
-    bg->setSize({10, 30});
-    part->setSize({10, 1});
+    bg->setSize({5, 30});
+    part->setSize({5, 1});
     key->setPosition({-1.7f, 0.1f});
     key->setSize({0.8f, 0.8f});
     precision->setSize({1.5f, 0.5f});
@@ -175,6 +173,13 @@ void Synthmania::loadSong(std::string songFolder) {
         music = audio->playSound("song");
         music->setGain(.5f);
     }
+    std::string pdata = songFolder;
+    pdata.append("/");
+    pdata.append(chart.plugindata);
+    if (chart.plugindata.compare("None") == 0) pdata = "None";
+#ifndef NOVST
+    plugin = new AudioPluginHandler("./plugins/Vital.vst3", audio, pdata);
+#endif
     std::string text = chart.name;
     text.append(" by ");
     text.append(chart.artist);
@@ -187,6 +192,7 @@ void Synthmania::loadSong(std::string songFolder) {
        22, {0, 0}, .001, {1, 0, 0, 1})) addGui(g);*/
     // Needs to be above everything else
     addGui(precision);
+    begTime = std::chrono::high_resolution_clock::now();
 }
 
 void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
@@ -238,8 +244,9 @@ void Synthmania::noteHit(Note *note) {
     addGui(prec);
     delta = std::clamp<int64_t>(delta, 0, note->getTotalDuration() / 2);
 #ifndef NOVST
-    plugin->playNote(note->getPitch(), 90,
-                     time + note->getTotalDuration() - delta);
+    if (plugin != NULL)
+        plugin->playNote(note->getPitch(), 90,
+                         time + note->getTotalDuration() - delta);
 #endif
     note->setStatus(HIT);
     note->kill(time + note->getTotalDuration());
@@ -310,6 +317,10 @@ void Synthmania::resetScene() {
         mod = NULL;
     }
 }
+// TODO config
+uint64_t audioLatency = 10000;
+
+uint32_t multiplier = 0;
 
 void Synthmania::update() {
     int64_t time_from_start = getCurrentTimeMicros();
@@ -401,17 +412,27 @@ void Synthmania::update() {
             m = handler->getMessage();
         }
     }
-    if (audio != NULL) {  // audio latency study
+    if (music != NULL) {  // audio latency study
         long long j = music->getSampleOffset() * 1000000.;
-        int64_t res = j / (uint64_t)44100 - this->startTime;
         int64_t a = getCurrentTimeMicros();
+        int64_t res = j / (uint64_t)44100 - this->startTime;
+        int err;
+        if ((err = alGetError()) != AL_NO_ERROR)
+            std::cerr << "OpenAL error when getting sample offset:" << err
+                      << std::endl;
         int64_t b = res - a;
-        // std::cout << b << std::dec << " ";
-        // If music gets more than 10ms off reset it
-        // Most people can play with 10ms off right? (I'm sorry rythm gamers)
-        if (b > 10000) setTimeMicros(a);
+        if (b < 0) b = -b;
+        // std::cout << std::dec << a << "\n";
+        //  If music gets more than 10ms off reset it
+        //  Most people can play with 10ms off right? (I'm sorry rythm gamers)
+        if (b > audioLatency * (1 + .1 * multiplier)) {
+            setTimeMicros(a);
+            multiplier++;
+        }
     }
-    // thrd_yield();
+
+    if (multiplier > 0 && std::rand() % 300 == 0) multiplier--;
+    std::this_thread::yield();
 }
 
 size_t Synthmania::updateUBO(void *&ubo) {
@@ -436,9 +457,8 @@ std::string Synthmania::getSongFolder() { return songFolder; }
 Synthmania::~Synthmania() {
     if (mod != NULL) delete mod;
 #ifndef NOVST
-    delete plugin;
+    if (plugin != NULL) delete plugin;
 #endif
-    delete audio;
 
     delete handler;
 }
@@ -502,6 +522,25 @@ std::vector<Gui *> printShakingString(std::string text, Renderer *renderer,
                                            new float[]{shake * (float)size}));
         gui->setColor(color);
         gui->setNegate(true);
+        gui->setPosition(t.pos);
+        gui->setSize(t.size);
+        result.push_back(gui);
+    }
+    return result;
+}
+
+std::vector<Gui *> printVerticalString(std::string text, Renderer *renderer,
+                                       std::string entityNames,
+                                       std::string font, double size,
+                                       glm::vec2 pos, glm::vec4 color) {
+    std::vector<Gui *> result;
+    int i = 0;
+    for (Text t : renderer->createText(text, font, size, pos)) {
+        std::string name = entityNames;
+        name.append(std::to_string(i++));
+        Gui *gui = new Gui(t.character.texture, name.c_str());
+        gui->setColor(color);
+        gui->setNegate(1);
         gui->setPosition(t.pos);
         gui->setSize(t.size);
         result.push_back(gui);

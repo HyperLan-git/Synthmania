@@ -9,6 +9,8 @@ class Button : public Gui {
     Button(ImageView* texture, ImageView* pressedTexture, const char* name,
            glm::vec2 position, glm::vec2 size);
 
+    bool isPressed();
+
     virtual bool isInside(glm::vec2 position);
 
     virtual void onPressed();
@@ -18,4 +20,5 @@ class Button : public Gui {
 
    private:
     ImageView *normalTexture, *pressedTexture;
+    bool pressed = false;
 };

@@ -43,8 +43,9 @@ class CommandBuffer {
 
     void copyBufferRegion(Buffer *src, Buffer *dest, VkDeviceSize size);
 
-    void beginRenderPass(Swapchain *swapchain, uint32_t imageIndex,
-                         VkClearValue *clearValues, uint32_t count);
+    void beginRenderPass(RenderPass *renderPass, Framebuffer *framebuffer,
+                         VkExtent2D extent, VkClearValue *clearValues,
+                         uint32_t count);
     void endRenderPass();
     void bindPipeline(Pipeline *pipeline);
     void bindVertexBuffers(Buffer *vertexBuffers, uint32_t count);
