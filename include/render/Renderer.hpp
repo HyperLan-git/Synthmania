@@ -68,7 +68,7 @@ class Renderer;
 // Font texture sizes
 const unsigned long FONT_SIZE = 128;
 
-const int MAX_FRAMES_IN_FLIGHT = 3;
+const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
@@ -135,6 +135,9 @@ class Renderer {
 
     Swapchain* swapchain = NULL;
 
+    // TODO simplify this shit I should not have to create all of this just to
+    // do a second pass
+    // What if I want to do 5 passes?
     Image* renderImage = NULL;
     ImageView* renderImageView = NULL;
     Image* depthImage = NULL;
@@ -142,6 +145,13 @@ class Renderer {
     RenderPass* renderPass = NULL;
     Framebuffer* framebuffer = NULL;
     CommandBuffer* renderCommandBuffer = NULL;
+    Pipeline* renderPipeline = NULL;
+    PipelineLayout* renderPipelineLayout = NULL;
+    ShaderDescriptorSetLayout* renderLayout = NULL;
+    ShaderDescriptorSet* renderDescriptor = NULL;
+    Semaphore* imageAvailableSemaphore = NULL;
+    Buffer* uniformBuffer = NULL;
+    TextureSampler* sampler = NULL;
 
     ShaderDescriptorSetLayout* shaderLayout = NULL;
     ShaderDescriptorSetLayout* guiShaderLayout = NULL;
@@ -165,8 +175,8 @@ class Renderer {
 
     std::vector<Buffer*> uniformBuffers;
     std::vector<Buffer*> guiUniformBuffers;
-    std::vector<Buffer*> constantUniformBuffers;
-    std::vector<Buffer*> guiConstantUniformBuffers;
+    std::vector<Buffer*> constantBuffers;
+    std::vector<Buffer*> guiConstantBuffers;
 
     ShaderDescriptorPool* pool = NULL;
     ShaderDescriptorPool* guiPool = NULL;
@@ -216,6 +226,7 @@ class Renderer {
 
     void createGraphicsPipeline();
     void createGuiPipeline();
+    void createMainPipeline();
 
     bool hasStencilComponent(VkFormat format);
 
@@ -253,9 +264,14 @@ class Renderer {
     void createUniformBuffers();
     void createDescriptorSets();
 
+    void createCommandBuffers();
+
     void recordCommandBuffer(CommandBuffer* commandBuffer,
                              RenderPass* renderPass, Framebuffer* framebuffer,
                              VkExtent2D extent);
+    void drawScreenCommandBuffer(CommandBuffer* commandBuffer,
+                                 RenderPass* renderPass,
+                                 Framebuffer* framebuffer, VkExtent2D extent);
     void updateUniformBuffer(uint32_t currentImage);
     void drawFrame();
     void drawEntity(Entity* entity, CommandBuffer* commandBuffer);

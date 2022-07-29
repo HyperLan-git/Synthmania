@@ -47,6 +47,9 @@ void Renderer::initVulkan() {
     createGraphicsPipeline();
 
     createGuiPipeline();
+
+    createMainPipeline();
+
     guiModel = new Model({{{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
                           {{0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
                           {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f}},
@@ -75,7 +78,11 @@ void Renderer::initVulkan() {
             *(indexBuffer->getBuffer()));
 
     createUniformBuffers();
+    createCommandBuffers();
+}
 
+void Renderer::createCommandBuffers() {
+    DebugFunc functions = getDebugFunctions(instance);
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         commandBuffers.push_back(new CommandBuffer(device, commandPool, false));
         setName(functions, device, "Main command buffer " + std::to_string(i),
@@ -95,6 +102,9 @@ void Renderer::initVulkan() {
         setName(functions, device, "Main semaphore " + std::to_string(i),
                 VK_OBJECT_TYPE_FENCE, *(inFlightFences[i]->getFence()));
     }
+    renderCommandBuffer = new CommandBuffer(device, commandPool, false);
+    setName(functions, device, "Render command buffer",
+            VK_OBJECT_TYPE_COMMAND_BUFFER, *(renderCommandBuffer->getBuffer()));
 }
 
 void Renderer::createSwapchain() {
@@ -118,6 +128,9 @@ void Renderer::createSwapchain() {
             *(renderImage->getImage()));
     setName(functions, device, "render image view", VK_OBJECT_TYPE_IMAGE_VIEW,
             *(renderImageView->getView()));
+    sampler = new TextureSampler(&physicalDevice, device);
+    setName(functions, device, "render image sampler", VK_OBJECT_TYPE_SAMPLER,
+            *(sampler->getSampler()));
     VkFormat depthFormat = findDepthFormat(physicalDevice);
 
     depthImage = new Image(&physicalDevice, device, w, h, depthFormat,
@@ -191,6 +204,7 @@ Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
                 layout.rowPitch * h, 0, &d);
     memcpy(d, buffer, layout.rowPitch * h);
     vkUnmapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()));
+    // TODO copy image to other image with tiling optimal and less memory usage
     return image;
 }
 
@@ -281,9 +295,9 @@ Renderer::~Renderer() {
     delete guiPipeline;
 
     for (size_t i = 0; i < uniformBuffers.size(); i++) {
-        delete constantUniformBuffers[i];
+        delete constantBuffers[i];
         delete uniformBuffers[i];
-        delete guiConstantUniformBuffers[i];
+        delete guiConstantBuffers[i];
         delete guiUniformBuffers[i];
     }
 
@@ -502,6 +516,61 @@ void Renderer::createGuiPipeline() {
     delete fragShader;
 }
 
+void Renderer::createMainPipeline() {
+    VkDescriptorSetLayoutBinding ubo, textureSampler;
+    ubo.binding = 0;
+    ubo.descriptorCount = 1;
+    ubo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    ubo.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    textureSampler.binding = 1;
+    textureSampler.descriptorCount = 1;
+    textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    textureSampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    textureSampler.pImmutableSamplers = NULL;
+    VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
+    renderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
+
+    auto vertShaderCode = readFile("bin/pass.vert.spv");
+    auto geomShaderCode = readFile("bin/pass.geom.spv");
+    auto fragShaderCode = readFile("bin/pass.frag.spv");
+
+    Shader* vertShader =
+        new Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
+    Shader* geomShader = new Shader("main", device, geomShaderCode,
+                                    VK_SHADER_STAGE_GEOMETRY_BIT);
+    Shader* fragShader = new Shader("main", device, fragShaderCode,
+                                    VK_SHADER_STAGE_FRAGMENT_BIT);
+    DebugFunc functions = getDebugFunctions(instance);
+    setName(functions, device, "Pass vertex shader",
+            VK_OBJECT_TYPE_SHADER_MODULE, *(vertShader->getModule()));
+    setName(functions, device, "Pass geometry shader",
+            VK_OBJECT_TYPE_SHADER_MODULE, *(geomShader->getModule()));
+    setName(functions, device, "Pass fragment shader",
+            VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader->getModule()));
+
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
+                                                      geomShader->toPipeline(),
+                                                      fragShader->toPipeline()};
+
+    renderPipelineLayout = new PipelineLayout(device, renderLayout, 0, NULL);
+    setName(functions, device, "Pass pipeline layout",
+            VK_OBJECT_TYPE_PIPELINE_LAYOUT,
+            *(renderPipelineLayout->getLayout()));
+
+    uint32_t w, h;
+    window->getFramebufferSize(&w, &h);
+    w *= 1.5;
+    h *= 1.5;
+
+    renderPipeline = new Pipeline(device, renderPipelineLayout, renderPass,
+                                  shaderStages, 3, VkExtent2D({w, h}));
+    setName(functions, device, "Pass pipeline", VK_OBJECT_TYPE_PIPELINE,
+            *(renderPipeline->getPipeline()));
+    delete vertShader;
+    delete geomShader;
+    delete fragShader;
+}
+
 void Renderer::createLogicalDevice() {
     std::map<std::string, FamilyPredicate> familyPredicates = {
         {"main",
@@ -686,7 +755,7 @@ void Renderer::createUniformBuffers() {
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
-        constantUniformBuffers.push_back(
+        constantBuffers.push_back(
             new Buffer(&physicalDevice, device, sizeof(EntityData),
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
@@ -696,12 +765,17 @@ void Renderer::createUniformBuffers() {
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
-        guiConstantUniformBuffers.push_back(
+        guiConstantBuffers.push_back(
             new Buffer(&physicalDevice, device, sizeof(GuiData),
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
     }
+    uniformBuffer =
+        new Buffer(&physicalDevice, device, sizeof(UniformBufferObject),
+                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
 void Renderer::updateDescriptorSet(ShaderDescriptorSet* descriptor,
@@ -748,6 +822,9 @@ void Renderer::createDescriptorSets() {
         }
         j += MAX_FRAMES_IN_FLIGHT;
     }
+    renderDescriptor = new ShaderDescriptorSet(device, pool, renderLayout);
+    updateDescriptorSet(renderDescriptor, renderImageView, sampler,
+                        uniformBuffer);
 }
 
 void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
@@ -781,10 +858,10 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     recreateSwapchain();
 }
 
-void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
-                                   RenderPass* renderPass,
-                                   Framebuffer* framebuffer,
-                                   VkExtent2D extent) {
+void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
+                                       RenderPass* renderPass,
+                                       Framebuffer* framebuffer,
+                                       VkExtent2D extent) {
     commandBuffer->reset();
     commandBuffer->begin();
 
@@ -871,6 +948,38 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->end();
 }
 
+void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
+                                   RenderPass* renderPass,
+                                   Framebuffer* framebuffer,
+                                   VkExtent2D extent) {
+    commandBuffer->reset();
+    commandBuffer->begin();
+
+    std::vector<VkClearValue> clearValues = {VkClearValue(), VkClearValue()};
+    clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+    clearValues[1].depthStencil = {1.0f, 0};
+
+    commandBuffer->beginRenderPass(renderPass, framebuffer, extent,
+                                   clearValues.data(), 2);
+
+    commandBuffer->bindPipeline(renderPipeline);
+
+    guiModel->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue("main"),
+                                       commandPool);
+    guiModel->toIndicesBuffer()->copyTo(indexBuffer, device->getQueue("main"),
+                                        commandPool);
+    commandBuffer->bindVertexBuffers(vertexBuffer, 1);
+    commandBuffer->bindIndexBuffer(indexBuffer);
+
+    commandBuffer->bindDescriptorSet(renderPipeline, renderDescriptor);
+
+    commandBuffer->draw(guiModel->getIndexes().size());
+
+    commandBuffer->endRenderPass();
+
+    commandBuffer->end();
+}
+
 void Renderer::drawEntity(Entity* entity, CommandBuffer* commandBuffer) {
     Model* model = entity->getModel();
 
@@ -910,7 +1019,7 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
 
     void* p = &ubo;
 
-    void *data = NULL, *data2 = NULL;
+    void* data = NULL;
     if (!game->getEntities().empty()) {
         vkMapMemory(*(device->getDevice()),
                     *(uniformBuffers[currentImage]->getMemory()->getMemory()),
@@ -922,14 +1031,21 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     }
     if (game->getGuis().empty()) return;
     ubo.view = glm::mat4(1.f);
+    ubo.proj = glm::orthoLH_ZO<float>(-.5, 1, -.5, .5, 0.f, 1.f);
+    vkMapMemory(*(device->getDevice()),
+                *(uniformBuffer->getMemory()->getMemory()), 0, sizeof(ubo), 0,
+                &data);
+    memcpy(data, p, sizeof(ubo));
+    vkUnmapMemory(*(device->getDevice()),
+                  *(uniformBuffer->getMemory()->getMemory()));
     ubo.proj = glm::orthoLH_ZO<float>(-ratio, ratio, -1, 1, 0.f, 1.f);
 
     p = &ubo;
     size_t sz = game->updateUBO(p);
     vkMapMemory(*(device->getDevice()),
                 *(guiUniformBuffers[currentImage]->getMemory()->getMemory()), 0,
-                sz, 0, &data2);
-    memcpy(data2, p, sz);
+                sz, 0, &data);
+    memcpy(data, p, sz);
     vkUnmapMemory(*(device->getDevice()),
                   *(guiUniformBuffers[currentImage]->getMemory()->getMemory()));
     if (p != &ubo) game->freeUBO(p);
@@ -965,9 +1081,19 @@ void Renderer::drawFrame() {
 
     inFlightFences[currentFrame]->reset();
 
+    uint32_t w, h;
+    window->getFramebufferSize(&w, &h);
+    w *= 1.5;
+    h *= 1.5;
+    /*drawScreenCommandBuffer(
+        commandBuffers[currentFrame], swapchain->getRenderPass(),
+        swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());*/
+    drawScreenCommandBuffer(renderCommandBuffer, renderPass, framebuffer,
+                            {w, h});
     recordCommandBuffer(
         commandBuffers[currentFrame], swapchain->getRenderPass(),
         swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());
+    renderCommandBuffer->submit(device->getQueue("main"));
 
     commandBuffers[currentFrame]->submit(
         device->getQueue("main"), imageAvailableSemaphores[currentFrame],

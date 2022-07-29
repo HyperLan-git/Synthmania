@@ -36,10 +36,7 @@ void CommandBuffer::end() {
     }
 }
 
-void CommandBuffer::reset() {
-    vkResetCommandBuffer(*buffer,
-                         /*VkCommandBufferResetFlagBits*/ 0);
-}
+void CommandBuffer::reset() { vkResetCommandBuffer(*buffer, 0); }
 
 void CommandBuffer::submit(Queue *queue, bool wait) {
     VkSubmitInfo submitInfo;
