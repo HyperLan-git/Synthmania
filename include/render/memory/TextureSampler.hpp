@@ -12,7 +12,7 @@ class TextureSampler {
 
     VkSampler* getSampler();
 
-    ~TextureSampler();
+    virtual ~TextureSampler();
 
    private:
     Device* device;

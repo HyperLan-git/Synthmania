@@ -6,7 +6,15 @@ extern "C" class DefaultEmptyAnimLib : public GraphicalEffectHandler {
 
     std::string getVertShaderCode() override { return std::string(); }
 
+    std::string getGeomShaderCode() override { return std::string(); }
+
     std::string getFragShaderCode() override { return std::string(); }
+
+    std::string getFinalVertShaderCode() override { return std::string(); }
+
+    std::string getFinalGeomShaderCode() override { return std::string(); }
+
+    std::string getFinalFragShaderCode() override { return std::string(); }
 
     void onSpawn(Gui* g) override {}
 
@@ -20,7 +28,7 @@ extern "C" class DefaultEmptyAnimLib : public GraphicalEffectHandler {
 
     void freeUBO(void*& ubo) override {}
 
-    ~DefaultEmptyAnimLib() = default;
+    virtual ~DefaultEmptyAnimLib() = default;
 };
 
 extern "C" GraphicalEffectHandler* getEffectHandler(Synthmania* game) {

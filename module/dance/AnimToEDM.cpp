@@ -71,6 +71,12 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
         return (game->getSongFolder() + "/f_shader.spv");
     }
 
+    std::string getFinalVertShaderCode() override { return std::string(); }
+
+    std::string getFinalGeomShaderCode() override { return std::string(); }
+
+    std::string getFinalFragShaderCode() override { return std::string(); }
+
     virtual VkDeviceSize getUBOSize() { return sizeof(UniformBufferObject2); }
 
     void onSpawn(Gui* g) override {}

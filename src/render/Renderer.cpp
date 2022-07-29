@@ -112,8 +112,12 @@ void Renderer::createSwapchain() {
     swapchain = new Swapchain(device, &physicalDevice, window, surface);
     setName(functions, device, "Swapchain", VK_OBJECT_TYPE_SWAPCHAIN_KHR,
             *(swapchain->getSwapchain()));
-    uint32_t w, h;
+    uint32_t w = 0, h = 0;
     window->getFramebufferSize(&w, &h);
+    while (w == 0 || h == 0) {
+        glfwWaitEvents();
+        window->getFramebufferSize(&w, &h);
+    }
     w *= 1.5;
     h *= 1.5;
     renderImage = new Image(
@@ -289,6 +293,21 @@ Renderer::~Renderer() {
     device->wait();
 
     delete swapchain;
+
+    delete renderImageView;
+    delete renderImage;
+    delete depthImage;
+    delete depthImageView;
+    delete renderPass;
+    delete framebuffer;
+    delete renderCommandBuffer;
+    delete renderDescriptor;
+    delete uniformBuffer;
+    delete renderPipeline;
+    delete renderPipelineLayout;
+    delete sampler;
+    delete renderLayout;
+
     delete graphicsPipelineLayout;
     delete graphicsPipeline;
     delete guiPipelineLayout;
@@ -354,10 +373,12 @@ void Renderer::recreateSwapchain() {
     delete swapchain;
     delete renderImageView;
     delete renderImage;
+    delete sampler;
     delete depthImage;
     delete depthImageView;
     delete renderPass;
     delete framebuffer;
+
     delete graphicsPipeline;
     delete graphicsPipelineLayout;
     delete guiPipeline;
@@ -367,6 +388,8 @@ void Renderer::recreateSwapchain() {
     delete guiShaderLayout;
 
     createSwapchain();
+    updateDescriptorSet(renderDescriptor, renderImageView, sampler,
+                        uniformBuffer);
     createGraphicsPipeline();
     createGuiPipeline();
 }
@@ -840,6 +863,7 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     guiDescriptorSets.clear();
     for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
     descriptorSets.clear();
+    delete renderDescriptor;
     delete pool;
     delete guiPool;
 
@@ -1031,7 +1055,7 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     }
     if (game->getGuis().empty()) return;
     ubo.view = glm::mat4(1.f);
-    ubo.proj = glm::orthoLH_ZO<float>(-.5, 1, -.5, .5, 0.f, 1.f);
+    ubo.proj = glm::orthoLH_ZO<float>(-.5, .5, -.5, .5, 0.f, 1.f);
     vkMapMemory(*(device->getDevice()),
                 *(uniformBuffer->getMemory()->getMemory()), 0, sizeof(ubo), 0,
                 &data);

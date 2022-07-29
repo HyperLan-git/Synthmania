@@ -1,11 +1,12 @@
 #include "ShaderDescriptorSet.hpp"
 
+// TODO put that in buffer class
 VkDescriptorBufferInfo *createBufferInfo(Buffer *buffer) {
     VkDescriptorBufferInfo *bufferInfo = new VkDescriptorBufferInfo();
 
     bufferInfo->buffer = *(buffer->getBuffer());
     bufferInfo->offset = 0;
-    bufferInfo->range = sizeof(UniformBufferObject);
+    bufferInfo->range = buffer->getSize();
     return bufferInfo;
 }
 
@@ -49,12 +50,15 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
     descriptorWrites->descriptorType = type;
     descriptorWrites->descriptorCount = 1;
 
-    if (bInfo != NULL) descriptorWrites->pBufferInfo = bInfo;
-    if (iInfo != NULL) descriptorWrites->pImageInfo = iInfo;
+    descriptorWrites->pBufferInfo = bInfo;
+    descriptorWrites->pImageInfo = iInfo;
 
     if (writeDescriptor == NULL) {
         this->writeDescriptor = descriptorWrites;
     } else {
+        // TODO a bit shitty if you ask me
+        if (writeDescriptor->pNext != NULL) delete writeDescriptor->pNext;
+
         writeDescriptor->pNext = descriptorWrites;
     }
     vkUpdateDescriptorSets(*(device->getDevice()), 1, descriptorWrites, 0,

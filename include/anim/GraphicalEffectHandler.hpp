@@ -56,6 +56,36 @@ class GraphicalEffectHandler {
     virtual const std::string getFragShaderCode() = 0;
 
     /**
+     * @brief Gets the final pass vertex shader code
+     * the final pass is when the entire screen has been rendered to a texture
+     * meaning you can transform that
+     *
+     * @return A string containing path to a valid spv file else an empty string
+     * if you don't know what you're doing (just like me !)
+     */
+    virtual const std::string getFinalVertShaderCode() = 0;
+
+    /**
+     * @brief Gets the final pass geometry shader code
+     * the final pass is when the entire screen has been rendered to a texture
+     * meaning you can transform that
+     *
+     * @return A string containing path to a valid spv file else an empty string
+     * if you don't know what you're doing (just like me !)
+     */
+    virtual const std::string getFinalGeomShaderCode() = 0;
+
+    /**
+     * @brief Gets the final pass fragment shader code
+     * the final pass is when the entire screen has been rendered to a texture
+     * meaning you can transform that
+     *
+     * @return A string containing path to a valid spv file else an empty string
+     * if you don't know what you're doing (just like me !)
+     */
+    virtual const std::string getFinalFragShaderCode() = 0;
+
+    /**
      * @brief This function gets called every frame after elements ingame are
      * updated
      *
