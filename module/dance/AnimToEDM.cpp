@@ -6,6 +6,13 @@ struct UniformBufferObject2 {
     alignas(16) glm::vec4 color;
 };
 
+struct UniformBufferObject3 {
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
+    alignas(4) float chroma;
+    alignas(4) float blur;
+};
+
 glm::vec3 hsv2rgb(glm::vec3 hsv) {
     float hh, p, q, t, ff;
     int i;
@@ -71,13 +78,23 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
         return (game->getSongFolder() + "/f_shader.spv");
     }
 
-    std::string getFinalVertShaderCode() override { return std::string(); }
+    const std::string getFinalVertShaderCode() override {
+        return (game->getSongFolder() + "/f_v.spv");
+    }
 
-    std::string getFinalGeomShaderCode() override { return std::string(); }
+    const std::string getFinalGeomShaderCode() override {
+        return (game->getSongFolder() + "/f_g.spv");
+    }
 
-    std::string getFinalFragShaderCode() override { return std::string(); }
+    const std::string getFinalFragShaderCode() override {
+        return (game->getSongFolder() + "/f_f.spv");
+    }
 
     virtual VkDeviceSize getUBOSize() { return sizeof(UniformBufferObject2); }
+
+    virtual VkDeviceSize getFinalUBOSize() {
+        return sizeof(UniformBufferObject3);
+    }
 
     void onSpawn(Gui* g) override {}
 
@@ -107,7 +124,22 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
         return sizeof(UniformBufferObject2);
     }
 
+    size_t updateFinalUBO(void*& ubo, int64_t time) override {
+        UniformBufferObject* u = (UniformBufferObject*)ubo;
+        UniformBufferObject3* result = new UniformBufferObject3();
+        uint64_t MPQ = game->getPartition().MPQ;
+        result->proj = u->proj;
+        result->view = u->view;
+        result->chroma = .005f * (1 - (time % (MPQ)) / (double)MPQ);
+        result->chroma = 0;
+        result->blur = 2.5f * (1 - (time % (MPQ)) / (double)MPQ);
+        ubo = result;
+        return sizeof(UniformBufferObject3);
+    }
+
     void freeUBO(void*& ubo) { delete (UniformBufferObject2*)ubo; }
+
+    void freeFinalUBO(void*& ubo) { delete (UniformBufferObject3*)ubo; }
 
     ~AnimToEDM() = default;
 };

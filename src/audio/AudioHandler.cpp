@@ -56,8 +56,8 @@ bool AudioHandler::update() {
         ALenum state = (*iter)->getState();
         if (state == AL_STOPPED) {
             delete *iter;
-            iter = sources.erase(iter);
-            iter--;
+            sources.erase(iter);
+            return update();
         }
     }
     return !sources.empty();

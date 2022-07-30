@@ -54,6 +54,9 @@ class Game {
     virtual size_t updateUBO(void *&ubo);
     virtual void freeUBO(void *&ubo);
 
+    virtual size_t updateFinalUBO(void *&ubo);
+    virtual void freeFinalUBO(void *&ubo);
+
     virtual void addGui(Gui *gui);
     virtual void addEntity(Entity *entity);
 
@@ -62,7 +65,7 @@ class Game {
     int64_t getCurrentTimeMicros();
     virtual void setTimeMicros(int64_t time);
 
-    ~Game();
+    virtual ~Game();
 
    protected:
     GLFWkeyfun keyFunction = NULL;

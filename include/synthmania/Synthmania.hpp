@@ -73,8 +73,10 @@ class Synthmania : public Game {
     virtual void resetScene();
 
     virtual size_t updateUBO(void *&ubo);
-
     virtual void freeUBO(void *&ubo);
+
+    virtual size_t updateFinalUBO(void *&ubo);
+    virtual void freeFinalUBO(void *&ubo);
 
     virtual void addGui(Gui *gui);
 

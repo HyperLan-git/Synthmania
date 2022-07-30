@@ -6,7 +6,6 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
     vec4 color;
-    vec4 ambientColor;
 } ubo;
 layout (triangles) in;
 

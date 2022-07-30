@@ -38,10 +38,16 @@ void Synthmania::loadSong(std::string songFolder) {
         }
         std::string v = this->mod->getVertShaderCode(),
                     g = this->mod->getGeomShaderCode(),
-                    f = this->mod->getFragShaderCode();
-        VkDeviceSize UBOSize = this->mod->getUBOSize();
+                    f = this->mod->getFragShaderCode(),
+                    v_f = this->mod->getFinalVertShaderCode(),
+                    g_f = this->mod->getFinalGeomShaderCode(),
+                    f_f = this->mod->getFinalFragShaderCode();
+        VkDeviceSize UBOSize = this->mod->getUBOSize(),
+                     fUBOSize = this->mod->getFinalUBOSize();
         if (!v.empty() || !g.empty() || !f.empty())
             renderer->loadGuiShaders(v, g, f, UBOSize);
+        if (!v_f.empty() || !g_f.empty() || !f_f.empty())
+            renderer->loadFinalShaders(v_f, g_f, f_f, fUBOSize);
     }
     std::string path = songFolder;
     path.append("/");
@@ -442,6 +448,15 @@ size_t Synthmania::updateUBO(void *&ubo) {
 
 void Synthmania::freeUBO(void *&ubo) {
     if (mod != NULL) mod->freeUBO(ubo);
+}
+
+size_t Synthmania::updateFinalUBO(void *&ubo) {
+    if (mod != NULL) return mod->updateFinalUBO(ubo, getCurrentTimeMicros());
+    return sizeof(UniformBufferObject);
+}
+
+void Synthmania::freeFinalUBO(void *&ubo) {
+    if (mod != NULL) mod->freeFinalUBO(ubo);
 }
 
 Chart Synthmania::getChart() { return chart; }

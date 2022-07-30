@@ -378,6 +378,9 @@ void Renderer::recreateSwapchain() {
     delete depthImageView;
     delete renderPass;
     delete framebuffer;
+    delete renderPipeline;
+    delete renderLayout;
+    delete renderPipelineLayout;
 
     delete graphicsPipeline;
     delete graphicsPipelineLayout;
@@ -392,6 +395,7 @@ void Renderer::recreateSwapchain() {
                         uniformBuffer);
     createGraphicsPipeline();
     createGuiPipeline();
+    createMainPipeline();
 }
 
 void Renderer::createInstance() {
@@ -553,9 +557,9 @@ void Renderer::createMainPipeline() {
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     renderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
-    auto vertShaderCode = readFile("bin/pass.vert.spv");
-    auto geomShaderCode = readFile("bin/pass.geom.spv");
-    auto fragShaderCode = readFile("bin/pass.frag.spv");
+    auto vertShaderCode = readFile(finalVertShader);
+    auto geomShaderCode = readFile(finalGeomShader);
+    auto fragShaderCode = readFile(finalFragShader);
 
     Shader* vertShader =
         new Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
@@ -794,11 +798,10 @@ void Renderer::createUniformBuffers() {
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
     }
-    uniformBuffer =
-        new Buffer(&physicalDevice, device, sizeof(UniformBufferObject),
-                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    uniformBuffer = new Buffer(&physicalDevice, device, finalUBOSize,
+                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
 void Renderer::updateDescriptorSet(ShaderDescriptorSet* descriptor,
@@ -877,6 +880,44 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
 
     pool = new ShaderDescriptorPool(device, tp, type_sz);
     guiPool = new ShaderDescriptorPool(device, tp, type_sz);
+    createDescriptorSets();
+
+    recreateSwapchain();
+}
+
+void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
+                                std::string fShader, VkDeviceSize UBOSize) {
+    this->finalUBOSize = UBOSize;
+    if (!vShader.empty()) this->finalVertShader = vShader;
+    if (!gShader.empty()) this->finalGeomShader = gShader;
+    if (!fShader.empty()) this->finalFragShader = fShader;
+
+    device->wait();
+    for (int i = 0; i < guiDescriptorSets.size(); i++)
+        delete guiDescriptorSets[i];
+    guiDescriptorSets.clear();
+    for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
+    descriptorSets.clear();
+    delete renderDescriptor;
+    delete pool;
+    delete guiPool;
+
+    delete uniformBuffer;
+
+    uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * this->textures.size();
+    std::vector<VkDescriptorType> types(type_sz);
+    for (size_t i = 0; i < textures.size(); i++) {
+        types[2 * i] = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        types[2 * i + 1] = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    }
+    VkDescriptorType* tp = types.data();
+
+    pool = new ShaderDescriptorPool(device, tp, type_sz);
+    guiPool = new ShaderDescriptorPool(device, tp, type_sz);
+    uniformBuffer = new Buffer(&physicalDevice, device, finalUBOSize,
+                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     createDescriptorSets();
 
     recreateSwapchain();
@@ -1055,13 +1096,6 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     }
     if (game->getGuis().empty()) return;
     ubo.view = glm::mat4(1.f);
-    ubo.proj = glm::orthoLH_ZO<float>(-.5, .5, -.5, .5, 0.f, 1.f);
-    vkMapMemory(*(device->getDevice()),
-                *(uniformBuffer->getMemory()->getMemory()), 0, sizeof(ubo), 0,
-                &data);
-    memcpy(data, p, sizeof(ubo));
-    vkUnmapMemory(*(device->getDevice()),
-                  *(uniformBuffer->getMemory()->getMemory()));
     ubo.proj = glm::orthoLH_ZO<float>(-ratio, ratio, -1, 1, 0.f, 1.f);
 
     p = &ubo;
@@ -1073,6 +1107,16 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
     vkUnmapMemory(*(device->getDevice()),
                   *(guiUniformBuffers[currentImage]->getMemory()->getMemory()));
     if (p != &ubo) game->freeUBO(p);
+    ubo.view = glm::mat4(1.f);
+    ubo.proj = glm::orthoLH_ZO<float>(-.5, .5, -.5, .5, 0.f, 1.f);
+    p = &ubo;
+    sz = game->updateFinalUBO(p);
+    vkMapMemory(*(device->getDevice()),
+                *(uniformBuffer->getMemory()->getMemory()), 0, sz, 0, &data);
+    memcpy(data, p, sz);
+    vkUnmapMemory(*(device->getDevice()),
+                  *(uniformBuffer->getMemory()->getMemory()));
+    if (p != &ubo) game->freeFinalUBO(p);
 }
 
 glm::vec2 Renderer::getVirtPos(glm::vec2 realPos) {

@@ -118,6 +118,9 @@ class Renderer {
     void loadGuiShaders(std::string vShader, std::string gShader,
                         std::string fShader, VkDeviceSize guiUBOSize);
 
+    void loadFinalShaders(std::string vShader, std::string gShader,
+                          std::string fShader, VkDeviceSize guiUBOSize);
+
     glm::vec2 getVirtPos(glm::vec2 realPos);
 
     ~Renderer();
@@ -204,6 +207,11 @@ class Renderer {
     std::string guiVertShader = "bin/gui.vert.spv",
                 guiGeomShader = "bin/def.geom.spv",
                 guiFragShader = "bin/def.frag.spv";
+
+    VkDeviceSize finalUBOSize = sizeof(UniformBufferObject);
+    std::string finalVertShader = "bin/pass.vert.spv",
+                finalGeomShader = "bin/pass.geom.spv",
+                finalFragShader = "bin/pass.frag.spv";
 
     void initWindow();
 

@@ -94,6 +94,9 @@ Renderer *Game::getRenderer() { return renderer; }
 size_t Game::updateUBO(void *&ubo) { return sizeof(UniformBufferObject); }
 void Game::freeUBO(void *&ubo) {}
 
+size_t Game::updateFinalUBO(void *&ubo) { return sizeof(UniformBufferObject); }
+void Game::freeFinalUBO(void *&ubo) {}
+
 void Game::addEntity(Entity *entity) { entities.push_back(entity); }
 
 float prevZ = 0.9999f;

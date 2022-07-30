@@ -96,11 +96,19 @@ class GraphicalEffectHandler {
 
     /**
      * @brief This should return sizeof(UniformBufferObject) unless you are
-     * changing the shader
+     * changing the shaders
      *
      * @return maximum size you may return for updateUBO(void*&, int64_t)
      */
     virtual size_t getUBOSize() = 0;
+
+    /**
+     * @brief This should return sizeof(UniformBufferObject) unless you are
+     * changing the final shaders
+     *
+     * @return maximum size you may return for updateFinalUBO(void*&, int64_t)
+     */
+    virtual size_t getFinalUBOSize() = 0;
 
     /**
      * @brief Updates UBO for the current frame, you can replace the pointer
@@ -116,13 +124,34 @@ class GraphicalEffectHandler {
     virtual size_t updateUBO(void*& ubo, int64_t time) = 0;
 
     /**
-     * @brief Do nothing if you did not replace ubo, else free or delete the
-     * pointer in order to avoid memory leaks
+     * @brief Updates UBO used in the shaders of the second pass
+     *
+     * @param ubo The pointer to uniforms
+     * @param time Current time in micros
+     * @return the size of the data written
+     * (should be sizeof(UniformBufferObject) by default)
+     * CANNOT be higher than what you return in getFinalUBOSize()
+     * else you will cause a SegFault
+     */
+    virtual size_t updateFinalUBO(void*& ubo, int64_t time) = 0;
+
+    /**
+     * @brief Do nothing if you did not replace ubo in updateUBO, else free or
+     * delete the pointer in order to avoid memory leaks
      *
      * @param ubo The pointer as you left it at the end of updateUBO(void*&,
      * int64_t)
      */
     virtual void freeUBO(void*& ubo) = 0;
+
+    /**
+     * @brief Do nothing if you did not replace ubo in updateFinalUBO, else free
+     * or delete the pointer in order to avoid memory leaks
+     *
+     * @param ubo The pointer as you left it at the end of
+     * updateFinalUBO(void*&, int64_t)
+     */
+    virtual void freeFinalUBO(void*& ubo) = 0;
 
     virtual ~GraphicalEffectHandler() = default;
 
