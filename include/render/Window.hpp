@@ -33,6 +33,7 @@ class Window {
 
     void setKeycallback(GLFWkeyfun fun);
     void setMousecallback(GLFWmousebuttonfun fun);
+    void setMouseWheelcallback(GLFWscrollfun fun);
 
     glm::vec2 getCursorPos();
 

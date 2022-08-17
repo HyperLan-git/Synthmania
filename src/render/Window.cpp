@@ -53,6 +53,10 @@ void Window::setMousecallback(GLFWmousebuttonfun fun) {
     glfwSetMouseButtonCallback(window, fun);
 }
 
+void Window::setMouseWheelcallback(GLFWscrollfun fun) {
+    glfwSetScrollCallback(window, fun);
+}
+
 glm::vec2 Window::getCursorPos() {
     double x, y;
     glfwGetCursorPos(window, &x, &y);

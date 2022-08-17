@@ -2,6 +2,7 @@
 
 #include "MainMenu.hpp"
 #include "Renderer.hpp"
+#include "SongSelectMenu.hpp"
 
 Game::Game() {
     textures = std::map<std::string, std::string>();
@@ -18,6 +19,8 @@ void Game::init() {
     renderer->loadTextures(textures, fontsToLoad);
     window->setWindowUserPointer(this);
     this->menus.emplace("main", new MainMenu(this));
+    this->menus.emplace("song select",
+                        new SongSelectMenu(this, "resources/songs"));
 }
 
 void Game::resetScene() {

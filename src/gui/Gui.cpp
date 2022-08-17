@@ -4,13 +4,13 @@
 #define M_PI 3.14159265359
 #endif
 
-Gui::Gui(ImageView* texture, const char* name) {
+Gui::Gui(ImageView* texture, std::string name) {
     this->texture = texture;
     this->name = name;
 }
 
 ImageView* Gui::getTexture() const { return texture; }
-const char* Gui::getName() const { return name; }
+std::string Gui::getName() const { return name; }
 glm::vec3 Gui::getPosition() const { return position; }
 glm::vec2 Gui::getRealPosition() const { return position; }
 glm::vec2 Gui::getGraphicalPosition() const { return graphicalPosition; }

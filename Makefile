@@ -22,7 +22,7 @@ IDIRS += -I ./mingw-std-threads
 endif
 
 CFLAGS = -std=c++17 -O3 $(VSTOBJ) -D NDEBUG
-LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype
+LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype -lboost_filesystem
 ifeq ($(OS),Windows_NT)
 LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lalut -lwinmm -lfreetype
 endif

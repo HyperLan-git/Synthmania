@@ -5,6 +5,7 @@ class Gui;
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <string>
 #include <vector>
 
 #include "Entity.hpp"
@@ -22,10 +23,10 @@ struct GuiData {
 
 class Gui {
    public:
-    Gui(ImageView* texture, const char* name);
+    Gui(ImageView* texture, std::string name);
 
     ImageView* getTexture() const;
-    const char* getName() const;
+    std::string getName() const;
     glm::vec3 getPosition() const;
     glm::vec2 getGraphicalPosition() const;
     virtual glm::vec2 getRealPosition() const;
@@ -64,7 +65,7 @@ class Gui {
     glm::vec2 size = {1, 1};
     glm::vec4 color = {1, 1, 1, 1};
     int negate = false;
-    const char* name;
+    std::string name;
     std::vector<GraphicalEffect*> effects;
     bool destroyed = false;
 };

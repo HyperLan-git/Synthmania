@@ -75,7 +75,7 @@ TrackPartition MidiHandler::readMidi(const char *path) {
     libremidi::reader::parse_result result = r.parse(bytes);
     std::vector<MidiNote> notes;
 
-    r.startingTempo = 120;
+    // r.startingTempo = 120;
     uint64_t MPQ = 250000 * 60 / r.startingTempo;
 
     // If parsing succeeded, use the parsed data
