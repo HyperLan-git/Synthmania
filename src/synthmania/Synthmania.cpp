@@ -89,9 +89,8 @@ void Synthmania::loadSong(std::string songFolder) {
         std::vector<double> cutDown = splitDuration(totalDuration);
         short firstDots = 0;
         for (int i = 1; i < cutDown.size(); i++)
-            if (cutDown.size() > 1 && cutDown[i] == cutDown[i - 1] / 2.) {
+            if (cutDown.size() > 1 && cutDown[i] == cutDown[i - 1] / 2.)
                 firstDots = i;
-            }
         for (int i = 0; i < firstDots; i++) {
             cutDown[1] += cutDown[0];
             cutDown.erase(cutDown.begin());

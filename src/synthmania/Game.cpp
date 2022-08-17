@@ -42,7 +42,9 @@ void Game::run() {
 
         if (menu != NULL) {
             bool pressed = window->mousePressed();
-            for (Button *b : menu->getButtons())
+            std::vector<Button *> buttons = menu->getButtons();
+            for (auto iter = buttons.rbegin(); iter != buttons.rend(); iter++) {
+                Button *b = *iter;
                 if (!pressed) {
                     if (b->isPressed() && b->isInside(pos)) {
                         menu->onPressed(b);
@@ -50,10 +52,11 @@ void Game::run() {
                         break;
                     }
                     b->onReleased();
-                } else if (b->isInside(pos) && !b->isPressed()) {
-                    b->onPressed();
+                } else if (b->isInside(pos)) {
+                    if (!b->isPressed()) b->onPressed();
                     break;
                 }
+            }
         }
         if (audio != NULL) audio->update();
         update();
