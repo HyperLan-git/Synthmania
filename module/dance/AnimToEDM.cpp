@@ -4,6 +4,7 @@ struct UniformBufferObject2 {
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
     alignas(16) glm::vec4 color;
+    alignas(sizeof(float)) float warp;
 };
 
 struct UniformBufferObject3 {
@@ -11,6 +12,19 @@ struct UniformBufferObject3 {
     alignas(16) glm::mat4 proj;
     alignas(4) float chroma;
     alignas(4) float blur;
+};
+
+struct AnimData {
+    uint64_t timing;
+    float kick;
+    float color;
+    float chroma;
+    float rotation;
+    float blur;
+    float x, y;
+    float zoom;
+    float light;
+    float warp;
 };
 
 glm::vec3 hsv2rgb(glm::vec3 hsv) {
@@ -64,7 +78,56 @@ glm::vec3 hsv2rgb(glm::vec3 hsv) {
 
 extern "C" class AnimToEDM : public GraphicalEffectHandler {
    public:
-    AnimToEDM(Synthmania* game) : GraphicalEffectHandler(game) {}
+    std::vector<AnimData> datas;
+
+    AnimToEDM(Synthmania* game) : GraphicalEffectHandler(game) {
+        std::vector<char> file = readFile(game->getSongFolder() + "/anim.csv");
+        file.push_back('\0');
+
+        size_t elem;
+        char* cur = NULL;
+        char line[2048];
+        std::stringstream lines(file.data());
+        while (lines.getline(line, 2048)) {
+            elem = 0;
+            char* token = std::strtok(line, ",");
+            while (token != NULL) {
+                std::string str = std::string(token);
+                bool isNumber =
+                    str.find_first_not_of("0123456789. ") == str.npos;
+                if (isNumber) {
+                    if (datas.size() <= elem) datas.resize(elem + 1);
+
+                    // I hate this
+                    if (std::strcmp(cur, "timing") == 0)
+                        datas[elem].timing = std::atoll(token);
+                    else if (std::strcmp(cur, "kick") == 0)
+                        datas[elem].kick = std::atof(token);
+                    else if (std::strcmp(cur, "color") == 0)
+                        datas[elem].color = std::atof(token);
+                    else if (std::strcmp(cur, "x") == 0)
+                        datas[elem].x = std::atof(token);
+                    else if (std::strcmp(cur, "y") == 0)
+                        datas[elem].y = std::atof(token);
+                    else if (std::strcmp(cur, "zoom") == 0)
+                        datas[elem].zoom = std::atof(token);
+                    else if (std::strcmp(cur, "chroma") == 0)
+                        datas[elem].chroma = std::atof(token);
+                    else if (std::strcmp(cur, "rotation") == 0)
+                        datas[elem].rotation = std::atof(token);
+                    else if (std::strcmp(cur, "blur") == 0)
+                        datas[elem].blur = std::atof(token);
+                    else if (std::strcmp(cur, "light") == 0)
+                        datas[elem].light = std::atof(token);
+                    else if (std::strcmp(cur, "warp") == 0)
+                        datas[elem].warp = std::atof(token);
+                    elem++;
+                } else
+                    cur = token;
+                token = std::strtok(NULL, ",");
+            }
+        }
+    }
 
     const std::string getVertShaderCode() override {
         return (game->getSongFolder() + "/v_shader.spv");
@@ -100,26 +163,66 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
 
     void update(int64_t time) override {}
 
+    AnimData getData(int64_t time) {
+        auto data = datas[0], next = *--datas.end();
+        if (next.timing < time) return next;
+        for (auto iter = datas.rbegin(); iter != datas.rend(); iter++) {
+            if (time > iter->timing) {
+                data = *iter;
+                break;
+            }
+            next = *(iter);
+        }
+        if (next.timing == data.timing) return data;
+
+        double progress =
+            (time - data.timing) / (long double)(next.timing - data.timing);
+        double p = (1. - progress);
+        AnimData result;
+        result.blur = data.blur * p + next.blur * progress;
+        result.chroma = data.chroma * p + next.chroma * progress;
+        result.color = data.color * p + next.color * progress;
+        result.kick = data.kick * p + next.kick * progress;
+        result.light = data.light * p + next.light * progress;
+        result.rotation = data.rotation * p + next.rotation * progress;
+        result.zoom = data.zoom * p + next.zoom * progress;
+        result.warp = data.warp * p + next.warp * progress;
+        result.x = data.x * p + next.x * progress;
+        result.y = data.y * p + next.y * progress;
+        return result;
+    }
+
     size_t updateUBO(void*& ubo, int64_t time) override {
         UniformBufferObject* u = (UniformBufferObject*)ubo;
         UniformBufferObject2* result = new UniformBufferObject2();
+        if (time < 0) {
+            result->color = glm::vec4(0.3, 0.3, 0.3, 1);
+            result->view = u->view;
+            result->proj = u->proj;
+            ubo = result;
+            return sizeof(UniformBufferObject2);
+        }
+        auto data = getData(time);
         uint64_t MPQ = game->getPartition().MPQ;
         double progress = ((time % MPQ) / (double)MPQ);
-        short odd = (time % (MPQ * 2)) > MPQ;
-        if (time < 0) odd = !odd;
-        double a = -100 * progress * (progress - 0.2);
+        int odd = (time % (MPQ * 2)) > MPQ;
+        double a = -100 * progress * (progress - 0.2) * data.kick;
         if (a < 0) a = 0;
-        double zoom = 1 + .02 * a;
+        double zoom = data.zoom + .02 * a;
         u->view = glm::rotate(
             glm::mat4(1),
-            (float)(progress * (progress - 1) * .1f) * (odd ? 1 : -1),
+            (float)(data.rotation * progress * (progress - 1) * .1f) *
+                (odd ? 1 : -1),
             glm::vec3(0, 0, 1));
         u->view[0][0] = u->view[1][1] = zoom;
         result->view = u->view;
-        result->view = u->view;
         result->proj = u->proj;
         result->color = glm::vec4(
-            hsv2rgb(glm::vec3((time % (MPQ * 4)) / MPQ / 5. * 360, .5, 1)), 1);
+            (data.color) * hsv2rgb(glm::vec3(
+                               (time % (MPQ * 4)) / MPQ / 5. * 360, .5, 1)) +
+                (data.light) * glm::vec3(1),
+            1);
+        result->warp = data.warp;
         ubo = result;
         return sizeof(UniformBufferObject2);
     }
@@ -127,12 +230,21 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
     size_t updateFinalUBO(void*& ubo, int64_t time) override {
         UniformBufferObject* u = (UniformBufferObject*)ubo;
         UniformBufferObject3* result = new UniformBufferObject3();
+        if (time < 0) {
+            result->proj = u->proj;
+            result->view = u->view;
+            result->chroma = 0;
+            result->blur = 0;
+            ubo = result;
+            return sizeof(UniformBufferObject3);
+        }
+        auto data = getData(time);
         uint64_t MPQ = game->getPartition().MPQ;
         result->proj = u->proj;
         result->view = u->view;
-        result->chroma = .005f * (1 - (time % (MPQ)) / (double)MPQ);
-        result->chroma = 0;
-        result->blur = 2.5f * (1 - (time % (MPQ)) / (double)MPQ);
+        result->chroma =
+            data.chroma * .005f * (1 - (time % (MPQ)) / (double)MPQ);
+        result->blur = data.blur * 2.5f * (1 - (time % (MPQ)) / (double)MPQ);
         ubo = result;
         return sizeof(UniformBufferObject3);
     }
@@ -141,7 +253,7 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
 
     void freeFinalUBO(void*& ubo) { delete (UniformBufferObject3*)ubo; }
 
-    ~AnimToEDM() = default;
+    virtual ~AnimToEDM() = default;
 };
 
 extern "C" GraphicalEffectHandler* getEffectHandler(Synthmania* game) {

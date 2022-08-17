@@ -6,7 +6,9 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
     vec4 color;
+    float warp;
 } ubo;
+
 layout (triangles) in;
 
 layout (triangle_strip, max_vertices = 3 * passes) out;
@@ -18,9 +20,11 @@ layout(location = 0) out vec2 geomTexCoord;
 layout(location = 1) out vec4 fColor;
 
 vec4 trans(vec4 v) {
+    if(0 == ubo.warp) return v;
     vec4 v2 = vec4(v);
     float l = pow(length(v2.xy), .15f);
     if(l < .8f) l = .8f;
+    l = pow(l, ubo.warp);
     v2.x *= l;
     v2.y *= l;
     return v2;

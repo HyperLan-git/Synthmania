@@ -97,7 +97,8 @@
         "xloctime": "cpp",
         "xmemory": "cpp",
         "xstddef": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "cerrno": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "editor.formatOnSave": true,

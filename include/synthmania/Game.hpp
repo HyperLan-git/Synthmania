@@ -26,6 +26,8 @@ class Game;
 
 class Renderer;
 
+// FIXME pass everything that needs it by reference this is so much useless
+// copying, man looking at Cherno's vids help already
 class Game {
    public:
     Game();

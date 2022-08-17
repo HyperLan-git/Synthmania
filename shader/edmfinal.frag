@@ -18,19 +18,17 @@ float weight[5] = float[](0.2270270270, 0.1945945946, 0.1216216216,
                                   0.0540540541, 0.0162162162);
 
 vec4 tex(vec2 pos) {
-    if(pos.x > pos.y)
-        return texture(texSampler, vec2(v.x, -v.y));
-    return texture(texSampler, v);
+    return texture(texSampler, pos);
 }
 
 vec4 texBlur(vec2 v) {
     vec4 col = tex(v) * weight[0];
-    vec2 texSize = tex(texSampler, 0);
+    vec2 texSize = textureSize(texSampler, 0);
     for (int i = 1; i < 5; i++) {
-        col += tex(v + vec2(0, offset[i] * ubo.blur / texSize.x)) * weight[i];
-        col += tex(v + vec2(0, offset[i] * ubo.blur / texSize.x)) * weight[i];
-        col += tex(v + vec2(offset[i] * ubo.blur / texSize.y, 0)) * weight[i];
-        col += tex(v + vec2(offset[i] * ubo.blur / texSize.y, 0)) * weight[i];
+        col += tex(v + vec2(0, offset[i] * ubo.blur / texSize.y)) * weight[i];
+        col += tex(v + vec2(0, offset[i] * ubo.blur / texSize.y)) * weight[i];
+        col += tex(v + vec2(offset[i] * ubo.blur / texSize.x, 0)) * weight[i];
+        col += tex(v + vec2(offset[i] * ubo.blur / texSize.x, 0)) * weight[i];
     }
     return col;
 }

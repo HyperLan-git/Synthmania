@@ -437,7 +437,7 @@ void Synthmania::update() {
         }
     }
 
-    if (multiplier > 0 && std::rand() % 300 == 0) multiplier--;
+    // if (multiplier > 0 && std::rand() % 300 == 0) multiplier--;
     std::this_thread::yield();
 }
 
