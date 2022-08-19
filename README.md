@@ -19,7 +19,12 @@ This means that you will have to -I every subfolder of include and the includes 
 
 Object files are now setup this is so cool not having to wait 1 min each time I add a space in the source code.
 
+Windows build needs a shitton of dlls right now. Idk how I'm going to handle that for the end user. Probably a crappy windows installer hehe
+
 # Development
-I'll probably put some screenshots of what the game looks like for people who don't want to/know how to compile and try the thing for themself. Or I'll actually do something right and code short scripts to detect your platform and install everything automatically.
+Here is what the game looks like for people who don't want to/know how to compile and try the thing for themself (I'll post some demos and more info when more ppl get interested) :
+- [youtube](https://www.youtube.com/channel/UCkYoZyuOyPuBcerhdJB67Zw)
+- [discord](https://discord.gg/WnU84Aqtnb)
+Maybe I'll actually do something right and code short scripts to detect your platform and install everything automatically.
 
 Nah that's too much work I'd rather remake Synthesia using 200h of spare time just to avoid paying 30€.
