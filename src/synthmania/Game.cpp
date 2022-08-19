@@ -18,6 +18,7 @@ Game::Game() {
 void Game::init() {
     renderer->loadTextures(textures, fontsToLoad);
     window->setWindowUserPointer(this);
+    // TODO Shit we gotta put menus somewhere else
     this->menus.emplace("main", new MainMenu(this));
     this->menus.emplace("song select",
                         new SongSelectMenu(this, "resources/songs"));

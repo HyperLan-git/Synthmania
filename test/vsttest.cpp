@@ -41,12 +41,18 @@ int audiorun(void* arg) {
         source->queueBuffers(buffers, BUFFERS);
         handler->addSource(source);
         source->play();
+        AudioBuffer* b;
         while (host->isVisible()) {
             // std::cout << std::hex << source->getState() << std::endl;
             source->play();
             int proc = source->getProcessedBuffers();
             while (proc--) {
-                AudioBuffer* b = source->unqueueBuffers(1);
+                ALuint* id = source->unqueueBuffers(1);
+                for (int i = 0; i < BUFFERS; i++)
+                    if (buffers[i].getBuffer() == *id) {
+                        b = buffers + i;
+                        break;
+                    }
                 const float** channels = host->update();
                 for (int j = 0; j < BUFFERSIZE; j++) {
                     buf[j] = channels[j % 2][j] * 32767;  // LEFT / RIGHT
@@ -75,11 +81,9 @@ int guirun(void* arg) {
     do {
         try {
             host->handleMessages();
-            std::cout << "gg\n";
             errored = false;
         } catch (std::exception e) {
             std::cerr << "error: " << e.what() << std::endl;
-            std::cout << "error: " << e.what() << std::endl;
             errored = true;
         }
     } while (errored);

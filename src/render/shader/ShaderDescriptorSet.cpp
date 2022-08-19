@@ -57,7 +57,8 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
         this->writeDescriptor = descriptorWrites;
     } else {
         // TODO a bit shitty if you ask me
-        if (writeDescriptor->pNext != NULL) delete writeDescriptor->pNext;
+        if (writeDescriptor->pNext != NULL)
+            delete (VkWriteDescriptorSet *)writeDescriptor->pNext;
 
         writeDescriptor->pNext = descriptorWrites;
     }
