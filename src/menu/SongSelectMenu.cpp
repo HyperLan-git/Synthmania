@@ -13,6 +13,7 @@ SongSelectMenu::SongSelectMenu(Game *g, std::string folder) : Menu(g) {
     }
     this->folder = folder;
     if (!boost::filesystem::exists(folder)) return;
+    // Default constructor gives end iterator
     boost::filesystem::directory_iterator end;
     float pos = 1;
     for (boost::filesystem::directory_iterator iter(folder); iter != end;

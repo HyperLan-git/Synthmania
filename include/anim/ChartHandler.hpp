@@ -1,25 +1,23 @@
 #pragma once
 
-class GraphicalEffectHandler;
+class ChartHandler;
 
 #include "GraphicalEffect.hpp"
 #include "Synthmania.hpp"
 
-// TODO rename this to modchart handler or some shit
-
 /**
  * @brief Returns your Graphics handler for this mod
  */
-extern "C" GraphicalEffectHandler* getEffectHandler(Synthmania* game);
+extern "C" ChartHandler* getChartHandler(Synthmania* game);
 
 /**
  * @brief A class powerful enough (hopefully) to make modcharts to rival NotITG
  * itself. Feel free to modify or replace variables in the game, as long as you
  * know what you are doing everything will be fine
  */
-class GraphicalEffectHandler {
+class ChartHandler {
    public:
-    GraphicalEffectHandler(Synthmania* game);
+    ChartHandler(Synthmania* game);
 
     /**
      * @brief Gets called whenever a gui appears
@@ -153,7 +151,7 @@ class GraphicalEffectHandler {
      */
     virtual void freeFinalUBO(void*& ubo) = 0;
 
-    virtual ~GraphicalEffectHandler() = default;
+    virtual ~ChartHandler() = default;
 
    protected:
     Synthmania* game;

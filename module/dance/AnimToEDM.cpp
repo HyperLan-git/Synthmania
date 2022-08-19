@@ -1,4 +1,4 @@
-#include "GraphicalEffectHandler.hpp"
+#include "ChartHandler.hpp"
 
 struct UniformBufferObject2 {
     alignas(16) glm::mat4 view;
@@ -76,11 +76,11 @@ glm::vec3 hsv2rgb(glm::vec3 hsv) {
     return rgb;
 }
 
-extern "C" class AnimToEDM : public GraphicalEffectHandler {
+extern "C" class AnimToEDM : public ChartHandler {
    public:
     std::vector<AnimData> datas;
 
-    AnimToEDM(Synthmania* game) : GraphicalEffectHandler(game) {
+    AnimToEDM(Synthmania* game) : ChartHandler(game) {
         std::vector<char> file = readFile(game->getSongFolder() + "/anim.csv");
         file.push_back('\0');
 
@@ -256,6 +256,6 @@ extern "C" class AnimToEDM : public GraphicalEffectHandler {
     virtual ~AnimToEDM() = default;
 };
 
-extern "C" GraphicalEffectHandler* getEffectHandler(Synthmania* game) {
+extern "C" ChartHandler* getChartHandler(Synthmania* game) {
     return new AnimToEDM(game);
 }

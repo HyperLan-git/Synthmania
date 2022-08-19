@@ -36,6 +36,7 @@ class Renderer;
 #include <vector>
 
 #include "Buffer.hpp"
+#include "ChartHandler.hpp"
 #include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
 #include "Device.hpp"
@@ -43,7 +44,6 @@ class Renderer;
 #include "Fence.hpp"
 #include "Font.hpp"
 #include "Framebuffer.hpp"
-#include "GraphicalEffectHandler.hpp"
 #include "Gui.hpp"
 #include "Image.hpp"
 #include "ImageView.hpp"

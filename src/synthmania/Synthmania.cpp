@@ -27,9 +27,9 @@ void Synthmania::loadSong(std::string songFolder) {
         if (e != NULL) {
             std::cerr << "Error while loading anim ! " << e << "\n";
         } else {
-            GraphicalEffectHandler *(*f)(Synthmania *) =
-                (GraphicalEffectHandler * (*)(Synthmania *))
-                    getFunction(shared, "getEffectHandler");
+            ChartHandler *(*f)(Synthmania *) =
+                (ChartHandler * (*)(Synthmania *))
+                    getFunction(shared, "getChartHandler");
             char *e = NULL;  // TODO dlerror();
             if (e != NULL)
                 std::cerr << "Error while loading anim ! " << e << "\n";

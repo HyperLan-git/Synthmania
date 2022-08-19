@@ -1,6 +1,6 @@
-#include "GraphicalEffectHandler.hpp"
+#include "ChartHandler.hpp"
 
-extern "C" class DefaultEmptyAnimLib : public GraphicalEffectHandler {
+extern "C" class DefaultEmptyAnimLib : public ChartHandler {
    public:
     DefaultEmptyAnimLib(Synthmania* game) : GraphicalEffectHandler(game) {}
 
@@ -41,6 +41,6 @@ extern "C" class DefaultEmptyAnimLib : public GraphicalEffectHandler {
     virtual ~DefaultEmptyAnimLib() = default;
 };
 
-extern "C" GraphicalEffectHandler* getEffectHandler(Synthmania* game) {
+extern "C" ChartHandler* getChartHandler(Synthmania* game) {
     return new DefaultEmptyAnimLib(game);
 }

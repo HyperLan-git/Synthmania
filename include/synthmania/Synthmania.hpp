@@ -93,7 +93,7 @@ class Synthmania : public Game {
     TrackPartition partition;
     Chart chart;
     Diff diff;
-    GraphicalEffectHandler *mod = NULL;
+    ChartHandler *mod = NULL;
 
     std::vector<Note *> notes;
     AudioSource *music = NULL;
