@@ -25,6 +25,7 @@ Windows build needs a shitton of dlls right now. Idk how I'm going to handle tha
 Here is what the game looks like for people who don't want to/know how to compile and try the thing for themself (I'll post some demos and more info when more ppl get interested) :
 - [youtube](https://www.youtube.com/channel/UCkYoZyuOyPuBcerhdJB67Zw)
 - [discord](https://discord.gg/WnU84Aqtnb)
+
 Maybe I'll actually do something right and code short scripts to detect your platform and install everything automatically.
 
 Nah that's too much work I'd rather remake Synthesia using 200h of spare time just to avoid paying 30€.
