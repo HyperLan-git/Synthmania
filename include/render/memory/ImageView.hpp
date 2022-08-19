@@ -12,7 +12,7 @@ class ImageView;
 class ImageView {
    public:
     ImageView(Device *device, Image *image, VkFormat format,
-              VkImageAspectFlags aspectFlags, const char *name);
+              VkImageAspectFlags aspectFlags, std::string name);
     VkImageView *getView();
     Image *getImage();
     std::string getName();

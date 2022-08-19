@@ -113,6 +113,8 @@ class Renderer {
     VkPhysicalDevice* getPhysicalDevice();
     Device* getDevice();
 
+    Instance* getInstance();
+
     void addModel(Model* m);
 
     void loadGuiShaders(std::string vShader, std::string gShader,

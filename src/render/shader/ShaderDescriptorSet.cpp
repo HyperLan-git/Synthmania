@@ -70,7 +70,8 @@ VkDescriptorSet *ShaderDescriptorSet::getSet() const { return set; }
 
 ShaderDescriptorSet::~ShaderDescriptorSet() {
     if (writeDescriptor != NULL) {
-        if (writeDescriptor->pNext != NULL) delete writeDescriptor->pNext;
+        if (writeDescriptor->pNext != NULL)
+            delete (VkWriteDescriptorSet *)writeDescriptor->pNext;
         delete writeDescriptor;
     }
     vkFreeDescriptorSets(*(device->getDevice()), *(pool->getPool()), 1, set);

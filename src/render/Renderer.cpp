@@ -281,6 +281,8 @@ void Renderer::loadTextures(
 VkPhysicalDevice* Renderer::getPhysicalDevice() { return &physicalDevice; }
 Device* Renderer::getDevice() { return device; }
 
+Instance* Renderer::getInstance() { return instance; }
+
 void Renderer::setStartTime(double start) { this->startTime = start; }
 
 void Renderer::addModel(Model* model) { models.push_back(model); }
@@ -1161,12 +1163,12 @@ void Renderer::drawFrame() {
     recordCommandBuffer(
         commandBuffers[currentFrame], swapchain->getRenderPass(),
         swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());
-    renderCommandBuffer->submit(device->getQueue("main"));
 
     commandBuffers[currentFrame]->submit(
         device->getQueue("main"), imageAvailableSemaphores[currentFrame],
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
         renderFinishedSemaphores[currentFrame], inFlightFences[currentFrame]);
+    renderCommandBuffer->submit(device->getQueue("main"));
 
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

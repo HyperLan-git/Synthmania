@@ -1,7 +1,7 @@
 #include "ImageView.hpp"
 
 ImageView::ImageView(Device *device, Image *image, VkFormat format,
-                     VkImageAspectFlags aspectFlags, const char *name) {
+                     VkImageAspectFlags aspectFlags, std::string name) {
     this->device = device;
     this->image = image;
     VkImageViewCreateInfo viewInfo{};
