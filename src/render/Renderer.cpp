@@ -9,6 +9,78 @@ Renderer::Renderer(Game* game, Window* window) {
     this->game = game;
     this->window = window;
     initVulkan();
+    ComputeShader shader(device, readFile("bin/square.comp.spv"), "main", 128);
+    VkPushConstantRange range{.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
+                              .offset = 0,
+                              .size = sizeof(unsigned int) * 2};
+    VkDescriptorSetLayoutBinding in, out;
+    in.binding = 0;
+    in.descriptorCount = 1;
+    in.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    in.pImmutableSamplers = NULL;
+    in.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    out.binding = 1;
+    out.descriptorCount = 1;
+    out.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    out.pImmutableSamplers = NULL;
+    out.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    VkDescriptorSetLayoutBinding bindings[] = {in, out};
+    VkDescriptorType types[] = {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                                VK_DESCRIPTOR_TYPE_STORAGE_BUFFER};
+    ShaderDescriptorPool shaderPool(device, types, 2);
+    ShaderDescriptorSetLayout shaderLayout(device, bindings, 2);
+    VkDeviceSize bufSize = 128 * sizeof(float);
+    Buffer input(&physicalDevice, device, bufSize,
+                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
+        output(&physicalDevice, device, bufSize,
+               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+               VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
+                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    VkDescriptorBufferInfo info = {.buffer = *(input.getBuffer()),
+                                   .offset = 0,
+                                   .range = bufSize},
+                           info2 = {.buffer = *(output.getBuffer()),
+                                    .offset = 0,
+                                    .range = bufSize};
+    ShaderDescriptorSet set(device, &shaderPool, &shaderLayout);
+    set.updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 0,
+                     VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &info, NULL);
+    set.updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
+                     VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &info2, NULL);
+    PipelineLayout layout(device, &shaderLayout, 1, &range);
+    Pipeline compute(device, &layout, &shader);
+    CommandPool pool(physicalDevice, device);
+    CommandBuffer buf(device, &pool, true);
+    void* p;
+    float arr[128];
+    for (int i = 0; i < 128; i++) {
+        arr[i] = i;
+    }
+    vkMapMemory(*(device->getDevice()), *(input.getMemory()->getMemory()), 0,
+                bufSize, 0, &p);
+    memcpy(p, arr, bufSize);
+    vkUnmapMemory(*(device->getDevice()), *(input.getMemory()->getMemory()));
+    std::cout << "haha" << std::endl;
+    buf.begin();
+    buf.bindPipeline(&compute, VK_PIPELINE_BIND_POINT_COMPUTE);
+    buf.bindDescriptorSet(&compute, &set, VK_PIPELINE_BIND_POINT_COMPUTE);
+    unsigned int constants[] = {128, 1};
+    buf.pushConstants(&compute, VK_SHADER_STAGE_COMPUTE_BIT, 0, constants,
+                      sizeof(unsigned int) * 2);
+
+    buf.executeComputeShader(&shader, 128);
+
+    buf.end();
+    buf.submit(device->getQueue("compute"));
+    vkMapMemory(*(device->getDevice()), *(output.getMemory()->getMemory()), 0,
+                bufSize, 0, &p);
+    memcpy(arr, p, bufSize);
+    vkUnmapMemory(*(device->getDevice()), *(output.getMemory()->getMemory()));
+    for (int i = 0; i < 128; i++) {
+        std::cout << i << " squared = " << arr[i] << std::endl;
+    }
 }
 
 void Renderer::initVulkan() {
@@ -204,6 +276,7 @@ Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
     transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     void* d;
+    // TODO utilitary function to map memory
     vkMapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()), 0,
                 layout.rowPitch * h, 0, &d);
     memcpy(d, buffer, layout.rowPitch * h);
@@ -606,12 +679,17 @@ void Renderer::createLogicalDevice() {
          [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
              return prop.queueFlags & VK_QUEUE_GRAPHICS_BIT;
          }},
-        {"secondary", [this](VkPhysicalDevice dev, VkQueueFamilyProperties prop,
-                             uint32_t id) {
+        {"secondary",
+         [this](VkPhysicalDevice dev, VkQueueFamilyProperties prop,
+                uint32_t id) {
              VkBool32 presentSupport = false;
              vkGetPhysicalDeviceSurfaceSupportKHR(dev, id, *surface,
                                                   &presentSupport);
              return presentSupport;
+         }},
+        {"compute",
+         [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
+             return prop.queueFlags & VK_QUEUE_COMPUTE_BIT;
          }}};
     device = new Device(&physicalDevice, deviceExtensions, familyPredicates,
                         (enableValidationLayers ? validationLayers
@@ -1203,14 +1281,19 @@ bool Renderer::isDeviceSuitable(VkPhysicalDevice device) {
          [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
              return prop.queueFlags & VK_QUEUE_GRAPHICS_BIT;
          }},
-        {"secondary", [this](VkPhysicalDevice dev, VkQueueFamilyProperties prop,
-                             uint32_t id) {
+        {"secondary",
+         [this](VkPhysicalDevice dev, VkQueueFamilyProperties prop,
+                uint32_t id) {
              VkBool32 presentSupport = false;
              vkGetPhysicalDeviceSurfaceSupportKHR(dev, id, *surface,
                                                   &presentSupport);
              return presentSupport;
+         }},
+        {"compute",
+         [](VkPhysicalDevice dev, VkQueueFamilyProperties prop, uint32_t id) {
+             return prop.queueFlags & VK_QUEUE_COMPUTE_BIT;
          }}};
-    std::vector<VkQueueFamilyProperties> fam;
+    std::vector<VkQueueFamilyProperties> fam;  // Hey fam
     getQueueFamilies(device, fam);
     std::map<std::string, FamilyData> families =
         findQueueFamilies(device, fam, familyPredicates);

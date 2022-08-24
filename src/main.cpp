@@ -1,7 +1,7 @@
 #include "Synthmania.hpp"
 
+// TODO clean includes because it might or might not currently be complete chaos
 int main(int argc, char **argv) {
-    // std::string path = "resources/songs/ETEA";
     std::string skin = "resources/textures";
     if (argc > 1 && argv[1][0] != '\0') skin = std::string(argv[1]);
     Synthmania instance(skin);
@@ -9,7 +9,6 @@ int main(int argc, char **argv) {
     instance.setRenderer(new Renderer(&instance, instance.getWindow()));
     instance.init();
     instance.loadMenu("main");
-    // instance.loadSong(path);
     instance.run();
 
     return 0;

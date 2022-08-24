@@ -91,9 +91,9 @@ void CommandBuffer::beginRenderPass(RenderPass *renderPass,
     vkCmdBeginRenderPass(*buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void CommandBuffer::bindPipeline(Pipeline *pipeline) {
-    vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      *(pipeline->getPipeline()));
+void CommandBuffer::bindPipeline(Pipeline *pipeline,
+                                 VkPipelineBindPoint bindPoint) {
+    vkCmdBindPipeline(*buffer, bindPoint, *(pipeline->getPipeline()));
 }
 
 void CommandBuffer::bindVertexBuffers(Buffer *vertexBuffers, uint32_t count) {
@@ -109,9 +109,10 @@ void CommandBuffer::bindIndexBuffer(Buffer *indexBuffer) {
                          VK_INDEX_TYPE_UINT16);
 }
 
-void CommandBuffer::bindDescriptorSet(
-    Pipeline *pipeline, const ShaderDescriptorSet *descriptorSet) {
-    vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+void CommandBuffer::bindDescriptorSet(Pipeline *pipeline,
+                                      const ShaderDescriptorSet *descriptorSet,
+                                      VkPipelineBindPoint bindPoint) {
+    vkCmdBindDescriptorSets(*buffer, bindPoint,
                             *(pipeline->getLayout()->getLayout()), 0, 1,
                             descriptorSet->getSet(), 0, nullptr);
 }
@@ -255,6 +256,12 @@ void CommandBuffer::convertImage(Image *src, VkImageLayout srcImageLayout,
     blit.dstSubresource.layerCount = 1;
     vkCmdBlitImage(*buffer, *(src->getImage()), srcImageLayout,
                    *(dst->getImage()), dstImageLayout, 1, &blit, filter);
+}
+
+void CommandBuffer::executeComputeShader(ComputeShader *shader,
+                                         uint64_t workers, uint64_t workGroups,
+                                         uint64_t workLegions) {
+    vkCmdDispatch(*buffer, workers, workGroups, workLegions);
 }
 
 CommandBuffer::~CommandBuffer() {

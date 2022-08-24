@@ -9,6 +9,7 @@ class CommandBuffer;
 #include "Buffer.hpp"
 #include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
+#include "ComputeShader.hpp"
 #include "Fence.hpp"
 #include "Framebuffer.hpp"
 #include "Image.hpp"
@@ -47,11 +48,13 @@ class CommandBuffer {
                          VkExtent2D extent, VkClearValue *clearValues,
                          uint32_t count);
     void endRenderPass();
-    void bindPipeline(Pipeline *pipeline);
+    void bindPipeline(Pipeline *pipeline, VkPipelineBindPoint bindPoint =
+                                              VK_PIPELINE_BIND_POINT_GRAPHICS);
     void bindVertexBuffers(Buffer *vertexBuffers, uint32_t count);
     void bindIndexBuffer(Buffer *indexBuffer);
-    void bindDescriptorSet(Pipeline *pipeline,
-                           const ShaderDescriptorSet *descriptorSet);
+    void bindDescriptorSet(
+        Pipeline *pipeline, const ShaderDescriptorSet *descriptorSet,
+        VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
     void pushConstants(Pipeline *pipeline, VkShaderStageFlags shaderStage,
                        uint32_t offset, const void *data, uint32_t size);
     void draw(uint32_t count);
@@ -60,6 +63,10 @@ class CommandBuffer {
                 VkPipelineStageFlags waitStage, Semaphore *finishedSemaphore,
                 Fence *fence);
     void submit(Queue *queue, bool wait = true);
+
+    void executeComputeShader(ComputeShader *shader, uint64_t workers,
+                              uint64_t workGroups = 1,
+                              uint64_t workLegions = 1);
 
     ~CommandBuffer();
 

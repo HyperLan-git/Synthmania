@@ -15,6 +15,7 @@ ShaderDescriptorPool::ShaderDescriptorPool(Device *device,
     poolInfo.poolSizeCount = count;
     poolInfo.pPoolSizes = poolSizes;
     poolInfo.maxSets = count;
+    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
     pool = new VkDescriptorPool();
 

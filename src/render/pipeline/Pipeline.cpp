@@ -1,5 +1,6 @@
 #include "Pipeline.hpp"
 
+// TODO VkPipelineCache
 Pipeline::Pipeline(Device *device, PipelineLayout *layout,
                    RenderPass *renderPass,
                    VkPipelineShaderStageCreateInfo *shaderStages,
@@ -7,6 +8,7 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
     this->pipeline = new VkPipeline();
     this->device = device;
     this->layout = layout;
+    this->graphics = true;
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType =
@@ -87,7 +89,7 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
     // colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     // colorBlendAttachment.dstAlphaBlendFactor =
     //     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    // colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     colorBlending.sType =
@@ -117,17 +119,39 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
     pipelineInfo.renderPass = *(renderPass->getPass());
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.flags = 0;
 
     if (vkCreateGraphicsPipelines(*(device->getDevice()), VK_NULL_HANDLE, 1,
-                                  &pipelineInfo, nullptr,
-                                  pipeline) != VK_SUCCESS) {
+                                  &pipelineInfo, NULL, pipeline) != VK_SUCCESS)
         throw std::runtime_error("failed to create graphics pipeline!");
-    }
+}
+
+Pipeline::Pipeline(Device *device, PipelineLayout *layout,
+                   ComputeShader *shader) {
+    this->pipeline = new VkPipeline();
+    this->device = device;
+    this->layout = layout;
+    this->graphics = false;
+
+    VkComputePipelineCreateInfo pipelineInfo;
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipelineInfo.layout = *(layout->getLayout());
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.basePipelineIndex = 0;
+    pipelineInfo.flags = 0;
+    pipelineInfo.stage = shader->toPipeline();
+    pipelineInfo.pNext = NULL;
+
+    if (vkCreateComputePipelines(*(device->getDevice()), VK_NULL_HANDLE, 1,
+                                 &pipelineInfo, NULL, pipeline))
+        throw std::runtime_error("failed to create compute pipeline!");
 }
 
 VkPipeline *Pipeline::getPipeline() { return pipeline; }
 
 PipelineLayout *Pipeline::getLayout() { return layout; }
+
+bool Pipeline::isGraphics() { return graphics; }
 
 Pipeline ::~Pipeline() {
     vkDestroyPipeline(*(device->getDevice()), *pipeline, nullptr);

@@ -22,6 +22,10 @@ IDIRS += -I ./mingw-std-threads
 endif
 
 CFLAGS = -std=c++17 -O3 $(VSTOBJ) -D NDEBUG
+ifdef DEBUG
+CFLAGS = -std=c++17 -O3 $(VSTOBJ)
+endif
+
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype -lboost_filesystem
 ifeq ($(OS),Windows_NT)
 LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lalut -lwinmm -lfreetype
@@ -51,9 +55,10 @@ MODULEDIR = module
 
 SHADERS = $(wildcard shader/*)
 
-SHADERS_SPV = $(patsubst shader/%.vert, bin/%.vert.spv,\
+SHADERS_SPV = $(patsubst shader/%.comp, bin/%.comp.spv,\
+				$(patsubst shader/%.vert, bin/%.vert.spv,\
 				$(patsubst shader/%.frag, bin/%.frag.spv,\
-				$(patsubst shader/%.geom, bin/%.geom.spv, $(SHADERS))))
+				$(patsubst shader/%.geom, bin/%.geom.spv, $(SHADERS)))))
 
 Synthmania: shader $(VSTLIB)
 	make $(OBJ)
