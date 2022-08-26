@@ -47,11 +47,29 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
                                  glm::vec2({1, .3f}), glm::vec2({.2, .6f})));
 
     for (Text t : g->getRenderer()->createVerticalText("PLAY", "Stupid", 12,
-                                                       glm::vec2({-1.8, .4}))) {
+                                                       glm::vec2({-1.8, .1}))) {
         Gui* g = new Gui(t.character.texture, "PLAY");
         g->setPosition(t.pos);
         g->setSize(t.size);
         g->setColor(glm::vec4(.2, .2, .7, 1));
+        guis.push_back(g);
+    }
+
+    for (Text t : g->getRenderer()->createVerticalText("EDIT", "Stupid", 12,
+                                                       glm::vec2({-1.3, .1}))) {
+        Gui* g = new Gui(t.character.texture, "EDIT");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        g->setColor(glm::vec4(.2, .7, .7, 1));
+        guis.push_back(g);
+    }
+
+    for (Text t : g->getRenderer()->createVerticalText("OPTIONS", "Stupid", 12,
+                                                       glm::vec2({-.8, .1}))) {
+        Gui* g = new Gui(t.character.texture, "OPTIONS");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        g->setColor(glm::vec4(.7, .7, .2, 1));
         guis.push_back(g);
     }
 }
@@ -61,10 +79,12 @@ void MainMenu::show() { Menu::show(); }
 void MainMenu::onPressed(Button* b) {
     Synthmania* s = dynamic_cast<Synthmania*>(game);
     if (s != NULL) {
-        s->playSound("click");
-        s->resetScene();
-        s->loadMenu("song select");
-        s->setTimeMicros(-s->getChart().offset);
+        if (b->getName() == "start") {
+            s->playSound("click");
+            s->resetScene();
+            s->loadMenu("song select");
+            s->setTimeMicros(-s->getChart().offset);
+        }
     }
 }
 

@@ -1,11 +1,6 @@
 #include "ComputeShader.hpp"
 
 ComputeShader::ComputeShader(Device* device, const std::vector<char>& code,
-                             const char* mainFunction, uint64_t workers)
-    : ComputeShader(device, NULL, code, mainFunction, workers) {}
-
-ComputeShader::ComputeShader(Device* device, Pipeline* pipeline,
-                             const std::vector<char>& code,
                              const char* mainFunction, uint64_t workers) {
     VkShaderModuleCreateInfo createInfo;
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

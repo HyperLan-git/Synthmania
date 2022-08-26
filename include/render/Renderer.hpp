@@ -39,6 +39,7 @@ class Renderer;
 #include "ChartHandler.hpp"
 #include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
+#include "ComputeModule.hpp"
 #include "Device.hpp"
 #include "Entity.hpp"
 #include "Fence.hpp"
@@ -147,13 +148,13 @@ class Renderer {
     ImageView* renderImageView = NULL;
     Image* depthImage = NULL;
     ImageView* depthImageView = NULL;
-    RenderPass* renderPass = NULL;
     Framebuffer* framebuffer = NULL;
     CommandBuffer* renderCommandBuffer = NULL;
     Pipeline* renderPipeline = NULL;
     PipelineLayout* renderPipelineLayout = NULL;
     ShaderDescriptorSetLayout* renderLayout = NULL;
     ShaderDescriptorSet* renderDescriptor = NULL;
+    ShaderDescriptorPool* renderDescriptorPool = NULL;
     Semaphore* imageAvailableSemaphore = NULL;
     Buffer* uniformBuffer = NULL;
     TextureSampler* sampler = NULL;

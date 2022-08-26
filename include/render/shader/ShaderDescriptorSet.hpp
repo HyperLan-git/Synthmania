@@ -33,8 +33,10 @@ class ShaderDescriptorSet {
     void updateAccess(VkStructureType allowed, uint32_t binding,
                       VkDescriptorType type, VkDescriptorBufferInfo* bInfo,
                       VkDescriptorImageInfo* iInfo);
+    void resetAccess();
 
-    VkDescriptorSet* getSet() const;
+    VkDescriptorSet* getSet();
+
     ~ShaderDescriptorSet();
 
    private:

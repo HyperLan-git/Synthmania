@@ -22,4 +22,6 @@ Queue *Queue::getAvailableQueue(std::vector<Queue *> queues) {
     return queues[0];
 }
 
+void Queue::wait() { vkQueueWaitIdle(*queue); }
+
 Queue::~Queue() { delete queue; }

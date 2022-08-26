@@ -48,7 +48,7 @@ void CommandBuffer::submit(Queue *queue, bool wait) {
     submitInfo.pNext = NULL;
 
     vkQueueSubmit(*(queue->getQueue()), 1, &submitInfo, VK_NULL_HANDLE);
-    if (wait) vkQueueWaitIdle(*(queue->getQueue()));
+    if (wait) queue->wait();
 }
 
 void CommandBuffer::submit(Queue *queue, Semaphore *waitSemaphore,
@@ -110,7 +110,7 @@ void CommandBuffer::bindIndexBuffer(Buffer *indexBuffer) {
 }
 
 void CommandBuffer::bindDescriptorSet(Pipeline *pipeline,
-                                      const ShaderDescriptorSet *descriptorSet,
+                                      ShaderDescriptorSet *descriptorSet,
                                       VkPipelineBindPoint bindPoint) {
     vkCmdBindDescriptorSets(*buffer, bindPoint,
                             *(pipeline->getLayout()->getLayout()), 0, 1,

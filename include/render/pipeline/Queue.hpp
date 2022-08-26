@@ -24,6 +24,9 @@ class Queue {
     uint32_t getFamily();
     uint32_t getID();
     std::string getName();
+
+    void wait();
+
     ~Queue();
 
     static Queue *getAvailableQueue(std::vector<Queue *> queues);

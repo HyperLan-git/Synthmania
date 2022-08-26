@@ -9,78 +9,6 @@ Renderer::Renderer(Game* game, Window* window) {
     this->game = game;
     this->window = window;
     initVulkan();
-    ComputeShader shader(device, readFile("bin/square.comp.spv"), "main", 128);
-    VkPushConstantRange range{.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-                              .offset = 0,
-                              .size = sizeof(unsigned int) * 2};
-    VkDescriptorSetLayoutBinding in, out;
-    in.binding = 0;
-    in.descriptorCount = 1;
-    in.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    in.pImmutableSamplers = NULL;
-    in.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-    out.binding = 1;
-    out.descriptorCount = 1;
-    out.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    out.pImmutableSamplers = NULL;
-    out.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-    VkDescriptorSetLayoutBinding bindings[] = {in, out};
-    VkDescriptorType types[] = {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                VK_DESCRIPTOR_TYPE_STORAGE_BUFFER};
-    ShaderDescriptorPool shaderPool(device, types, 2);
-    ShaderDescriptorSetLayout shaderLayout(device, bindings, 2);
-    VkDeviceSize bufSize = 128 * sizeof(float);
-    Buffer input(&physicalDevice, device, bufSize,
-                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
-        output(&physicalDevice, device, bufSize,
-               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-               VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
-                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-    VkDescriptorBufferInfo info = {.buffer = *(input.getBuffer()),
-                                   .offset = 0,
-                                   .range = bufSize},
-                           info2 = {.buffer = *(output.getBuffer()),
-                                    .offset = 0,
-                                    .range = bufSize};
-    ShaderDescriptorSet set(device, &shaderPool, &shaderLayout);
-    set.updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 0,
-                     VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &info, NULL);
-    set.updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
-                     VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &info2, NULL);
-    PipelineLayout layout(device, &shaderLayout, 1, &range);
-    Pipeline compute(device, &layout, &shader);
-    CommandPool pool(physicalDevice, device);
-    CommandBuffer buf(device, &pool, true);
-    void* p;
-    float arr[128];
-    for (int i = 0; i < 128; i++) {
-        arr[i] = i;
-    }
-    vkMapMemory(*(device->getDevice()), *(input.getMemory()->getMemory()), 0,
-                bufSize, 0, &p);
-    memcpy(p, arr, bufSize);
-    vkUnmapMemory(*(device->getDevice()), *(input.getMemory()->getMemory()));
-    std::cout << "haha" << std::endl;
-    buf.begin();
-    buf.bindPipeline(&compute, VK_PIPELINE_BIND_POINT_COMPUTE);
-    buf.bindDescriptorSet(&compute, &set, VK_PIPELINE_BIND_POINT_COMPUTE);
-    unsigned int constants[] = {128, 1};
-    buf.pushConstants(&compute, VK_SHADER_STAGE_COMPUTE_BIT, 0, constants,
-                      sizeof(unsigned int) * 2);
-
-    buf.executeComputeShader(&shader, 128);
-
-    buf.end();
-    buf.submit(device->getQueue("compute"));
-    vkMapMemory(*(device->getDevice()), *(output.getMemory()->getMemory()), 0,
-                bufSize, 0, &p);
-    memcpy(arr, p, bufSize);
-    vkUnmapMemory(*(device->getDevice()), *(output.getMemory()->getMemory()));
-    for (int i = 0; i < 128; i++) {
-        std::cout << i << " squared = " << arr[i] << std::endl;
-    }
 }
 
 void Renderer::initVulkan() {
@@ -93,16 +21,16 @@ void Renderer::initVulkan() {
     DebugFunc functions = getDebugFunctions(instance);
     // Error for some reason
     /*setName(functions, device, "GPU", VK_OBJECT_TYPE_PHYSICAL_DEVICE,
-            physicalDevice);
+            physicalDevice);*/
     setName(functions, device, "Instance", VK_OBJECT_TYPE_INSTANCE,
-     *(instance->getInstance()));*/
+            *(instance->getInstance()));
     setName(functions, device, "mainSurface", VK_OBJECT_TYPE_SURFACE_KHR,
             *surface);
     setName(functions, device, "secondaryQueue", VK_OBJECT_TYPE_QUEUE,
             *(device->getQueue("secondary")->getQueue()));
     setName(functions, device, "mainQueue", VK_OBJECT_TYPE_QUEUE,
             *(device->getQueue("main")->getQueue()));
-    commandPool = new CommandPool(physicalDevice, device);
+    commandPool = new CommandPool(device);
     setName(functions, device, "Command Pool", VK_OBJECT_TYPE_COMMAND_POOL,
             *(commandPool->getPool()));
     createSwapchain();
@@ -193,12 +121,12 @@ void Renderer::createSwapchain() {
     w *= 1.5;
     h *= 1.5;
     renderImage = new Image(
-        &physicalDevice, device, w, h, VK_FORMAT_R8G8B8A8_SRGB,
+        &physicalDevice, device, w, h, VK_FORMAT_B8G8R8A8_SRGB,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     renderImageView =
-        new ImageView(device, renderImage, VK_FORMAT_R8G8B8A8_SRGB,
+        new ImageView(device, renderImage, VK_FORMAT_B8G8R8A8_SRGB,
                       VK_IMAGE_ASPECT_COLOR_BIT, "render");
     setName(functions, device, "render image", VK_OBJECT_TYPE_IMAGE,
             *(renderImage->getImage()));
@@ -220,18 +148,15 @@ void Renderer::createSwapchain() {
     setName(functions, device, "depth image view", VK_OBJECT_TYPE_IMAGE_VIEW,
             *(depthImageView->getView()));
 
-    renderPass =
+    /*renderPass =
         new RenderPass(&physicalDevice, device, VK_FORMAT_R8G8B8A8_SRGB);
     setName(functions, device, "render pass", VK_OBJECT_TYPE_RENDER_PASS,
-            *(renderPass->getPass()));
+            *(renderPass->getPass()));*/
 
-    framebuffer = new Framebuffer(device, renderPass, {w, h},
+    framebuffer = new Framebuffer(device, swapchain->getRenderPass(), {w, h},
                                   {renderImageView, depthImageView});
     setName(functions, device, "framebuffer", VK_OBJECT_TYPE_FRAMEBUFFER,
             *(framebuffer->getFramebuffer()));
-
-    transitionImageLayout(renderImage, VK_IMAGE_LAYOUT_UNDEFINED,
-                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 // TODO put text related shit elsewhere
@@ -337,8 +262,7 @@ void Renderer::loadTextures(
             readTexture(entry.second.c_str(), entry.first.c_str()));
     }
     loadFonts(fonts);
-
-    uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * this->textures.size();
+    uint32_t type_sz = 2 * this->textures.size();
     std::vector<VkDescriptorType> types(type_sz);
     for (size_t i = 0; i < textures.size(); i++) {
         types[2 * i] = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -348,6 +272,11 @@ void Renderer::loadTextures(
 
     pool = new ShaderDescriptorPool(device, tp, type_sz);
     guiPool = new ShaderDescriptorPool(device, tp, type_sz);
+    VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
+    renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
+    setName(getDebugFunctions(instance), device, "renderDescriptorPool",
+            VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(renderDescriptorPool->getPool()));
     createDescriptorSets();
 }
 
@@ -373,7 +302,7 @@ Renderer::~Renderer() {
     delete renderImage;
     delete depthImage;
     delete depthImageView;
-    delete renderPass;
+    // delete renderPass;
     delete framebuffer;
     delete renderCommandBuffer;
     delete renderDescriptor;
@@ -401,6 +330,7 @@ Renderer::~Renderer() {
 
     delete pool;
     delete guiPool;
+    delete renderDescriptorPool;
 
     delete textureSampler;
     delete guiSampler;
@@ -451,11 +381,13 @@ void Renderer::recreateSwapchain() {
     delete sampler;
     delete depthImage;
     delete depthImageView;
-    delete renderPass;
+    // delete renderPass;
     delete framebuffer;
     delete renderPipeline;
     delete renderLayout;
+    delete renderDescriptor;
     delete renderPipelineLayout;
+    delete renderDescriptorPool;
 
     delete graphicsPipeline;
     delete graphicsPipelineLayout;
@@ -466,11 +398,17 @@ void Renderer::recreateSwapchain() {
     delete guiShaderLayout;
 
     createSwapchain();
-    updateDescriptorSet(renderDescriptor, renderImageView, sampler,
-                        uniformBuffer);
+
     createGraphicsPipeline();
     createGuiPipeline();
     createMainPipeline();
+    VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
+    renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
+    renderDescriptor =
+        new ShaderDescriptorSet(device, renderDescriptorPool, renderLayout);
+    updateDescriptorSet(renderDescriptor, renderImageView, sampler,
+                        uniformBuffer);
 }
 
 void Renderer::createInstance() {
@@ -567,7 +505,8 @@ void Renderer::createGuiPipeline() {
     ubo.binding = 0;
     ubo.descriptorCount = 1;
     ubo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    ubo.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    ubo.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT |
+                     VK_SHADER_STAGE_FRAGMENT_BIT;
     textureSampler.binding = 1;
     textureSampler.descriptorCount = 1;
     textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -623,7 +562,8 @@ void Renderer::createMainPipeline() {
     ubo.binding = 0;
     ubo.descriptorCount = 1;
     ubo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    ubo.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    ubo.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT |
+                     VK_SHADER_STAGE_FRAGMENT_BIT;
     textureSampler.binding = 1;
     textureSampler.descriptorCount = 1;
     textureSampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -631,6 +571,9 @@ void Renderer::createMainPipeline() {
     textureSampler.pImmutableSamplers = NULL;
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
     renderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
+    DebugFunc functions = getDebugFunctions(instance);
+    setName(functions, device, "render layout",
+            VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, *(renderLayout->getLayout()));
 
     auto vertShaderCode = readFile(finalVertShader);
     auto geomShaderCode = readFile(finalGeomShader);
@@ -642,7 +585,6 @@ void Renderer::createMainPipeline() {
                                     VK_SHADER_STAGE_GEOMETRY_BIT);
     Shader* fragShader = new Shader("main", device, fragShaderCode,
                                     VK_SHADER_STAGE_FRAGMENT_BIT);
-    DebugFunc functions = getDebugFunctions(instance);
     setName(functions, device, "Pass vertex shader",
             VK_OBJECT_TYPE_SHADER_MODULE, *(vertShader->getModule()));
     setName(functions, device, "Pass geometry shader",
@@ -664,8 +606,9 @@ void Renderer::createMainPipeline() {
     w *= 1.5;
     h *= 1.5;
 
-    renderPipeline = new Pipeline(device, renderPipelineLayout, renderPass,
-                                  shaderStages, 3, VkExtent2D({w, h}));
+    renderPipeline =
+        new Pipeline(device, renderPipelineLayout, swapchain->getRenderPass(),
+                     shaderStages, 3, VkExtent2D({w, h}));
     setName(functions, device, "Pass pipeline", VK_OBJECT_TYPE_PIPELINE,
             *(renderPipeline->getPipeline()));
     delete vertShader;
@@ -928,7 +871,10 @@ void Renderer::createDescriptorSets() {
         }
         j += MAX_FRAMES_IN_FLIGHT;
     }
-    renderDescriptor = new ShaderDescriptorSet(device, pool, renderLayout);
+    renderDescriptor =
+        new ShaderDescriptorSet(device, renderDescriptorPool, renderLayout);
+    setName(functions, device, "render descriptor",
+            VK_OBJECT_TYPE_DESCRIPTOR_SET, *(renderDescriptor->getSet()));
     updateDescriptorSet(renderDescriptor, renderImageView, sampler,
                         uniformBuffer);
 }
@@ -949,6 +895,20 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     delete renderDescriptor;
     delete pool;
     delete guiPool;
+    delete renderDescriptorPool;
+    // TODO use vkResetDescriptorPool and other pools aswell
+    for (size_t i = 0; i < uniformBuffers.size(); i++) {
+        delete constantBuffers[i];
+        delete uniformBuffers[i];
+        delete guiConstantBuffers[i];
+        delete guiUniformBuffers[i];
+    }
+    constantBuffers.clear();
+    uniformBuffers.clear();
+    guiConstantBuffers.clear();
+    guiUniformBuffers.clear();
+    delete uniformBuffer;
+    createUniformBuffers();
 
     uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * this->textures.size();
     std::vector<VkDescriptorType> types(type_sz);
@@ -958,8 +918,13 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     }
     VkDescriptorType* tp = types.data();
 
+    // TODO This is so fucking stupid I'm just going to prepare in advance a
+    // big pool and then scale it up when needed
     pool = new ShaderDescriptorPool(device, tp, type_sz);
     guiPool = new ShaderDescriptorPool(device, tp, type_sz);
+    VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
+    renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
     createDescriptorSets();
 
     recreateSwapchain();
@@ -981,6 +946,7 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
     delete renderDescriptor;
     delete pool;
     delete guiPool;
+    delete renderDescriptorPool;
 
     delete uniformBuffer;
 
@@ -994,6 +960,10 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
 
     pool = new ShaderDescriptorPool(device, tp, type_sz);
     guiPool = new ShaderDescriptorPool(device, tp, type_sz);
+    VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
+    renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
+
     uniformBuffer = new Buffer(&physicalDevice, device, finalUBOSize,
                                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
@@ -1108,6 +1078,8 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
                                    clearValues.data(), 2);
 
     commandBuffer->bindPipeline(renderPipeline);
+    transitionImageLayout(renderImage, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     guiModel->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue("main"),
                                        commandPool);
@@ -1236,8 +1208,8 @@ void Renderer::drawFrame() {
     /*drawScreenCommandBuffer(
         commandBuffers[currentFrame], swapchain->getRenderPass(),
         swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());*/
-    drawScreenCommandBuffer(renderCommandBuffer, renderPass, framebuffer,
-                            {w, h});
+    drawScreenCommandBuffer(renderCommandBuffer, swapchain->getRenderPass(),
+                            framebuffer, {w, h});
     recordCommandBuffer(
         commandBuffers[currentFrame], swapchain->getRenderPass(),
         swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());
@@ -1386,7 +1358,7 @@ std::vector<Text> Renderer::createVerticalText(std::string text,
             start.y + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7};
         t.size = {(double)c.width / conv, (double)c.height / conv};
         result.push_back(t);
-        start.y += (c.vAdvance) / conv;
+        start.y += (c.vAdvance) / conv * .7;
     }
     return result;
 }

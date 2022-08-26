@@ -13,9 +13,6 @@ class ComputeShader;
 
 class ComputeShader {
    public:
-    ComputeShader(Device* device, Pipeline* pipeline,
-                  const std::vector<char>& code, const char* mainFunction,
-                  uint64_t workers);
     ComputeShader(Device* device, const std::vector<char>& code,
                   const char* mainFunction, uint64_t workers);
 

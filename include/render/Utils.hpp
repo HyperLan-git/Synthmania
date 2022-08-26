@@ -48,8 +48,7 @@ VkPresentModeKHR chooseSwapPresentMode(
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
                             Window* window);
 
-// TODO Shit I just realised this has O(n) complexity if I don't find a way to
-// optimize or replace code this will get down bad once I add more textures
+// TODO replace with map
 ImageView* getTextureByName(std::vector<ImageView*> textures, const char* name);
 
 struct DebugFunc {

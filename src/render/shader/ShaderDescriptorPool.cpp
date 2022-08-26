@@ -8,6 +8,7 @@ ShaderDescriptorPool::ShaderDescriptorPool(Device *device,
     VkDescriptorPoolSize poolSizes[count];
     for (uint32_t i = 0; i < count; i++) {
         poolSizes[i].type = types[i];
+        // FIXME wtf is this
         poolSizes[i].descriptorCount = count;
     }
     VkDescriptorPoolCreateInfo poolInfo{};

@@ -53,7 +53,7 @@ class CommandBuffer {
     void bindVertexBuffers(Buffer *vertexBuffers, uint32_t count);
     void bindIndexBuffer(Buffer *indexBuffer);
     void bindDescriptorSet(
-        Pipeline *pipeline, const ShaderDescriptorSet *descriptorSet,
+        Pipeline *pipeline, ShaderDescriptorSet *descriptorSet,
         VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
     void pushConstants(Pipeline *pipeline, VkShaderStageFlags shaderStage,
                        uint32_t offset, const void *data, uint32_t size);

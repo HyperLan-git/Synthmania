@@ -37,6 +37,15 @@ ShaderDescriptorSet::ShaderDescriptorSet(Device *device,
     }
 }
 
+void ShaderDescriptorSet::resetAccess() {
+    if (writeDescriptor != NULL) {
+        if (writeDescriptor->pNext != NULL)
+            delete (VkWriteDescriptorSet *)writeDescriptor->pNext;
+        delete writeDescriptor;
+    }
+    writeDescriptor = NULL;
+}
+
 void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
                                        uint32_t binding, VkDescriptorType type,
                                        VkDescriptorBufferInfo *bInfo,
@@ -49,6 +58,7 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
     descriptorWrites->dstArrayElement = 0;
     descriptorWrites->descriptorType = type;
     descriptorWrites->descriptorCount = 1;
+    descriptorWrites->pNext = NULL;
 
     descriptorWrites->pBufferInfo = bInfo;
     descriptorWrites->pImageInfo = iInfo;
@@ -56,17 +66,16 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
     if (writeDescriptor == NULL) {
         this->writeDescriptor = descriptorWrites;
     } else {
-        // TODO a bit shitty if you ask me
-        if (writeDescriptor->pNext != NULL)
-            delete (VkWriteDescriptorSet *)writeDescriptor->pNext;
+        VkWriteDescriptorSet *cur = writeDescriptor;
+        while (cur->pNext != NULL) cur = (VkWriteDescriptorSet *)cur->pNext;
 
-        writeDescriptor->pNext = descriptorWrites;
+        cur->pNext = descriptorWrites;
     }
     vkUpdateDescriptorSets(*(device->getDevice()), 1, descriptorWrites, 0,
                            NULL);
 }
 
-VkDescriptorSet *ShaderDescriptorSet::getSet() const { return set; }
+VkDescriptorSet *ShaderDescriptorSet::getSet() { return set; }
 
 ShaderDescriptorSet::~ShaderDescriptorSet() {
     if (writeDescriptor != NULL) {
