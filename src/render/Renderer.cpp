@@ -118,8 +118,8 @@ void Renderer::createSwapchain() {
         glfwWaitEvents();
         window->getFramebufferSize(&w, &h);
     }
-    w *= 1.5;
-    h *= 1.5;
+    // w *= 1.5;
+    // h *= 1.5;
     renderImage = new Image(
         &physicalDevice, device, w, h, VK_FORMAT_B8G8R8A8_SRGB,
         VK_IMAGE_TILING_OPTIMAL,
@@ -603,8 +603,12 @@ void Renderer::createMainPipeline() {
 
     uint32_t w, h;
     window->getFramebufferSize(&w, &h);
-    w *= 1.5;
-    h *= 1.5;
+    while (w == 0 || h == 0) {
+        glfwWaitEvents();
+        window->getFramebufferSize(&w, &h);
+    }
+    // w *= 1.5;
+    // h *= 1.5;
 
     renderPipeline =
         new Pipeline(device, renderPipelineLayout, swapchain->getRenderPass(),
@@ -1203,8 +1207,8 @@ void Renderer::drawFrame() {
 
     uint32_t w, h;
     window->getFramebufferSize(&w, &h);
-    w *= 1.5;
-    h *= 1.5;
+    // w *= 1.5;
+    // h *= 1.5;
     /*drawScreenCommandBuffer(
         commandBuffers[currentFrame], swapchain->getRenderPass(),
         swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());*/

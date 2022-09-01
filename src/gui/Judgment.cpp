@@ -1,6 +1,6 @@
 #include "Judgement.hpp"
 
-Judgement::Judgement(const char* name, std::vector<ImageView*> textures,
+Judgement::Judgement(std::string name, std::vector<ImageView*> textures,
                      TrackPartition notes)
     : Gui(getTextureByName(textures, "judgement_line"), name) {
     this->partition = notes;

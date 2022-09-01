@@ -1,8 +1,6 @@
 #include "Game.hpp"
 
-#include "MainMenu.hpp"
 #include "Renderer.hpp"
-#include "SongSelectMenu.hpp"
 
 Game::Game() {
     textures = std::map<std::string, std::string>();
@@ -18,10 +16,6 @@ Game::Game() {
 void Game::init() {
     renderer->loadTextures(textures, fontsToLoad);
     window->setWindowUserPointer(this);
-    // TODO Shit we gotta put menus somewhere else
-    this->menus.emplace("main", new MainMenu(this));
-    this->menus.emplace("song select",
-                        new SongSelectMenu(this, "resources/songs"));
 }
 
 void Game::resetScene() {
@@ -31,6 +25,9 @@ void Game::resetScene() {
     menu = NULL;
     for (Entity *e : entities) delete e;
     entities.clear();
+    window->setMouseWheelcallback(NULL);
+    window->setMousecallback(NULL);
+    window->setKeycallback(NULL);
 }
 
 void Game::loadMenu(std::string m) {
@@ -42,11 +39,18 @@ void Game::run() {
     setTimeMicros(-this->startTime);
     while (!window->shouldClose()) {
         glfwPollEvents();
-        glm::vec2 pos = renderer->getVirtPos(window->getCursorPos());
 
         if (menu != NULL) {
+            glm::vec2 pos = renderer->getVirtPos(window->getCursorPos());
             bool pressed = window->mousePressed();
             std::vector<Button *> buttons = menu->getButtons();
+            std::vector<GuiElement *> elements = menu->getGuiElements();
+            if (pressed)
+                for (auto iter = elements.begin(); iter != elements.end();
+                     iter++) {
+                    GuiElement *e = *iter;
+                    if (e->isInside(pos)) e->onPressed(pos);
+                }
             for (auto iter = buttons.rbegin(); iter != buttons.rend(); iter++) {
                 Button *b = *iter;
                 if (!pressed) {
@@ -57,7 +61,7 @@ void Game::run() {
                     }
                     b->onReleased();
                 } else if (b->isInside(pos)) {
-                    if (!b->isPressed()) b->onPressed();
+                    if (!b->isPressed()) b->onPressed(pos);
                     break;
                 }
             }
@@ -72,6 +76,8 @@ void Game::run() {
 void Game::setTimeMicros(int64_t time) {
     relativeTime -= time - getCurrentTimeMicros();
 }
+
+Menu *Game::getMenu(std::string menu) { return menus[menu]; }
 
 std::map<std::string, std::string> Game::readTextures(std::string file) {
     std::map<std::string, std::string> result;

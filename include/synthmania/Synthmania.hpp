@@ -24,10 +24,13 @@ class Synthmania;
 #include "Gui.hpp"
 #include "JsonHandler.hpp"
 #include "Judgement.hpp"
+#include "MainMenu.hpp"
 #include "MidiHandler.hpp"
 #include "Note.hpp"
+#include "OptionMenu.hpp"
 #include "Precision.hpp"
 #include "Renderer.hpp"
+#include "SongSelectMenu.hpp"
 #include "Window.hpp"
 
 #define HIT_TIME 1500000
@@ -53,6 +56,8 @@ class Synthmania : public Game {
     Synthmania(std::string skin);
 
     void loadSong(std::string songFolder);
+
+    virtual void init();
 
     virtual void update();
 

@@ -47,6 +47,8 @@ class MidiHandler {
     void openPort(unsigned int port,
                   libremidi::midi_in::message_callback callback);
 
+    int getOpenPort();
+
     ~MidiHandler();
 
    private:
@@ -54,6 +56,7 @@ class MidiHandler {
     uint64_t start_time;
     libremidi::midi_out out;
     libremidi::midi_in in;
+    int port = -1;
 };
 
 uint64_t micros();

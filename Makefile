@@ -26,7 +26,7 @@ ifdef DEBUG
 CFLAGS = -std=c++17 -O3 $(VSTOBJ)
 endif
 
-LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype -lboost_filesystem
+LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype
 ifeq ($(OS),Windows_NT)
 LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lalut -lwinmm -lfreetype
 endif

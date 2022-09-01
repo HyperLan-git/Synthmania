@@ -12,6 +12,14 @@ Synthmania::Synthmania(std::string skin) {
     audio->addSound("click", buffer);
 }
 
+void Synthmania::init() {
+    Game::init();
+    this->menus.emplace("main", new MainMenu(this));
+    this->menus.emplace("song select",
+                        new SongSelectMenu(this, "resources/songs"));
+    this->menus.emplace("options", new OptionMenu(this));
+}
+
 void Synthmania::loadSong(std::string songFolder) {
     window->setKeycallback(Synthmania::keyCallback);
     this->songFolder = songFolder;

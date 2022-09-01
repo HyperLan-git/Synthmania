@@ -23,11 +23,11 @@ struct EntityData {
 
 class Entity {
    public:
-    Entity(Model* model, ImageView* texture, const char* name);
+    Entity(Model* model, ImageView* texture, std::string name);
 
     Model* getModel() const;
     ImageView* getTexture() const;
-    const char* getName() const;
+    std::string getName() const;
     glm::vec3 getPosition() const;
     glm::vec4 getRotation() const;
     glm::vec3 getSize() const;
@@ -44,5 +44,5 @@ class Entity {
     glm::vec3 position = {0, 0, 0};
     glm::vec4 rotation = {0, 0, 0, 1};  // Quaternions my beloved :heart:
     glm::vec3 size = {1, 1, 1};
-    const char* name;
+    std::string name;
 };

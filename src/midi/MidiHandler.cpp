@@ -25,6 +25,7 @@ std::vector<std::string> MidiHandler::getMidiPorts() {
 }
 
 void MidiHandler::openPort(unsigned int port) {
+    this->port = port;
     in.set_callback([this](const libremidi::message &message) {
         // int bit = message[0] >> 7; // Should always be 1
         int type = (message[0] >> 4) - 8;
@@ -57,9 +58,12 @@ void MidiHandler::openPort(unsigned int port) {
 
 void MidiHandler::openPort(unsigned int port,
                            libremidi::midi_in::message_callback callback) {
+    this->port = port;
     in.set_callback(callback);
     in.open_port(port);
 }
+
+int MidiHandler::getOpenPort() { return port; }
 
 TrackPartition MidiHandler::readMidi(const char *path) {
     std::ifstream file(path, std::ios::binary);
@@ -185,7 +189,9 @@ Message MidiHandler::getMessage() {
     return val;
 }
 
-MidiHandler::~MidiHandler() { in.set_callback(NULL); }
+MidiHandler::~MidiHandler() {
+    if (port != -1) in.set_callback(NULL);
+}
 
 uint64_t micros() {
     uint64_t us =

@@ -13,7 +13,7 @@ class ParentedGui;
  */
 class ParentedGui : public Gui {
    public:
-    ParentedGui(ImageView* texture, const char* name, Gui* parent);
+    ParentedGui(ImageView* texture, std::string name, Gui* parent);
 
     virtual glm::vec2 getRealPosition() const;
 

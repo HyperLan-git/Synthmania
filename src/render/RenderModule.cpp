@@ -22,14 +22,14 @@ RenderModule::RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
     setName(functions, device, name + " image sampler", VK_OBJECT_TYPE_SAMPLER,
             *(sampler->getSampler()));
     commandPool = new CommandPool(device);
-    renderCommandBuffer = new CommandBuffer(device, commandPool, false);
+    commandBuffer = new CommandBuffer(device, commandPool, false);
 
     renderLayout = new ShaderDescriptorSetLayout(device, bindings, nBindings);
     setName(functions, device, name + " layout",
             VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, *(renderLayout->getLayout()));
 
     renderPipelineLayout = new PipelineLayout(device, renderLayout, 0, NULL);
-    setName(functions, device, "Pass pipeline layout",
+    setName(functions, device, name + " pipeline layout",
             VK_OBJECT_TYPE_PIPELINE_LAYOUT,
             *(renderPipelineLayout->getLayout()));
 
@@ -43,7 +43,7 @@ RenderModule::RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
     renderDescriptorPool = new ShaderDescriptorPool(device, types, nBindings);
     renderDescriptor =
         new ShaderDescriptorSet(device, renderDescriptorPool, renderLayout);
-    setName(functions, device, "render descriptor",
+    setName(functions, device, name + " descriptor",
             VK_OBJECT_TYPE_DESCRIPTOR_SET, *(renderDescriptor->getSet()));
     updateDescriptorSet(renderDescriptor, renderImageView, sampler,
                         uniformBuffer);

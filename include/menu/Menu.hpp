@@ -16,6 +16,8 @@ class Menu {
 
     std::vector<Button *> getButtons();
 
+    std::vector<GuiElement *> getGuiElements();
+
     std::vector<Gui *> getGuis();
 
     /**
@@ -33,6 +35,7 @@ class Menu {
 
    protected:
     std::vector<Gui *> guis;
+    std::vector<GuiElement *> elements;
     std::vector<Button *> buttons;
     Game *game;
 };

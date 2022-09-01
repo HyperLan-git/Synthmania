@@ -15,7 +15,7 @@ class Judgement;
 
 class Judgement : public Gui {
    public:
-    Judgement(const char* name, std::vector<ImageView*> textures,
+    Judgement(std::string name, std::vector<ImageView*> textures,
               TrackPartition notes);
 
     virtual bool update(int64_t time);

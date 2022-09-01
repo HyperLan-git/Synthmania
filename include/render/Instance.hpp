@@ -17,7 +17,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 class Instance {
    public:
-    Instance(const char* name, uint32_t version, const char* engineName,
+    Instance(std::string name, uint32_t version, const char* engineName,
              uint32_t engineVersion, uint32_t apiVersion,
              const std::vector<const char*> extensions,
              const std::vector<const char*> validationLayers =

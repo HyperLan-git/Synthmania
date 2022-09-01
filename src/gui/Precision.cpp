@@ -1,6 +1,6 @@
 #include "Precision.hpp"
 
-Precision::Precision(ImageView* texture, const char* name, int64_t time,
+Precision::Precision(ImageView* texture, std::string name, int64_t time,
                      int64_t delta)
     : Gui(texture, name) {
     hit_time = time;

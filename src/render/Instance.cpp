@@ -1,6 +1,6 @@
 #include "Instance.hpp"
 
-Instance::Instance(const char* name, uint32_t version, const char* engineName,
+Instance::Instance(std::string name, uint32_t version, const char* engineName,
                    uint32_t engineVersion, uint32_t apiVersion,
                    const std::vector<const char*> extensions,
                    const std::vector<const char*> validationLayers,
@@ -10,7 +10,7 @@ Instance::Instance(const char* name, uint32_t version, const char* engineName,
 
     VkApplicationInfo appInfo;
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = name;
+    appInfo.pApplicationName = name.c_str();
     appInfo.applicationVersion = version;
     appInfo.pEngineName = engineName;
     appInfo.engineVersion = engineVersion;

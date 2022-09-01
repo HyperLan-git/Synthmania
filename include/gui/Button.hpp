@@ -2,18 +2,18 @@
 
 class Button;
 
-#include "Gui.hpp"
+#include "GuiElement.hpp"
 
-class Button : public Gui {
+class Button : public GuiElement {
    public:
-    Button(ImageView* texture, ImageView* pressedTexture, const char* name,
+    Button(ImageView* texture, ImageView* pressedTexture, std::string name,
            glm::vec2 position, glm::vec2 size);
 
     bool isPressed();
 
     virtual bool isInside(glm::vec2 position);
 
-    virtual void onPressed();
+    virtual void onPressed(glm::vec2 pos);
     virtual void onReleased();
 
     virtual ~Button();

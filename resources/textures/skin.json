@@ -7,6 +7,8 @@
     "piano-pressed": "pressed_piano.png",
     "black_key": "black_key.png",
     "black_key-pressed": "black_key_pressed.png",
+    "slider": "slider.png",
+    "slider_button": "slider_button.png",
     "partition": "partition.png",
     "judgement_line": "judgement.png",
     "precision": "precision.png",

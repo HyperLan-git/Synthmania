@@ -8,10 +8,10 @@ bool isFromCMajor(unsigned char pitch);
 
 class PartitionNotation : public Gui {
    public:
-    PartitionNotation(const char* name, int64_t time, unsigned char pitch,
+    PartitionNotation(std::string name, int64_t time, unsigned char pitch,
                       ImageView* texture);
 
-    PartitionNotation(const char* name, int64_t time, double verticalPosition,
+    PartitionNotation(std::string name, int64_t time, double verticalPosition,
                       ImageView* texture);
 
     int64_t getTime();

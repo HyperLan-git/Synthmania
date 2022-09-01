@@ -2,6 +2,10 @@
 
 class SongSelectMenu;
 
+#include <filesystem>
+#include <string>
+#include <vector>
+
 #include "Menu.hpp"
 #include "Synthmania.hpp"
 

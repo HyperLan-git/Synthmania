@@ -10,12 +10,20 @@ static void framebufferResizeCallback(GLFWwindow *window, int width,
     game->getWindow()->onResize();
 }
 
-Window::Window(const uint32_t width, const uint32_t height, const char *title) {
+Window::Window(const uint32_t width, const uint32_t height, const char *title,
+               bool fullscreen) {
     glfwInit();
+
+    glfwSetErrorCallback([](int err, const char *desc) {
+        std::cerr << "glfw err : " << desc << std::endl;
+    });
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+    std::cout << "size : " << width << "," << height << std::endl;
+    window = glfwCreateWindow(width, height, title,
+                              fullscreen ? glfwGetPrimaryMonitor() : nullptr,
+                              nullptr);
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
@@ -24,8 +32,6 @@ bool Window::shouldClose() { return glfwWindowShouldClose(window); }
 void Window::onResize() { resized = true; }
 
 bool Window::hasResized() { return resized; }
-
-Window::~Window() { glfwDestroyWindow(window); }
 
 void Window::getFramebufferSize(uint32_t *width, uint32_t *height) {
     int x, y;
@@ -66,3 +72,5 @@ glm::vec2 Window::getCursorPos() {
 bool Window::mousePressed(int button) {
     return glfwGetMouseButton(window, button);
 }
+
+Window::~Window() { glfwDestroyWindow(window); }

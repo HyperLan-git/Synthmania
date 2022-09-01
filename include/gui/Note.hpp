@@ -28,7 +28,7 @@ glm::vec2 getSizeAndLocForNote(double duration);
 
 class Note : public PartitionNotation {
    public:
-    Note(const char* name, int64_t time, unsigned char pitch,
+    Note(std::string name, int64_t time, unsigned char pitch,
          double totalDuration, double duration, uint64_t MPQ,
          std::vector<ImageView*> textures);
 

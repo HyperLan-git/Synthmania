@@ -13,7 +13,8 @@ class Window;
 
 class Window {
    public:
-    Window(const uint32_t width, const uint32_t height, const char *title);
+    Window(const uint32_t width, const uint32_t height, const char *title,
+           bool fullscreen = false);
 
     bool hasResized();
     void onResize();

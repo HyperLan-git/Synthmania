@@ -21,18 +21,19 @@ class Game;
 #include "JsonHandler.hpp"
 #include "Menu.hpp"
 #include "MidiHandler.hpp"
+#include "Options.hpp"
 #include "Precision.hpp"
 #include "Window.hpp"
 
 class Renderer;
 
-// FIXME pass everything that needs it by reference this is so much useless
-// copying, man looking at Cherno's vids help already
+// TODO pass everything that needs it by reference this is so much
+// useless copying
 class Game {
    public:
     Game();
 
-    void init();
+    virtual void init();
 
     void run();
     virtual void update() = 0;
@@ -61,6 +62,8 @@ class Game {
 
     virtual void addGui(Gui *gui);
     virtual void addEntity(Entity *entity);
+
+    Menu *getMenu(std::string menu);
 
     void playSound(std::string sound);
 

@@ -125,9 +125,6 @@ int synthThread(void* arg) {
                 delete[] id;
             }
         }
-        // TODO I guess I can't beat every leak...
-        //  ALuint id = b->getBuffer();
-        //  if (alIsBuffer(id)) alDeleteBuffers(1, &id);
         for (int i = 0; i < params->buffers; i++) buffers[i].setBuffer(0);
         delete[] buffers;
         delete params;

@@ -19,14 +19,14 @@ bool isFromCMajor(unsigned char pitch) {
     return !(key == 1 || key == 3 || key == 6 || key == 8 || key == 10);
 }
 
-PartitionNotation::PartitionNotation(const char* name, int64_t time,
+PartitionNotation::PartitionNotation(std::string name, int64_t time,
                                      unsigned char pitch, ImageView* texture)
     : Gui(texture, name) {
     this->time = time;
     this->position.y = 0.5f - 0.083f * getDifferenceFromC4(pitch);
 }
 
-PartitionNotation::PartitionNotation(const char* name, int64_t time,
+PartitionNotation::PartitionNotation(std::string name, int64_t time,
                                      double verticalPosition,
                                      ImageView* texture)
     : Gui(texture, name) {

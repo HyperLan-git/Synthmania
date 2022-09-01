@@ -47,29 +47,96 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
                                  glm::vec2({1, .3f}), glm::vec2({.2, .6f})));
 
     for (Text t : g->getRenderer()->createVerticalText("PLAY", "Stupid", 12,
-                                                       glm::vec2({-1.8, .1}))) {
-        Gui* g = new Gui(t.character.texture, "PLAY");
+                                                       glm::vec2({0, -.4}))) {
+        ParentedGui* g =
+            new ParentedGui(t.character.texture, "PLAY", buttons[0]);
+        t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
         g->setColor(glm::vec4(.2, .2, .7, 1));
+        g->setNegate(true);
         guis.push_back(g);
     }
 
     for (Text t : g->getRenderer()->createVerticalText("EDIT", "Stupid", 12,
-                                                       glm::vec2({-1.3, .1}))) {
-        Gui* g = new Gui(t.character.texture, "EDIT");
+                                                       glm::vec2({0, -.4}))) {
+        ParentedGui* g =
+            new ParentedGui(t.character.texture, "EDIT", buttons[1]);
+        t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
         g->setColor(glm::vec4(.2, .7, .7, 1));
+        g->setNegate(true);
         guis.push_back(g);
     }
 
     for (Text t : g->getRenderer()->createVerticalText("OPTIONS", "Stupid", 12,
-                                                       glm::vec2({-.8, .1}))) {
-        Gui* g = new Gui(t.character.texture, "OPTIONS");
+                                                       glm::vec2({0, -.4}))) {
+        ParentedGui* g =
+            new ParentedGui(t.character.texture, "OPTIONS", buttons[2]);
+        t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
         g->setColor(glm::vec4(.7, .7, .2, 1));
+        g->setNegate(true);
+        guis.push_back(g);
+    }
+
+    for (Text t : g->getRenderer()->createVerticalText("TESTS", "Stupid", 12,
+                                                       glm::vec2({0, -.4}))) {
+        ParentedGui* g =
+            new ParentedGui(t.character.texture, "TESTS", buttons[3]);
+        t.pos.x -= t.size.x / 2;
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        g->setColor(glm::vec4(.5, .5, .5, 1));
+        g->setNegate(true);
+        guis.push_back(g);
+    }
+
+    for (Text t : g->getRenderer()->createVerticalText("SOCIAL", "Stupid", 12,
+                                                       glm::vec2({0, -.4}))) {
+        ParentedGui* g =
+            new ParentedGui(t.character.texture, "SOCIAL", buttons[4]);
+        t.pos.x -= t.size.x / 2;
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        g->setColor(glm::vec4(0, .1, .8, 1));
+        g->setNegate(true);
+        guis.push_back(g);
+    }
+
+    for (Text t : g->getRenderer()->createVerticalText("UPDATES", "Stupid", 12,
+                                                       glm::vec2({0, -.4}))) {
+        ParentedGui* g =
+            new ParentedGui(t.character.texture, "UPDATES", buttons[5]);
+        t.pos.x -= t.size.x / 2;
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        g->setColor(glm::vec4(.9, 0, .1, 1));
+        g->setNegate(true);
+        guis.push_back(g);
+    }
+
+    for (Text t : g->getRenderer()->createVerticalText("MAPS", "Stupid", 12,
+                                                       glm::vec2({0, -.4}))) {
+        ParentedGui* g =
+            new ParentedGui(t.character.texture, "MAPS", buttons[6]);
+        t.pos.x -= t.size.x / 2;
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        g->setColor(glm::vec4(.7, .7, .7, 1));
+        g->setNegate(true);
+        guis.push_back(g);
+    }
+
+    for (Text t : g->getRenderer()->createVerticalText("EXTRA", "Stupid", 12,
+                                                       glm::vec2({0, -.4}))) {
+        ParentedGui* g =
+            new ParentedGui(t.character.texture, "EXTRA", buttons[7]);
+        t.pos.x -= t.size.x / 2;
+        g->setPosition(t.pos);
+        g->setSize(t.size);
         guis.push_back(g);
     }
 }
@@ -79,11 +146,14 @@ void MainMenu::show() { Menu::show(); }
 void MainMenu::onPressed(Button* b) {
     Synthmania* s = dynamic_cast<Synthmania*>(game);
     if (s != NULL) {
+        s->playSound("click");
         if (b->getName() == "start") {
-            s->playSound("click");
             s->resetScene();
             s->loadMenu("song select");
             s->setTimeMicros(-s->getChart().offset);
+        } else if (b->getName() == "options") {
+            s->resetScene();
+            s->loadMenu("options");
         }
     }
 }

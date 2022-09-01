@@ -17,7 +17,6 @@ class RenderModule {
                  uint32_t nBindings,
                  VkPipelineShaderStageCreateInfo* shaderStages,
                  uint32_t nShaders);
-    RenderModule(Renderer* r, std::string name);
 
     void recreate();
     void recreateImage(int w, int h);
@@ -27,10 +26,6 @@ class RenderModule {
    private:
     Image* renderImage = NULL;
     ImageView* renderImageView = NULL;
-    Image* depthImage = NULL;
-    ImageView* depthImageView = NULL;
-    Framebuffer* framebuffer = NULL;
-    CommandBuffer* renderCommandBuffer = NULL;
     Pipeline* renderPipeline = NULL;
     PipelineLayout* renderPipelineLayout = NULL;
     ShaderDescriptorSetLayout* renderLayout = NULL;
@@ -39,6 +34,7 @@ class RenderModule {
     Buffer* uniformBuffer = NULL;
     TextureSampler* sampler = NULL;
     CommandPool* commandPool = NULL;
+    CommandBuffer* commandBuffer = NULL;
 };
 
 void updateDescriptorSet(ShaderDescriptorSet* descriptor, ImageView* texture,

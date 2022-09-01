@@ -49,7 +49,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
                             Window* window);
 
 // TODO replace with map
-ImageView* getTextureByName(std::vector<ImageView*> textures, const char* name);
+ImageView* getTextureByName(std::vector<ImageView*> textures, std::string name);
 
 struct DebugFunc {
     PFN_vkSetDebugUtilsObjectTagEXT setTag;

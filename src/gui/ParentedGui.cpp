@@ -1,6 +1,6 @@
 #include "ParentedGui.hpp"
 
-ParentedGui::ParentedGui(ImageView* texture, const char* name, Gui* parent)
+ParentedGui::ParentedGui(ImageView* texture, std::string name, Gui* parent)
     : Gui(texture, name) {
     this->parent = parent;
 }
@@ -20,7 +20,10 @@ ShaderData* ParentedGui::getShaderData() const {
     edata->rot = rotation + rot;
     edata->size = size;
     glm::vec4 color = parent->getColor();
-    if (parent->getNegate() || this->negate) color.a *= -1;
+    color.r *= this->color.r;
+    color.g *= this->color.g;
+    color.b *= this->color.b;
+    if (parent->getNegate() != this->negate) color.a *= -1;
     edata->color = color;
     data->data = edata;
     data->size = sizeof(GuiData);

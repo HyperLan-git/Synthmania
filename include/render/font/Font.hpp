@@ -18,7 +18,7 @@ struct Font {
     std::map<unsigned long, Character> characters;
 };
 
-// This represents everything a character knows in order to be rendered
+// This represents everything a character needs in order to be rendered
 struct Text {
     glm::vec2 pos, size;
     Character character;

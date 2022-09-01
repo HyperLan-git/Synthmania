@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-Entity::Entity(Model* model, ImageView* texture, const char* name) {
+Entity::Entity(Model* model, ImageView* texture, std::string name) {
     this->model = model;
     this->texture = texture;
     this->name = name;
@@ -16,7 +16,7 @@ glm::vec3 Entity::getPosition() const { return this->position; }
 glm::vec4 Entity::getRotation() const { return this->rotation; }
 glm::vec3 Entity::getSize() const { return this->size; }
 
-const char* Entity::getName() const { return this->name; }
+std::string Entity::getName() const { return this->name; }
 
 ShaderData* Entity::getShaderData() const {
     ShaderData* data = new ShaderData();
