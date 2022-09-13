@@ -2,9 +2,9 @@
 
 class Slider;
 
-#include "GuiElement.hpp"
+#include "MenuElement.hpp"
 
-class Slider : public GuiElement {
+class Slider : public MenuElement {
    public:
     Slider(ImageView* texture, std::string name, float width = .5f,
            float min = 0, float max = 1, bool vertical = false);
@@ -15,6 +15,8 @@ class Slider : public GuiElement {
     virtual bool isInside(glm::vec2 pos);
 
     virtual void onPressed(glm::vec2 pos);
+
+    virtual void onClicked(glm::vec2 pos);
 
     virtual ShaderData* getShaderData() const;
 

@@ -37,33 +37,41 @@ void Game::loadMenu(std::string m) {
 
 void Game::run() {
     setTimeMicros(-this->startTime);
+    bool clicked = false, lastPressed = false;
     while (!window->shouldClose()) {
         glfwPollEvents();
 
+        // TODO handle everything with z values and do it elsewhere
         if (menu != NULL) {
             glm::vec2 pos = renderer->getVirtPos(window->getCursorPos());
             bool pressed = window->mousePressed();
+            clicked = lastPressed && !pressed;
+            lastPressed = pressed;
             std::vector<Button *> buttons = menu->getButtons();
-            std::vector<GuiElement *> elements = menu->getGuiElements();
-            if (pressed)
+            std::vector<MenuElement *> elements = menu->getMenuElements();
+            if (pressed || clicked)
                 for (auto iter = elements.begin(); iter != elements.end();
                      iter++) {
-                    GuiElement *e = *iter;
-                    if (e->isInside(pos)) e->onPressed(pos);
+                    MenuElement *e = *iter;
+                    if (e->isInside(pos))
+                        if (clicked)
+                            e->onClicked(pos);
+                        else if (pressed)
+                            e->onPressed(pos);
                 }
             for (auto iter = buttons.rbegin(); iter != buttons.rend(); iter++) {
                 Button *b = *iter;
-                if (!pressed) {
-                    if (b->isPressed() && b->isInside(pos)) {
+                if (clicked) {
+                    if (b->isInside(pos)) {
                         menu->onPressed(b);
                         b->onReleased();
                         break;
                     }
-                    b->onReleased();
-                } else if (b->isInside(pos)) {
+                } else if (pressed && b->isInside(pos)) {
                     if (!b->isPressed()) b->onPressed(pos);
                     break;
                 }
+                if (!pressed) b->onReleased();
             }
         }
         if (audio != NULL) audio->update();
@@ -104,6 +112,7 @@ Window *Game::getWindow() { return this->window; }
 
 Renderer *Game::getRenderer() { return renderer; }
 
+// TODO replace with render module thing
 size_t Game::updateUBO(void *&ubo) { return sizeof(UniformBufferObject); }
 void Game::freeUBO(void *&ubo) {}
 
@@ -115,12 +124,11 @@ void Game::addEntity(Entity *entity) { entities.push_back(entity); }
 float prevZ = 0.9999f;
 
 void Game::addGui(Gui *gui) {
-    if (guis.empty()) {
-        gui->setZ(0.9999f);
+    if (guis.empty())
         prevZ = 0.9999f;
-    } else {
-        gui->setZ(prevZ -= 0.00001f);
-    }
+    else
+        prevZ -= 0.00001f;
+    gui->setZ(prevZ);
     this->guis.push_back(gui);
 }
 

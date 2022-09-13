@@ -1,13 +1,17 @@
-#include "GuiElement.hpp"
+#include "MenuElement.hpp"
 
-GuiElement::GuiElement(ImageView* texture, std::string name)
+MenuElement::MenuElement(ImageView* texture, std::string name)
     : Gui(texture, name) {}
 
-bool GuiElement::isInside(glm::vec2 position) {
+bool MenuElement::isInside(glm::vec2 position) {
     return position.x <= (this->position.x + this->size.x / 2) &&
            position.x >= (this->position.x - this->size.x / 2) &&
            position.y <= (this->position.y + this->size.y / 2) &&
            position.y >= (this->position.y - this->size.y / 2);
 }
 
-GuiElement::~GuiElement() {}
+void MenuElement::onPressed(glm::vec2 pos) {}
+
+void MenuElement::onClicked(glm::vec2 pos) {}
+
+MenuElement::~MenuElement() {}

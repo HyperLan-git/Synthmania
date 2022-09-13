@@ -2,7 +2,7 @@
 
 Slider::Slider(ImageView* texture, std::string name, float width, float min,
                float max, bool vertical)
-    : GuiElement(texture, name) {
+    : MenuElement(texture, name) {
     this->min = min;
     this->max = max;
     this->vertical = vertical;
@@ -40,6 +40,8 @@ void Slider::onPressed(glm::vec2 pos) {
     if (progress > 1) progress = 1;
     this->pos = progress * (max - min) + min;
 }
+
+void Slider::onClicked(glm::vec2 pos) {}
 
 ShaderData* Slider::getShaderData() const {
     ShaderData* data = new ShaderData();

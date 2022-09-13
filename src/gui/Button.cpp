@@ -2,7 +2,7 @@
 
 Button::Button(ImageView* texture, ImageView* pressedTexture, std::string name,
                glm::vec2 position, glm::vec2 size)
-    : GuiElement(texture, name) {
+    : MenuElement(texture, name) {
     this->normalTexture = texture;
     this->pressedTexture = pressedTexture;
     this->position = glm::vec3(position, 0);
@@ -10,7 +10,7 @@ Button::Button(ImageView* texture, ImageView* pressedTexture, std::string name,
 }
 
 bool Button::isInside(glm::vec2 position) {
-    return GuiElement::isInside(position);
+    return MenuElement::isInside(position);
 }
 
 bool Button::isPressed() { return pressed; }

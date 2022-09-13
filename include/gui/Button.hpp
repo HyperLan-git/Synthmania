@@ -2,9 +2,9 @@
 
 class Button;
 
-#include "GuiElement.hpp"
+#include "MenuElement.hpp"
 
-class Button : public GuiElement {
+class Button : public MenuElement {
    public:
     Button(ImageView* texture, ImageView* pressedTexture, std::string name,
            glm::vec2 position, glm::vec2 size);
