@@ -14,5 +14,9 @@ class MenuElement : public Gui {
 
     virtual void onClicked(glm::vec2 pos);
 
+    virtual void onKeyPressed(int key, int scancode, int mods);
+
+    virtual void onTyped(unsigned int character);
+
     virtual ~MenuElement();
 };

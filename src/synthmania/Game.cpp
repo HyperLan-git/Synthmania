@@ -14,20 +14,23 @@ Game::Game() {
 }
 
 void Game::init() {
-    renderer->loadTextures(textures, fontsToLoad);
+    CommandPool *pool = new CommandPool(renderer->getDevice());
+    renderer->getTextHandler()->loadFonts(fontsToLoad, pool);
+    renderer->loadTextures(textures);
     window->setWindowUserPointer(this);
+    delete pool;
 }
 
 void Game::resetScene() {
     if (menu == NULL)
         for (Gui *g : guis) delete g;
+    else
+        menu->select(NULL);
     guis.clear();
     menu = NULL;
     for (Entity *e : entities) delete e;
     entities.clear();
-    window->setMouseWheelcallback(NULL);
-    window->setMousecallback(NULL);
-    window->setKeycallback(NULL);
+    window->resetCallbacks();
 }
 
 void Game::loadMenu(std::string m) {
@@ -53,11 +56,14 @@ void Game::run() {
                 for (auto iter = elements.begin(); iter != elements.end();
                      iter++) {
                     MenuElement *e = *iter;
-                    if (e->isInside(pos))
-                        if (clicked)
+                    if (e->isInside(pos)) {
+                        if (clicked) {
                             e->onClicked(pos);
-                        else if (pressed)
+                            menu->select(e);
+                        } else if (pressed)
                             e->onPressed(pos);
+                        break;
+                    }
                 }
             for (auto iter = buttons.rbegin(); iter != buttons.rend(); iter++) {
                 Button *b = *iter;
@@ -70,8 +76,8 @@ void Game::run() {
                 } else if (pressed && b->isInside(pos)) {
                     if (!b->isPressed()) b->onPressed(pos);
                     break;
-                }
-                if (!pressed) b->onReleased();
+                } else if (!pressed && b->isPressed())
+                    b->onReleased();
             }
         }
         if (audio != NULL) audio->update();
@@ -86,6 +92,8 @@ void Game::setTimeMicros(int64_t time) {
 }
 
 Menu *Game::getMenu(std::string menu) { return menus[menu]; }
+
+Menu *Game::getCurrentMenu() { return menu; }
 
 std::map<std::string, std::string> Game::readTextures(std::string file) {
     std::map<std::string, std::string> result;
@@ -111,6 +119,8 @@ void Game::setWindow(Window *window) { this->window = window; }
 Window *Game::getWindow() { return this->window; }
 
 Renderer *Game::getRenderer() { return renderer; }
+
+TextHandler *Game::getTextHandler() { return renderer->getTextHandler(); }
 
 // TODO replace with render module thing
 size_t Game::updateUBO(void *&ubo) { return sizeof(UniformBufferObject); }

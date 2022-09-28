@@ -11,13 +11,12 @@ You will need to install :
 - JUCE
 - glslc
 - boost
+
 Imma keep the latest versions of those and make sure project compiles with them (hopefully).
 
 # Compilation
 I have no clue what I'm doing but I thought it would be a good idea to make headers organized in a file system.
 This means that you will have to -I every subfolder of include and the includes of every library used that is not immediately available to the compiler. You could also just put every header in the same folder and compile from there. lol
-
-Object files are now setup this is so cool not having to wait 1 min each time I add a space in the source code.
 
 Windows build needs a shitton of dlls right now. Idk how I'm going to handle that for the end user. Probably a crappy windows installer hehe
 

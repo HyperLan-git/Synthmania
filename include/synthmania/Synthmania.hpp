@@ -35,18 +35,20 @@ class Synthmania;
 
 #define HIT_TIME 1500000
 
-std::vector<Gui *> printString(std::string text, Renderer *renderer,
+std::vector<Gui *> printString(std::string text, TextHandler *textHandler,
                                std::string entityNames, std::string font,
                                double size, glm::vec2 pos,
                                glm::vec4 color = {0, 0, 0, 1});
 
-std::vector<Gui *> printShadowedString(std::string text, Renderer *renderer,
+std::vector<Gui *> printShadowedString(std::string text,
+                                       TextHandler *textHandler,
                                        std::string entityNames,
                                        std::string font, double size,
                                        glm::vec2 pos,
                                        glm::vec4 color = {0, 0, 0, 1});
 
-std::vector<Gui *> printShakingString(std::string text, Renderer *renderer,
+std::vector<Gui *> printShakingString(std::string text,
+                                      TextHandler *textHandler,
                                       std::string entityNames, std::string font,
                                       double size, glm::vec2 pos, float shake,
                                       glm::vec4 color = {0, 0, 0, 1});

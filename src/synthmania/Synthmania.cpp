@@ -197,8 +197,9 @@ void Synthmania::loadSong(std::string songFolder) {
     text.append(" by ");
     text.append(chart.artist);
 
-    for (Gui *g : printShadowedString(text, renderer, "title_", "Stupid", 11,
-                                      {-2, -.9}, {.2, .2, 1, 1}))
+    for (Gui *g :
+         printShadowedString(text, renderer->getTextHandler(), "title_",
+                             "Stupid", 11, {-2, -.9}, {.2, .2, 1, 1}))
         addGui(g);
 
     /*for (Gui *g : printShakingString("ANGERY", renderer, "scary_", "Stupid",
@@ -266,10 +267,10 @@ void Synthmania::noteHit(Note *note) {
 
     std::string text = "Good!";
     int i = 0;
-    for (Text t :
-         renderer->createText(text, "Stupid", 11,
-                              {-2, (double)(-.25 + line->getPosition().y +
-                                            line->getSize().y / 2.)})) {
+    for (Text t : renderer->getTextHandler()->createText(
+             text, "Stupid", 11,
+             {-2, (double)(-.25 + line->getPosition().y +
+                           line->getSize().y / 2.)})) {
         std::string name = "hit_";
         name.append(std::to_string((size_t)note));
         name.append("_");
@@ -297,10 +298,10 @@ void Synthmania::noteMiss(Note *note) {
 
     std::string text = "BAD";
     int i = 0;
-    for (Text t :
-         renderer->createText(text, "Stupid", 11,
-                              {-2, (double)(-.25 + line->getPosition().y +
-                                            line->getSize().y / 2.)})) {
+    for (Text t : renderer->getTextHandler()->createText(
+             text, "Stupid", 11,
+             {-2, (double)(-.25 + line->getPosition().y +
+                           line->getSize().y / 2.)})) {
         std::string name = "miss_";
         name.append(std::to_string((size_t)note));
         name.append("_");
@@ -485,12 +486,12 @@ Synthmania::~Synthmania() {
     delete handler;
 }
 
-std::vector<Gui *> printString(std::string text, Renderer *renderer,
+std::vector<Gui *> printString(std::string text, TextHandler *textHandler,
                                std::string entityNames, std::string font,
                                double size, glm::vec2 pos, glm::vec4 color) {
     std::vector<Gui *> result;
     int i = 0;
-    for (Text t : renderer->createText(text, font, size, pos)) {
+    for (Text t : textHandler->createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
         Gui *gui = new Gui(t.character.texture, name.c_str());
@@ -503,7 +504,8 @@ std::vector<Gui *> printString(std::string text, Renderer *renderer,
     return result;
 }
 
-std::vector<Gui *> printShadowedString(std::string text, Renderer *renderer,
+std::vector<Gui *> printShadowedString(std::string text,
+                                       TextHandler *textHandler,
                                        std::string entityNames,
                                        std::string font, double size,
                                        glm::vec2 pos, glm::vec4 color) {
@@ -512,15 +514,15 @@ std::vector<Gui *> printShadowedString(std::string text, Renderer *renderer,
     shadowPos += glm::vec2({.0005 * size, .0005 * size});
     std::string shadowName = entityNames;
     shadowName.append("shadow_");
-    for (Gui *g : printString(text, renderer, shadowName, font, size, shadowPos,
-                              {0, 0, 0, .7})) {
+    for (Gui *g : printString(text, textHandler, shadowName, font, size,
+                              shadowPos, {0, 0, 0, .7})) {
         glm::vec2 sz = g->getSize();
         sz *= 1.05;
         g->setSize(sz);
         result.push_back(g);
     }
     for (Gui *g :
-         printString(text, renderer, entityNames, font, size, pos, color))
+         printString(text, textHandler, entityNames, font, size, pos, color))
         result.push_back(g);
     for (int i = 0; i < result.size() / 2; i++) {
         result2.push_back(result[i]);
@@ -530,13 +532,14 @@ std::vector<Gui *> printShadowedString(std::string text, Renderer *renderer,
     return result2;
 }
 
-std::vector<Gui *> printShakingString(std::string text, Renderer *renderer,
+std::vector<Gui *> printShakingString(std::string text,
+                                      TextHandler *textHandler,
                                       std::string entityNames, std::string font,
                                       double size, glm::vec2 pos, float shake,
                                       glm::vec4 color) {
     std::vector<Gui *> result;
     int i = 0;
-    for (Text t : renderer->createText(text, font, size, pos)) {
+    for (Text t : textHandler->createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
         Gui *gui = new Gui(t.character.texture, name.c_str());
@@ -551,13 +554,14 @@ std::vector<Gui *> printShakingString(std::string text, Renderer *renderer,
     return result;
 }
 
-std::vector<Gui *> printVerticalString(std::string text, Renderer *renderer,
+std::vector<Gui *> printVerticalString(std::string text,
+                                       TextHandler *textHandler,
                                        std::string entityNames,
                                        std::string font, double size,
                                        glm::vec2 pos, glm::vec4 color) {
     std::vector<Gui *> result;
     int i = 0;
-    for (Text t : renderer->createText(text, font, size, pos)) {
+    for (Text t : textHandler->createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
         Gui *gui = new Gui(t.character.texture, name.c_str());

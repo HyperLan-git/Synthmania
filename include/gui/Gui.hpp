@@ -40,6 +40,7 @@ class Gui {
     void setSize(glm::vec2 size);
     void setColor(glm::vec4 color);
     void setNegate(int negate);
+    void setTexture(ImageView* texture);
 
     void addEffect(GraphicalEffect* effect);
 

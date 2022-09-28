@@ -14,4 +14,8 @@ void MenuElement::onPressed(glm::vec2 pos) {}
 
 void MenuElement::onClicked(glm::vec2 pos) {}
 
+void MenuElement::onKeyPressed(int key, int scancode, int mods) {}
+
+void MenuElement::onTyped(unsigned int character) {}
+
 MenuElement::~MenuElement() {}

@@ -16,7 +16,7 @@ class AudioHandler;
 #include "AudioBuffer.hpp"
 #include "AudioSource.hpp"
 
-std::vector<std::string> getDevices();
+std::vector<std::string> getAudioDevices();
 
 class AudioHandler {
    public:
@@ -25,6 +25,8 @@ class AudioHandler {
 
     void addSound(std::string name, AudioBuffer* sound);
     AudioSource* playSound(std::string name);
+
+    void setDevice(const ALCchar* device);
 
     void addSource(AudioSource* source);
 

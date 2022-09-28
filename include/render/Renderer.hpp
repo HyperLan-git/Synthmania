@@ -21,7 +21,7 @@ class Renderer;
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <ft2build.h>
 
-#define FT
+// ft2build comes before this
 #include <freetype/freetype.h>
 #include <freetype/ftbitmap.h>
 
@@ -62,6 +62,7 @@ class Renderer;
 #include "ShaderDescriptorPool.hpp"
 #include "ShaderDescriptorSet.hpp"
 #include "Swapchain.hpp"
+#include "TextHandler.hpp"
 #include "TextureSampler.hpp"
 #include "Utils.hpp"
 #include "Window.hpp"
@@ -97,17 +98,9 @@ class Renderer {
 
     void render();
 
-    void loadTextures(std::map<std::string, std::string> textures,
-                      std::map<std::string, std::vector<unsigned long>> fonts);
+    void loadTextures(std::map<std::string, std::string> textures);
 
     std::vector<ImageView*> getTextures();
-    std::vector<Font> getFonts();
-    Character getCharacter(std::string fontName, unsigned long code);
-
-    std::vector<Text> createText(std::string text, std::string fontName,
-                                 double size, glm::vec2 start);
-    std::vector<Text> createVerticalText(std::string text, std::string fontName,
-                                         double size, glm::vec2 start);
 
     void setStartTime(double start);
 
@@ -115,6 +108,8 @@ class Renderer {
     Device* getDevice();
 
     Instance* getInstance();
+
+    TextHandler* getTextHandler();
 
     void addModel(Model* m);
 
@@ -198,7 +193,7 @@ class Renderer {
     std::vector<ImageView*> textures;
     std::vector<ShaderDescriptorSet*> textureAccessors;
 
-    std::vector<Font> fonts;
+    TextHandler* textHandler = NULL;
 
     std::chrono::_V2::system_clock::time_point begTime =
         std::chrono::high_resolution_clock::now();
@@ -246,22 +241,18 @@ class Renderer {
 
     ImageView* readTexture(const char* path, const char* name);
 
-   public:
     void addTexture(Image* texture, const char* name);
 
     void loadFonts(std::map<std::string, std::vector<unsigned long>> fonts);
 
-    Image* loadCharacter(FT_Face face, unsigned long character);
-
-   private:
     void updateDescriptorSet(ShaderDescriptorSet* descriptor,
                              ImageView* texture, TextureSampler* sampler,
                              Buffer* uniformBuffer);
 
-   public:
     void transitionImageLayout(Image* image, VkImageLayout oldLayout,
                                VkImageLayout newLayout);
 
+   public:
     void convertImage(Image* src, VkImageLayout srcImageLayout, Image* dst,
                       VkImageLayout dstImageLayout, VkFilter filter);
 

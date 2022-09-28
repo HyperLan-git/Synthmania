@@ -63,6 +63,17 @@ void Window::setMouseWheelcallback(GLFWscrollfun fun) {
     glfwSetScrollCallback(window, fun);
 }
 
+void Window::setTextcallback(GLFWcharfun fun) {
+    glfwSetCharCallback(window, fun);
+}
+
+void Window::resetCallbacks() {
+    setMouseWheelcallback(NULL);
+    setMousecallback(NULL);
+    setKeycallback(NULL);
+    setTextcallback(NULL);
+}
+
 glm::vec2 Window::getCursorPos() {
     double x, y;
     glfwGetCursorPos(window, &x, &y);

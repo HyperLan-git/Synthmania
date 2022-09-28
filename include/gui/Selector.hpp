@@ -23,6 +23,7 @@ class Selector : public MenuElement {
     std::vector<Gui*> getGuis();
 
     int getSelected();
+    void select(int selected);
 
     virtual ~Selector() = default;
 

@@ -6,8 +6,8 @@ SongSelectMenu::SongSelectMenu(Game *g, std::string folder) : Menu(g) {
                               getTextureByName(tex, "button-pressed"), "back",
                               {-1.7, .85}, {.6, .3});
     buttons.push_back(back);
-    for (Text t : g->getRenderer()->createText("Back", "Stupid", 12,
-                                               glm::vec2({-.1, 0}))) {
+    for (Text t : g->getTextHandler()->createText("Back", "Stupid", 12,
+                                                  glm::vec2({-.1, 0}))) {
         ParentedGui *g =
             new ParentedGui(t.character.texture, "Back_arrow", back);
         g->setPosition(t.pos);
@@ -29,8 +29,8 @@ SongSelectMenu::SongSelectMenu(Game *g, std::string folder) : Menu(g) {
                                  "button-pressed"),
                 name.c_str(), {0, pos}, {1, .5});
             this->buttons.push_back(but);
-            for (Text t : g->getRenderer()->createText(name, "Stupid", 10,
-                                                       glm::vec2({-.45, 0}))) {
+            for (Text t : g->getTextHandler()->createText(
+                     name, "Stupid", 10, glm::vec2({-.45, 0}))) {
                 ParentedGui *g = new ParentedGui(t.character.texture,
                                                  "Song name " + name, but);
                 g->setPosition(t.pos);

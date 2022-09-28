@@ -3,6 +3,7 @@
 #include "Synthmania.hpp"
 
 MainMenu::MainMenu(Game* g) : Menu(g) {
+    TextHandler* text = g->getTextHandler();
     std::vector<ImageView*> tex = g->getRenderer()->getTextures();
     ImageView *piano = getTextureByName(tex, "piano"),
               *piano_pressed = getTextureByName(tex, "piano-pressed"),
@@ -46,8 +47,8 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
     buttons.push_back(new Button(black_key, black_key_pressed, "updates*",
                                  glm::vec2({1, .3f}), glm::vec2({.2, .6f})));
 
-    for (Text t : g->getRenderer()->createVerticalText("PLAY", "Stupid", 12,
-                                                       glm::vec2({0, -.4}))) {
+    for (Text t :
+         text->createVerticalText("PLAY", "Stupid", 12, glm::vec2({0, -.4}))) {
         ParentedGui* g =
             new ParentedGui(t.character.texture, "PLAY", buttons[0]);
         t.pos.x -= t.size.x / 2;
@@ -58,8 +59,8 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
         guis.push_back(g);
     }
 
-    for (Text t : g->getRenderer()->createVerticalText("EDIT", "Stupid", 12,
-                                                       glm::vec2({0, -.4}))) {
+    for (Text t :
+         text->createVerticalText("EDIT", "Stupid", 12, glm::vec2({0, -.4}))) {
         ParentedGui* g =
             new ParentedGui(t.character.texture, "EDIT", buttons[1]);
         t.pos.x -= t.size.x / 2;
@@ -70,8 +71,8 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
         guis.push_back(g);
     }
 
-    for (Text t : g->getRenderer()->createVerticalText("OPTIONS", "Stupid", 12,
-                                                       glm::vec2({0, -.4}))) {
+    for (Text t : text->createVerticalText("OPTIONS", "Stupid", 12,
+                                           glm::vec2({0, -.4}))) {
         ParentedGui* g =
             new ParentedGui(t.character.texture, "OPTIONS", buttons[2]);
         t.pos.x -= t.size.x / 2;
@@ -82,8 +83,8 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
         guis.push_back(g);
     }
 
-    for (Text t : g->getRenderer()->createVerticalText("TESTS", "Stupid", 12,
-                                                       glm::vec2({0, -.4}))) {
+    for (Text t :
+         text->createVerticalText("TESTS", "Stupid", 12, glm::vec2({0, -.4}))) {
         ParentedGui* g =
             new ParentedGui(t.character.texture, "TESTS", buttons[3]);
         t.pos.x -= t.size.x / 2;
@@ -94,8 +95,8 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
         guis.push_back(g);
     }
 
-    for (Text t : g->getRenderer()->createVerticalText("SOCIAL", "Stupid", 12,
-                                                       glm::vec2({0, -.4}))) {
+    for (Text t : text->createVerticalText("SOCIAL", "Stupid", 12,
+                                           glm::vec2({0, -.4}))) {
         ParentedGui* g =
             new ParentedGui(t.character.texture, "SOCIAL", buttons[4]);
         t.pos.x -= t.size.x / 2;
@@ -106,8 +107,8 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
         guis.push_back(g);
     }
 
-    for (Text t : g->getRenderer()->createVerticalText("UPDATES", "Stupid", 12,
-                                                       glm::vec2({0, -.4}))) {
+    for (Text t : text->createVerticalText("UPDATES", "Stupid", 12,
+                                           glm::vec2({0, -.4}))) {
         ParentedGui* g =
             new ParentedGui(t.character.texture, "UPDATES", buttons[5]);
         t.pos.x -= t.size.x / 2;
@@ -118,8 +119,8 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
         guis.push_back(g);
     }
 
-    for (Text t : g->getRenderer()->createVerticalText("MAPS", "Stupid", 12,
-                                                       glm::vec2({0, -.4}))) {
+    for (Text t :
+         text->createVerticalText("MAPS", "Stupid", 12, glm::vec2({0, -.4}))) {
         ParentedGui* g =
             new ParentedGui(t.character.texture, "MAPS", buttons[6]);
         t.pos.x -= t.size.x / 2;
@@ -130,8 +131,8 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
         guis.push_back(g);
     }
 
-    for (Text t : g->getRenderer()->createVerticalText("EXTRA", "Stupid", 12,
-                                                       glm::vec2({0, -.4}))) {
+    for (Text t :
+         text->createVerticalText("EXTRA", "Stupid", 12, glm::vec2({0, -.4}))) {
         ParentedGui* g =
             new ParentedGui(t.character.texture, "EXTRA", buttons[7]);
         t.pos.x -= t.size.x / 2;

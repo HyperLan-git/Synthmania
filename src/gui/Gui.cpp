@@ -14,7 +14,9 @@ std::string Gui::getName() const { return name; }
 glm::vec3 Gui::getPosition() const { return position; }
 glm::vec2 Gui::getRealPosition() const { return position; }
 glm::vec2 Gui::getGraphicalPosition() const { return graphicalPosition; }
-float Gui::getRotation() const { return (rotation - ((int)rotation / (M_PI))); }
+float Gui::getRotation() const {
+    return (rotation - (int)(rotation / (M_PI * 2)) * 2 * M_PI);
+}
 glm::vec2 Gui::getSize() const { return size; }
 glm::vec4 Gui::getColor() const { return color; }
 int Gui::getNegate() const { return negate; }
@@ -30,6 +32,8 @@ void Gui::setSize(glm::vec2 size) { this->size = size; }
 void Gui::setColor(glm::vec4 color) { this->color = color; }
 
 void Gui::setNegate(int negate) { this->negate = negate; }
+
+void Gui::setTexture(ImageView* texture) { this->texture = texture; }
 
 bool Gui::update(int64_t time) { return false; }
 

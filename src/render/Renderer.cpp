@@ -1,3 +1,4 @@
+// Must appear only once in a source file
 #define STB_IMAGE_IMPLEMENTATION
 #include "Renderer.hpp"
 
@@ -33,6 +34,7 @@ void Renderer::initVulkan() {
     commandPool = new CommandPool(device);
     setName(functions, device, "Command Pool", VK_OBJECT_TYPE_COMMAND_POOL,
             *(commandPool->getPool()));
+    textHandler = new TextHandler(&physicalDevice, device, FONT_SIZE);
     createSwapchain();
     int i = 0;
     for (Framebuffer* f : swapchain->getFramebuffers()) {
@@ -159,109 +161,14 @@ void Renderer::createSwapchain() {
             *(framebuffer->getFramebuffer()));
 }
 
-// TODO put text related shit elsewhere
-Image* Renderer::loadCharacter(FT_Face face, unsigned long character) {
-    FT_GlyphSlot glyphSlot = face->glyph;
-    FT_UInt i = FT_Get_Char_Index(face, character);
-    FT_Load_Glyph(face, i, FT_LOAD_DEFAULT);
-    FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL);
-    unsigned int w = glyphSlot->bitmap.width + 2,
-                 h = glyphSlot->bitmap.rows + 2;
-
-    uint8_t* bitmap = glyphSlot->bitmap.buffer;
-
-    Image* image =
-        new Image(&physicalDevice, device, w, h, VK_FORMAT_R8G8B8A8_SRGB,
-                  VK_IMAGE_TILING_LINEAR,  // Fricking tiling
-                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-    // TODO put all that in image class
-    VkImageSubresource sub;
-    sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    sub.mipLevel = 0;
-    sub.arrayLayer = 0;
-    VkSubresourceLayout layout;
-    vkGetImageSubresourceLayout(*(device->getDevice()), *(image->getImage()),
-                                &sub, &layout);
-    uint8_t buffer[layout.rowPitch * h] = {0};
-    for (int y = 0; y < h; ++y)
-        for (int x = 0; x < w; ++x) {
-            if (y == 0 || y == h - 1 || x == 0 || x == w - 1) {
-                buffer[(x + y * layout.rowPitch / 4) * 4 + 3] = 0;
-                continue;
-            }
-            uint8_t value =
-                bitmap[(x - 1) + (y - 1) * (glyphSlot->bitmap.pitch)];
-            buffer[(x + y * layout.rowPitch / 4) * 4 + 3] = value;
-        }
-
-    transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
-                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    void* d;
-    // TODO utilitary function to map memory
-    vkMapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()), 0,
-                layout.rowPitch * h, 0, &d);
-    memcpy(d, buffer, layout.rowPitch * h);
-    vkUnmapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()));
-    // TODO copy image to other image with tiling optimal and less memory usage
-    return image;
-}
-
-void Renderer::loadFonts(
-    std::map<std::string, std::vector<unsigned long>> fontsToLoad) {
-    FT_Library* lib = new FT_Library();
-    FT_Init_FreeType(lib);
-    for (auto entry : fontsToLoad) {
-        FT_Face f;
-        if (FT_New_Face(*lib, entry.first.c_str(), 0, &f)) continue;
-        if (FT_Set_Pixel_Sizes(f, 0, static_cast<FT_UInt>(FONT_SIZE))) continue;
-
-        Font font;
-        font.name = f->family_name;
-
-        for (auto c : entry.second) {
-            std::string charName = f->family_name;
-            charName.append("_");
-            charName.append(std::to_string(c));
-            addTexture(loadCharacter(f, c), charName.c_str());
-            Character chr;
-            chr.texture = getTextureByName(textures, charName.c_str());
-            chr.character = c;
-            chr.width = f->glyph->bitmap.width + 2;
-            chr.height = f->glyph->bitmap.rows + 2;
-            chr.advance = f->glyph->linearHoriAdvance / 65536;
-            chr.vAdvance = f->glyph->linearVertAdvance / 65536;
-            chr.offsetTop = f->glyph->bitmap_top;
-            chr.offsetLeft = f->glyph->bitmap_left;
-            font.characters.emplace(c, chr);
-        }
-        fonts.push_back(font);
-    }
-    FT_Done_FreeType(*lib);
-    delete lib;
-}
-
-std::vector<Font> Renderer::getFonts() { return fonts; }
-
-Character Renderer::getCharacter(std::string fontName, unsigned long code) {
-    for (Font f : fonts) {
-        if (fontName.compare(f.name) != 0) continue;
-        return f.characters[code];
-    }
-    return Character({0, 0, 0, 0, 0, 0, 0, NULL});
-}
-
-void Renderer::loadTextures(
-    std::map<std::string, std::string> textures,
-    std::map<std::string, std::vector<unsigned long>> fonts) {
+void Renderer::loadTextures(std::map<std::string, std::string> textures) {
     for (auto entry : textures) {
         this->textures.push_back(
             readTexture(entry.second.c_str(), entry.first.c_str()));
     }
-    loadFonts(fonts);
+    for (ImageView* view : textHandler->getTextures())
+        this->textures.push_back(view);
+
     uint32_t type_sz = 2 * this->textures.size();
     std::vector<VkDescriptorType> types(type_sz);
     for (size_t i = 0; i < textures.size(); i++) {
@@ -284,6 +191,8 @@ VkPhysicalDevice* Renderer::getPhysicalDevice() { return &physicalDevice; }
 Device* Renderer::getDevice() { return device; }
 
 Instance* Renderer::getInstance() { return instance; }
+
+TextHandler* Renderer::getTextHandler() { return textHandler; }
 
 void Renderer::setStartTime(double start) { this->startTime = start; }
 
@@ -358,6 +267,8 @@ Renderer::~Renderer() {
 
     for (CommandBuffer* b : commandBuffers) delete b;
     delete commandPool;
+
+    delete textHandler;
 
     delete device;
 
@@ -1046,7 +957,7 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
         if (texture == NULL) texture = getTextureByName(textures, "missing");
         if (lastTexture != texture) {
             size_t idx = 0;
-            // TODO I should have a map instead
+            // TODO I should have a map instead or store texture index somewhere
             for (idx = 0; idx < textures.size(); idx++)
                 if (textures[idx] == texture) break;
             if (idx >= textures.size()) {
@@ -1328,41 +1239,4 @@ std::vector<const char*> Renderer::getRequiredExtensions() {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
     return extensions;
-}
-
-std::vector<Text> Renderer::createText(std::string text, std::string fontName,
-                                       double size, glm::vec2 start) {
-    std::vector<Text> result;
-    double conv = 64. * FONT_SIZE / size;
-    for (int i = 0; i < text.size(); i++) {
-        Character c = getCharacter(fontName, (unsigned long)text[i]);
-        Text t;
-        t.character = c;
-        t.pos = {
-            start.x + (double)c.width / conv / 2 - c.offsetLeft / conv * 0.7,
-            start.y + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7};
-        t.size = {(double)c.width / conv, (double)c.height / conv};
-        result.push_back(t);
-        start.x += (c.advance) / conv;
-    }
-    return result;
-}
-
-std::vector<Text> Renderer::createVerticalText(std::string text,
-                                               std::string fontName,
-                                               double size, glm::vec2 start) {
-    std::vector<Text> result;
-    double conv = 64. * FONT_SIZE / size;
-    for (int i = 0; i < text.size(); i++) {
-        Character c = getCharacter(fontName, (unsigned long)text[i]);
-        Text t;
-        t.character = c;
-        t.pos = {
-            start.x + (double)c.width / conv / 2 - c.offsetLeft / conv * 0.7,
-            start.y + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7};
-        t.size = {(double)c.width / conv, (double)c.height / conv};
-        result.push_back(t);
-        start.y += (c.vAdvance) / conv * .7;
-    }
-    return result;
 }

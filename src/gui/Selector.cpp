@@ -11,7 +11,7 @@ Selector::Selector(ImageView* texture, ImageView* selectTexture, Game* game,
         std::vector<std::pair<Text, Gui*>> vec;
         if (e.length() > textLimit) e = e.substr(0, textLimit - 2) + "..";
         for (Text t :
-             game->getRenderer()->createText(e, font, textSize, {0, 0})) {
+             game->getTextHandler()->createText(e, font, textSize, {0, 0})) {
             Gui* g = new Gui(t.character.texture, name + "_text");
             g->setColor({1, 1, 1, 0});
             g->setSize(t.size);
@@ -25,6 +25,21 @@ Selector::Selector(ImageView* texture, ImageView* selectTexture, Game* game,
 }
 
 int Selector::getSelected() { return current; }
+
+void Selector::select(int selected) {
+    this->current = selected;
+    recalculatePositions();
+    glm::vec4 color = {1, 1, 1, opened ? 1 : 0};
+    for (Gui* g : buttons) g->setColor(color);
+    int elem = 0;
+    for (std::vector<std::pair<Text, Gui*>> elements : strings) {
+        if (elem++ != current)
+            for (std::pair<Text, Gui*> c : elements) c.second->setColor(color);
+        else
+            for (std::pair<Text, Gui*> c : elements)
+                c.second->setColor({1, 1, 1, 1});
+    }
+}
 
 bool Selector::isInside(glm::vec2 position) {
     if (!opened) return MenuElement::isInside(position);
@@ -44,13 +59,9 @@ void Selector::onClicked(glm::vec2 pos) {
         color = {1, 1, 1, 0};
         int place =
             (pos.y + this->size.y / 2 - this->position.y) / this->size.y;
-        std::cout << "pos:" << (pos.y + this->size.y / 2 - this->position.y)
-                  << "\nclicked : " << place << std::endl;
-        if (place > 0) {
-            if (place >= current) place--;
-            current = place;
-            recalculatePositions();
-        }
+        place--;
+        current = place;
+        recalculatePositions();
     }
 
     for (Gui* g : buttons) g->setColor(color);
@@ -86,7 +97,7 @@ void Selector::recalculatePositions() {
         for (std::pair<Text, Gui*> c : elements) {
             glm::vec2 pos = c.first.pos;
             pos.y += this->position.y + this->size.y * place;
-            pos.x += this->position.x - this->size.x * .45;
+            pos.x += this->position.x - this->size.x * .25;
             c.second->setPosition(pos);
         }
 

@@ -1,9 +1,9 @@
 #include "AudioHandler.hpp"
 
-std::vector<std::string> getDevices() {
+std::vector<std::string> getAudioDevices() {
     std::vector<std::string> devices;
 
-    // Récupération des devices disponibles
+    // This list is just strings next to each other and then an empty string
     const ALCchar* list = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
 
     if (list != NULL) {
@@ -49,6 +49,11 @@ AudioSource* AudioHandler::playSound(std::string name) {
 void AudioHandler::addSource(AudioSource* source) { sources.push_back(source); }
 
 ALCint AudioHandler::getSampleRate() { return sampleRate; }
+
+void AudioHandler::setDevice(const ALCchar* device) {
+    alcCloseDevice(this->device);
+    this->device = alcOpenDevice(device);
+}
 
 bool AudioHandler::update() {
     for (auto iter = sources.begin(); iter != sources.end(); iter++) {

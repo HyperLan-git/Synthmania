@@ -23,6 +23,7 @@ class Game;
 #include "MidiHandler.hpp"
 #include "Options.hpp"
 #include "Precision.hpp"
+#include "TextHandler.hpp"
 #include "Window.hpp"
 
 class Renderer;
@@ -54,6 +55,8 @@ class Game {
 
     Window *getWindow();
 
+    TextHandler *getTextHandler();
+
     virtual size_t updateUBO(void *&ubo);
     virtual void freeUBO(void *&ubo);
 
@@ -64,6 +67,7 @@ class Game {
     virtual void addEntity(Entity *entity);
 
     Menu *getMenu(std::string menu);
+    Menu *getCurrentMenu();
 
     void playSound(std::string sound);
 

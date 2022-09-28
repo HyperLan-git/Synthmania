@@ -6,6 +6,7 @@ class OptionMenu;
 #include "Renderer.hpp"
 #include "Selector.hpp"
 #include "Slider.hpp"
+#include "TextArea.hpp"
 
 class OptionMenu : public Menu {
    public:
@@ -13,7 +14,10 @@ class OptionMenu : public Menu {
 
     virtual void show();
 
+    virtual void onPressed(Button* b);
+
     ~OptionMenu();
 
    private:
+    TextArea* audioLatency;
 };
