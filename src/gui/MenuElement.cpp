@@ -3,6 +3,8 @@
 MenuElement::MenuElement(ImageView* texture, std::string name)
     : Gui(texture, name) {}
 
+void MenuElement::focus(bool focus) { this->selected = focus; }
+
 bool MenuElement::isInside(glm::vec2 position) {
     return position.x <= (this->position.x + this->size.x / 2) &&
            position.x >= (this->position.x - this->size.x / 2) &&

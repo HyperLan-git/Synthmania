@@ -269,11 +269,10 @@ class Renderer {
     void createCommandBuffers();
 
     void recordCommandBuffer(CommandBuffer* commandBuffer,
-                             RenderPass* renderPass, Framebuffer* framebuffer,
-                             VkExtent2D extent);
+                             RenderPass* renderPass, Framebuffer* framebuffer);
     void drawScreenCommandBuffer(CommandBuffer* commandBuffer,
                                  RenderPass* renderPass,
-                                 Framebuffer* framebuffer, VkExtent2D extent);
+                                 Framebuffer* framebuffer);
     void updateUniformBuffer(uint32_t currentImage);
     void drawFrame();
     void drawEntity(Entity* entity, CommandBuffer* commandBuffer);

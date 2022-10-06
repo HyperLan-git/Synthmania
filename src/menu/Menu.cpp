@@ -12,7 +12,8 @@ std::vector<MenuElement*> Menu::getMenuElements() { return elements; }
 std::vector<Gui*> Menu::getGuis() { return guis; }
 
 void Menu::select(MenuElement* element) {
-    std::cout << "selected : " << element << std::endl;
+    if (selected != NULL) selected->focus(false);
+    if (element != NULL) element->focus();
     this->selected = element;
 }
 

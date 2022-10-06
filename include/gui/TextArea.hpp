@@ -24,6 +24,8 @@ class TextArea : public MenuElement {
 
     void showCursor(bool show = true);
 
+    virtual bool update(int64_t time);
+
     std::wstring getText();
 
     std::vector<Gui*> getGuis();
@@ -38,7 +40,7 @@ class TextArea : public MenuElement {
     std::vector<Gui*> textContents;
     Gui* cursor;
     Text cursorChar;
-    int cursorPos, pos, shown, maxChars;
+    int cursorPos, pos, shown, maxChars, blinkTimer;
     float textSize;
     bool cursorVisible;
     TextPredicate predicate;

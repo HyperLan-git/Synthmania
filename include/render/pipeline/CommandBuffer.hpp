@@ -45,8 +45,7 @@ class CommandBuffer {
     void copyBufferRegion(Buffer *src, Buffer *dest, VkDeviceSize size);
 
     void beginRenderPass(RenderPass *renderPass, Framebuffer *framebuffer,
-                         VkExtent2D extent, VkClearValue *clearValues,
-                         uint32_t count);
+                         VkClearValue *clearValues, uint32_t count);
     void endRenderPass();
     void bindPipeline(Pipeline *pipeline, VkPipelineBindPoint bindPoint =
                                               VK_PIPELINE_BIND_POINT_GRAPHICS);

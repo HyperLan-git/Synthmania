@@ -148,17 +148,60 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     s->recalculatePositions();
     for (Gui* g : s->getGuis()) this->guis.push_back(g);
     this->elements.push_back(s);
+    for (Text t : text->createText("Audio latency", "Stupid", 6,
+                                   glm::vec2({.17, -.1}))) {
+        Gui* g = new Gui(t.character.texture, "Audio latency");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        guis.push_back(g);
+    }
     wchar_t chars[] = {'I', 0};
     std::wstring str = chars;  //"│";
     audioLatency = new TextArea(getTextureByName(textures, "text_area"),
                                 "audio latency", text, "Stupid", 4, 4,
-                                (unsigned long)str[0], 12, integerPredicate);
-    audioLatency->setSize({1, .175});
-    audioLatency->setPosition({.7, -.1});
+                                (unsigned long)str[0], 8, integerPredicate);
+    audioLatency->setSize({.4, .125});
+    audioLatency->setPosition({.8, -.1});
     for (Gui* g : audioLatency->getGuis()) this->guis.push_back(g);
     audioLatency->recalculateText();
     audioLatency->recalculateCursor();
     this->elements.push_back(audioLatency);
+    for (Text t : text->createText("Video latency", "Stupid", 6,
+                                   glm::vec2({.17, -.25}))) {
+        Gui* g = new Gui(t.character.texture, "Video latency");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        guis.push_back(g);
+    }
+    graphicLatency = new TextArea(getTextureByName(textures, "text_area"),
+                                  "video latency", text, "Stupid", 4, 4,
+                                  (unsigned long)str[0], 8, integerPredicate);
+    graphicLatency->setSize({.4, .125});
+    graphicLatency->setPosition({.8, -.25});
+    for (Gui* g : graphicLatency->getGuis()) this->guis.push_back(g);
+    graphicLatency->recalculateText();
+    graphicLatency->recalculateCursor();
+    this->elements.push_back(graphicLatency);
+    for (Text t : text->createText("Audio leniency", "Stupid", 6,
+                                   glm::vec2({-1.4, .1}))) {
+        Gui* g = new Gui(t.character.texture, "Audio leniency");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        guis.push_back(g);
+    }
+    audioLeniency = new TextArea(getTextureByName(textures, "text_area"),
+                                 "audio leniency", text, "Stupid", 4, 4,
+                                 (unsigned long)str[0], 8, integerPredicate);
+    audioLeniency->setSize({.4, .125});
+    audioLeniency->setPosition({-.7, .1});
+    for (Gui* g : audioLeniency->getGuis()) this->guis.push_back(g);
+    audioLeniency->recalculateText();
+    audioLeniency->recalculateCursor();
+    this->elements.push_back(audioLeniency);
+    fullscreen = new Checkbox(getTextureByName(textures, "checkbox"),
+                              getTextureByName(textures, "checkbox-pressed"),
+                              "fullscreen");
+    this->elements.push_back(fullscreen);
 }
 
 void OptionMenu::onPressed(Button* b) {

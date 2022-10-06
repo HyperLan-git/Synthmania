@@ -2,6 +2,7 @@
 
 class OptionMenu;
 
+#include "Checkbox.hpp"
 #include "Menu.hpp"
 #include "Renderer.hpp"
 #include "Selector.hpp"
@@ -19,5 +20,6 @@ class OptionMenu : public Menu {
     ~OptionMenu();
 
    private:
-    TextArea* audioLatency;
+    TextArea *audioLatency, *graphicLatency, *audioLeniency;
+    Checkbox* fullscreen;
 };

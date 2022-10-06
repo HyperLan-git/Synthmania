@@ -6,6 +6,8 @@
 
 #include <map>
 
+// FIXME when window resize vulkan error -> sussy
+
 Renderer::Renderer(Game* game, Window* window) {
     this->game = game;
     this->window = window;
@@ -110,16 +112,16 @@ void Renderer::createCommandBuffers() {
 }
 
 void Renderer::createSwapchain() {
-    DebugFunc functions = getDebugFunctions(instance);
-    swapchain = new Swapchain(device, &physicalDevice, window, surface);
-    setName(functions, device, "Swapchain", VK_OBJECT_TYPE_SWAPCHAIN_KHR,
-            *(swapchain->getSwapchain()));
     uint32_t w = 0, h = 0;
     window->getFramebufferSize(&w, &h);
     while (w == 0 || h == 0) {
         glfwWaitEvents();
         window->getFramebufferSize(&w, &h);
     }
+    DebugFunc functions = getDebugFunctions(instance);
+    swapchain = new Swapchain(device, &physicalDevice, window, surface);
+    setName(functions, device, "Swapchain", VK_OBJECT_TYPE_SWAPCHAIN_KHR,
+            *(swapchain->getSwapchain()));
     // w *= 1.5;
     // h *= 1.5;
     renderImage = new Image(
@@ -277,13 +279,6 @@ Renderer::~Renderer() {
 }
 
 void Renderer::recreateSwapchain() {
-    uint32_t width = 0, height = 0;
-    window->getFramebufferSize(&width, &height);
-    while (width == 0 || height == 0) {
-        glfwWaitEvents();
-        window->getFramebufferSize(&width, &height);
-    }
-
     device->wait();
 
     delete swapchain;
@@ -890,8 +885,7 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
 
 void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
                                        RenderPass* renderPass,
-                                       Framebuffer* framebuffer,
-                                       VkExtent2D extent) {
+                                       Framebuffer* framebuffer) {
     commandBuffer->reset();
     commandBuffer->begin();
 
@@ -899,8 +893,8 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
     clearValues[0].color = {{1.0f, 1.0f, 1.0f, 0.0f}};
     clearValues[1].depthStencil = {1.0f, 0};
 
-    commandBuffer->beginRenderPass(renderPass, framebuffer, extent,
-                                   clearValues.data(), 2);
+    commandBuffer->beginRenderPass(renderPass, framebuffer, clearValues.data(),
+                                   2);
 
     Model* lastModel = NULL;
     ImageView* lastTexture = NULL;
@@ -980,8 +974,7 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
 
 void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
                                    RenderPass* renderPass,
-                                   Framebuffer* framebuffer,
-                                   VkExtent2D extent) {
+                                   Framebuffer* framebuffer) {
     commandBuffer->reset();
     commandBuffer->begin();
 
@@ -989,8 +982,8 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
     clearValues[1].depthStencil = {1.0f, 0};
 
-    commandBuffer->beginRenderPass(renderPass, framebuffer, extent,
-                                   clearValues.data(), 2);
+    commandBuffer->beginRenderPass(renderPass, framebuffer, clearValues.data(),
+                                   2);
 
     commandBuffer->bindPipeline(renderPipeline);
     transitionImageLayout(renderImage, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -1098,6 +1091,10 @@ glm::vec2 Renderer::getVirtPos(glm::vec2 realPos) {
 }
 
 void Renderer::drawFrame() {
+    if (window->hasResized()) {
+        window->setResized(false);
+        recreateSwapchain();
+    }
     inFlightFences[currentFrame]->wait();
 
     uint32_t imageIndex;
@@ -1107,7 +1104,8 @@ void Renderer::drawFrame() {
         VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        recreateSwapchain();
+        std::cout << "outofdate";
+        // recreateSwapchain();
         return;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
         throw std::runtime_error("failed to acquire swap chain image!");
@@ -1116,18 +1114,14 @@ void Renderer::drawFrame() {
 
     inFlightFences[currentFrame]->reset();
 
-    uint32_t w, h;
-    window->getFramebufferSize(&w, &h);
-    // w *= 1.5;
-    // h *= 1.5;
     /*drawScreenCommandBuffer(
         commandBuffers[currentFrame], swapchain->getRenderPass(),
         swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());*/
     drawScreenCommandBuffer(renderCommandBuffer, swapchain->getRenderPass(),
-                            framebuffer, {w, h});
-    recordCommandBuffer(
-        commandBuffers[currentFrame], swapchain->getRenderPass(),
-        swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());
+                            framebuffer);
+    recordCommandBuffer(commandBuffers[currentFrame],
+                        swapchain->getRenderPass(),
+                        swapchain->getFramebuffers()[imageIndex]);
 
     commandBuffers[currentFrame]->submit(
         device->getQueue("main"), imageAvailableSemaphores[currentFrame],

@@ -51,13 +51,11 @@ void TextArea::onKeyPressed(int key, int scancode, int mods) {
                 recalculateCursor();
             } else {
                 pos--;
-                std::cout << "p=" << pos << " cur=" << cursorPos << std::endl;
                 recalculateText();
                 recalculateCursor();
             }
             break;
         case GLFW_KEY_RIGHT:
-            std::cout << "sz : " << text.size() << std::endl;
             if (cursorPos + pos >= text.size()) break;
             if (cursorPos == shown) {
                 pos++;
@@ -109,7 +107,6 @@ void TextArea::onTyped(unsigned int character) {
         cursorPos++;
     else
         pos++;
-    std::cout << "mainpos=" << pos << std::endl;
     recalculateText();
     recalculateCursor();
 }
@@ -125,6 +122,15 @@ std::vector<Gui*> TextArea::getGuis() {
     std::vector<Gui*> result = textContents;
     result.push_back(cursor);
     return result;
+}
+
+bool TextArea::update(int64_t time) {
+    int64_t dt = 1000000;
+    if (selected)
+        showCursor((time / dt) % 2 == 0);
+    else
+        showCursor(false);
+    return false;
 }
 
 void TextArea::recalculateText() {

@@ -10,6 +10,8 @@
     "slider": "slider.png",
     "slider_button": "slider_button.png",
     "text_area": "text_area.png",
+    "checkbox": "checkbox.png",
+    "checkbox-pressed": "checkbox-on.png",
     "partition": "partition.png",
     "judgement_line": "judgement.png",
     "precision": "precision.png",

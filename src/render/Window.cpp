@@ -20,7 +20,6 @@ Window::Window(const uint32_t width, const uint32_t height, const char *title,
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    std::cout << "size : " << width << "," << height << std::endl;
     window = glfwCreateWindow(width, height, title,
                               fullscreen ? glfwGetPrimaryMonitor() : nullptr,
                               nullptr);
