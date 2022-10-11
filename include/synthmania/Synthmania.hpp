@@ -102,9 +102,10 @@ class Synthmania : public Game {
     Diff diff;
     ChartHandler *mod = NULL;
 
+    std::map<unsigned char, unsigned char> midiMapping;
     std::vector<Note *> notes;
     AudioSource *music = NULL;
     std::string songFolder, skin;
     Judgement *line = NULL;
-    bool autoPlay = false;
+    bool autoPlay = false, drum = false;
 };

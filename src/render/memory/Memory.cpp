@@ -17,6 +17,20 @@ Memory::Memory(VkPhysicalDevice* physicalDevice, Device* device,
     }
 }
 
+void Memory::write(const void* data, VkDeviceSize sz, VkDeviceSize offset) {
+    void* d;
+    vkMapMemory(*(device->getDevice()), *memory, offset, sz, 0, &d);
+    memcpy(d, data, sz);
+    vkUnmapMemory(*(device->getDevice()), *memory);
+}
+
+void Memory::read(void* data, VkDeviceSize sz, VkDeviceSize offset) {
+    void* d;
+    vkMapMemory(*(device->getDevice()), *memory, offset, sz, 0, &d);
+    memcpy(data, d, sz);
+    vkUnmapMemory(*(device->getDevice()), *memory);
+}
+
 VkDeviceMemory* Memory::getMemory() { return memory; }
 
 Memory::~Memory() {

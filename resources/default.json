@@ -17,7 +17,8 @@
     "appearance": {
         "fullscreen": false,
         "resolutionX": 1920,
-        "resolutionY": 1080
+        "resolutionY": 1080,
+        "skin": "default"
     },
     "plugin": {
         "buffer size": 1024,

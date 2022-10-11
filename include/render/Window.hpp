@@ -37,11 +37,16 @@ class Window {
     void setMouseWheelcallback(GLFWscrollfun fun);
     void setTextcallback(GLFWcharfun fun);
 
+    std::string getClipboard();
+    void setClipboard(const std::string &data);
+
     void resetCallbacks();
 
     glm::vec2 getCursorPos();
 
     bool mousePressed(int button = GLFW_MOUSE_BUTTON_LEFT);
+
+    void fullscreen(bool fullscreen = true);
 
     ~Window();
 

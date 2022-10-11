@@ -37,6 +37,9 @@ TextArea::TextArea(ImageView* texture, std::string name, TextHandler* handler,
 
 void TextArea::onKeyPressed(int key, int scancode, int mods) {
     switch (key) {
+        case GLFW_KEY_V:
+            if (!(mods & GLFW_MOD_CONTROL)) break;
+            break;
         case GLFW_KEY_LEFT:
             if (pos + cursorPos <= 0) break;
             if (mods & GLFW_MOD_CONTROL) {
@@ -118,6 +121,8 @@ void TextArea::showCursor(bool show) {
 
 std::wstring TextArea::getText() { return text; }
 
+void TextArea::setText(std::wstring text) { this->text = text; }
+
 std::vector<Gui*> TextArea::getGuis() {
     std::vector<Gui*> result = textContents;
     result.push_back(cursor);
@@ -136,9 +141,10 @@ bool TextArea::update(int64_t time) {
 void TextArea::recalculateText() {
     std::wstring sub = text.substr(pos);
     int i = 0;
-    for (Text t : handler->createText_w(
-             sub, fontName, textSize,
-             {position.x - size.x * .45, position.y + size.y * .25})) {
+    for (Text t :
+         handler->createText_w(sub, fontName, textSize,
+                               {position.x - size.x * .5 + cursor->getSize().x,
+                                position.y + size.y * .25})) {
         Gui* g = this->textContents[i++];
         g->setTexture(t.character.texture);
         g->setPosition(t.pos);
@@ -164,7 +170,7 @@ void TextArea::recalculateCursor() {
     Gui* g = this->textContents[cPos];
     if (end) pos.x += g->getSize().x;
     pos.x += g->getPosition().x + g->getGraphicalPosition().x - g->getSize().x +
-             cursorChar.size.x / 2;
+             cursorChar.size.x / 4;
     this->cursor->setPosition(pos);
     this->cursor->setColor({0, 0, 0, cursorVisible ? 1 : 0});
 }

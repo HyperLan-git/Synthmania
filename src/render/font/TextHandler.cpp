@@ -28,15 +28,7 @@ Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-    // TODO put all that in image class
-    VkImageSubresource sub;
-    sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    sub.mipLevel = 0;
-    sub.arrayLayer = 0;
-    VkSubresourceLayout layout;
-    vkGetImageSubresourceLayout(*(device->getDevice()), *(image->getImage()),
-                                &sub, &layout);
+    VkSubresourceLayout layout = image->getImageSubresourceLayout();
     uint8_t buffer[layout.rowPitch * h] = {0};
     for (int y = 0; y < h; ++y)
         for (int x = 0; x < w; ++x) {

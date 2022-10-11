@@ -10,5 +10,13 @@ int main(int argc, char** argv) {
                   << "\ntime : " << (double)(note.timestamp) / 1000000.
                   << std::endl;
     }
+    while (handler.getOpenPort() < 0) {
+        if (handler.hasMessage()) {
+            const Message& m = handler.getMessage();
+            if (m.type != libremidi::message_type::NOTE_ON) continue;
+            std::cout << "channel : " << m.channel << " note : " << m.data1
+                      << std::endl;
+        }
+    }
     return 0;
 }

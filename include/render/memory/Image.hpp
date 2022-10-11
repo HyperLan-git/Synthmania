@@ -18,6 +18,10 @@ class Image {
     VkImage *getImage();
     Memory *getMemory();
     VkExtent3D getExtent();
+    VkSubresourceLayout getImageSubresourceLayout(
+        uint32_t mipLevel = 0, uint32_t arrayLayer = 0,
+        VkImageAspectFlags flags = VK_IMAGE_ASPECT_COLOR_BIT);
+    void write(const void *data, VkDeviceSize sz, VkDeviceSize offset);
     ~Image();
 
    private:

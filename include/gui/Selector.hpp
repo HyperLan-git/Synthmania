@@ -6,7 +6,7 @@ class Selector;
 #include "MenuElement.hpp"
 #include "Renderer.hpp"
 
-// TODO find a way to have gui with subparts without having to add them all one
+// XXX find a way to have gui with subparts without having to add them all one
 // by one
 class Selector : public MenuElement {
    public:

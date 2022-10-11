@@ -1,7 +1,9 @@
 #include "Synthmania.hpp"
 
+// FIXME replace pointers with unique or shared_ptrs I have just had enough
 // TODO clean includes because it might or might not currently be complete chaos
 // TODO put consts everywhere relevant
+// TODO put inlines everywhere relevant
 int main(int argc, char **argv) {
     std::string skin = "resources/textures";
     if (argc > 1 && argv[1][0] != '\0') skin = std::string(argv[1]);

@@ -59,7 +59,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     }
 
     for (Text t :
-         text->createText("Plugin", "Stupid", 12, glm::vec2({-1.4, .7}))) {
+         text->createText("Plugin", "Stupid", 12, glm::vec2({-1.4, .6}))) {
         Gui* g = new Gui(t.character.texture, "Plugin");
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -167,7 +167,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     audioLatency->recalculateCursor();
     this->elements.push_back(audioLatency);
     for (Text t : text->createText("Video latency", "Stupid", 6,
-                                   glm::vec2({.17, -.25}))) {
+                                   glm::vec2({.17, -.3}))) {
         Gui* g = new Gui(t.character.texture, "Video latency");
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -177,7 +177,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
                                   "video latency", text, "Stupid", 4, 4,
                                   (unsigned long)str[0], 8, integerPredicate);
     graphicLatency->setSize({.4, .125});
-    graphicLatency->setPosition({.8, -.25});
+    graphicLatency->setPosition({.8, -.3});
     for (Gui* g : graphicLatency->getGuis()) this->guis.push_back(g);
     graphicLatency->recalculateText();
     graphicLatency->recalculateCursor();
@@ -198,10 +198,96 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     audioLeniency->recalculateText();
     audioLeniency->recalculateCursor();
     this->elements.push_back(audioLeniency);
+    for (Text t :
+         text->createText("Fullscreen", "Stupid", 6, glm::vec2({-.6, .3}))) {
+        Gui* g = new Gui(t.character.texture, "Fullscreen");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        guis.push_back(g);
+    }
     fullscreen = new Checkbox(getTextureByName(textures, "checkbox"),
                               getTextureByName(textures, "checkbox-pressed"),
                               "fullscreen");
+    fullscreen->setPosition({-.2, .3});
+    fullscreen->setSize({.15, .15});
     this->elements.push_back(fullscreen);
+
+    for (Text t : text->createText("Skin", "Stupid", 6, glm::vec2({0, .3}))) {
+        Gui* g = new Gui(t.character.texture, "skin");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        guis.push_back(g);
+    }
+    // TODO make skin system
+    s = new Selector(getTextureByName(textures, "selector"),
+                     getTextureByName(textures, "button"), game,
+                     "note selector", {"default"}, 5, "Stupid", 18);
+    s->setPosition({.5, .3});
+    s->setSize({.7, .15});
+    s->recalculatePositions();
+    for (Gui* g : s->getGuis()) this->guis.push_back(g);
+    this->elements.push_back(s);
+    for (Text t :
+         text->createText("Buffer size", "Stupid", 6, glm::vec2({-.9, .6}))) {
+        Gui* g = new Gui(t.character.texture, "buf size");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        guis.push_back(g);
+    }
+    for (Text t :
+         text->createText("Audio buffers", "Stupid", 6, glm::vec2({0, .6}))) {
+        Gui* g = new Gui(t.character.texture, "audio buffers");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        guis.push_back(g);
+    }
+    bufSize = new TextArea(getTextureByName(textures, "text_area"),
+                           "buffer size", text, "Stupid", 4, 4,
+                           (unsigned long)str[0], 8, integerPredicate);
+    bufSize->setSize({.4, .125});
+    bufSize->setPosition({-.3, .6});
+    for (Gui* g : bufSize->getGuis()) this->guis.push_back(g);
+    bufSize->recalculateText();
+    bufSize->recalculateCursor();
+    this->elements.push_back(bufSize);
+    bufAmt = new TextArea(getTextureByName(textures, "text_area"), "buffer amt",
+                          text, "Stupid", 2, 2, (unsigned long)str[0], 8,
+                          integerPredicate);
+    bufAmt->setSize({.4, .125});
+    bufAmt->setPosition({.7, .6});
+    for (Gui* g : bufAmt->getGuis()) this->guis.push_back(g);
+    bufAmt->recalculateText();
+    bufAmt->recalculateCursor();
+    this->elements.push_back(bufAmt);
+    bufAmt = new TextArea(getTextureByName(textures, "text_area"), "buffer amt",
+                          text, "Stupid", 2, 2, (unsigned long)str[0], 8,
+                          integerPredicate);
+    bufAmt->setSize({.4, .125});
+    bufAmt->setPosition({.7, .6});
+    for (Gui* g : bufAmt->getGuis()) this->guis.push_back(g);
+    bufAmt->recalculateText();
+    bufAmt->recalculateCursor();
+    this->elements.push_back(bufAmt);
+    for (Text t :
+         text->createText("Plugin folders", "Stupid", 6, glm::vec2({-1, .9}))) {
+        Gui* g = new Gui(t.character.texture, "plugin folders");
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        guis.push_back(g);
+    }
+    pluginFolders = new TextArea(getTextureByName(textures, "text_area"),
+                                 "plugin folders", text, "Stupid", 23, 256,
+                                 (unsigned long)str[0], 8, truePredicate);
+    pluginFolders->setSize({1.4, .125});
+    pluginFolders->setPosition({.3, .9});
+    std::string folders = "plugins;";
+    wchar_t wstr[folders.size() + 1] = {0};
+    for (int i = 0; i < folders.size(); i++) wstr[i] = folders[i];
+    pluginFolders->setText(std::wstring(wstr));
+    for (Gui* g : pluginFolders->getGuis()) this->guis.push_back(g);
+    pluginFolders->recalculateText();
+    pluginFolders->recalculateCursor();
+    this->elements.push_back(pluginFolders);
 }
 
 void OptionMenu::onPressed(Button* b) {

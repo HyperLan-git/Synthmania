@@ -5,12 +5,11 @@ Image::Image(VkPhysicalDevice* physicalDevice, Device* device, uint32_t width,
              VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
     this->device = device;
     this->image = new VkImage();
+    this->extent = {width, height, 1};
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
-    imageInfo.extent.width = width;
-    imageInfo.extent.height = height;
-    imageInfo.extent.depth = 1;
+    imageInfo.extent = this->extent;
     imageInfo.mipLevels = 1;
     imageInfo.arrayLayers = 1;
     imageInfo.format = format;
@@ -34,7 +33,6 @@ Image::Image(VkPhysicalDevice* physicalDevice, Device* device, uint32_t width,
 
     vkBindImageMemory(*(device->getDevice()), *image, *(memory->getMemory()),
                       0);
-    this->extent = {width, height, 1};
 }
 
 std::vector<Image*> createImagesForSwapchain(Device* device,
@@ -64,6 +62,20 @@ VkImage* Image::getImage() { return image; }
 Memory* Image::getMemory() { return memory; }
 
 VkExtent3D Image::getExtent() { return extent; }
+
+VkSubresourceLayout Image::getImageSubresourceLayout(uint32_t mipLevel,
+                                                     uint32_t arrayLayer,
+                                                     VkImageAspectFlags flags) {
+    VkSubresourceLayout result;
+    VkImageSubresource sub{
+        .aspectMask = flags, .mipLevel = mipLevel, .arrayLayer = arrayLayer};
+    vkGetImageSubresourceLayout(*(device->getDevice()), *image, &sub, &result);
+    return result;
+}
+
+void Image::write(const void* data, VkDeviceSize sz, VkDeviceSize offset) {
+    memory->write(data, sz, offset);
+}
 
 Image::~Image() {
     if (memory != NULL) {

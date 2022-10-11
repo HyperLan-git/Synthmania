@@ -27,6 +27,7 @@ class TextArea : public MenuElement {
     virtual bool update(int64_t time);
 
     std::wstring getText();
+    void setText(std::wstring text);
 
     std::vector<Gui*> getGuis();
 

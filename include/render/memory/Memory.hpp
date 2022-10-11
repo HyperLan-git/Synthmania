@@ -13,6 +13,8 @@ class Memory {
            VkMemoryPropertyFlags properties);
 
     VkDeviceMemory* getMemory();
+    void write(const void* data, VkDeviceSize sz, VkDeviceSize offset);
+    void read(void* data, VkDeviceSize sz, VkDeviceSize offset);
 
     ~Memory();
 

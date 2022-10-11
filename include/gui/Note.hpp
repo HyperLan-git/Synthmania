@@ -14,7 +14,7 @@ class Note;
 #define HIT_WINDOW 150000
 #define DELETE_ANIM 50000
 
-enum Key { SOL, FA };
+enum Key { SOL, FA, DRUM };
 
 enum NoteStatus { WAITING, HIT, FINISHED, MISSED };
 

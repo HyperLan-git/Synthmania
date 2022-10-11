@@ -20,6 +20,7 @@ class OptionMenu : public Menu {
     ~OptionMenu();
 
    private:
-    TextArea *audioLatency, *graphicLatency, *audioLeniency;
+    TextArea *audioLatency, *graphicLatency, *audioLeniency, *bufSize, *bufAmt,
+        *pluginFolders;
     Checkbox* fullscreen;
 };
