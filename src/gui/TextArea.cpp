@@ -123,6 +123,14 @@ std::wstring TextArea::getText() { return text; }
 
 void TextArea::setText(std::wstring text) { this->text = text; }
 
+void TextArea::setTextStr(std::string text) {
+    size_t l = text.size();
+    if (l > this->maxChars) l = this->maxChars;
+    wchar_t contents[l + 1] = {0};
+    for (int i = 0; i < l; i++) contents[i] = text[i];
+    this->text = std::wstring(contents);
+}
+
 std::vector<Gui*> TextArea::getGuis() {
     std::vector<Gui*> result = textContents;
     result.push_back(cursor);

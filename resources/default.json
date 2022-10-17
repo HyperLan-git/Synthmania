@@ -1,6 +1,6 @@
 {
     "audio": {
-        "device": "",
+        "device": -1,
         "volume": 1,
         "music": 0.7,
         "hitsounds": 1
@@ -9,7 +9,7 @@
         "device": 0
     },
     "gameplay": {
-        "notes": "Ro",
+        "notes": 0,
         "audio latency": 0,
         "graphical latency": 0,
         "adjusting delay": 20000

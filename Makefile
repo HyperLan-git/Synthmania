@@ -60,7 +60,7 @@ SHADERS_SPV = $(patsubst shader/%.comp, bin/%.comp.spv,\
 				$(patsubst shader/%.frag, bin/%.frag.spv,\
 				$(patsubst shader/%.geom, bin/%.geom.spv, $(SHADERS)))))
 
-Synthmania: shader $(VSTLIB)
+Synthmania: shader $(VSTLIB) bin/config.json
 	make $(OBJ)
 ifeq ($(OS),Windows_NT)
 	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
@@ -94,6 +94,9 @@ endif
 
 $(MODULEDIR)/$(MOD):
 	$(error No module folder found ! Put your source code in $(MODULEDIR)/$(MOD))
+
+bin/config.json:
+	cp resources/default.json bin/config.json
 
 test: Synthmania
 	./bin/Synthmania

@@ -1,8 +1,9 @@
 #include "Synthmania.hpp"
 // TODO fix the white half note being slightly misplaced to the right
 
-Synthmania::Synthmania(std::string skin) {
+Synthmania::Synthmania(std::string skin, std::string config) {
     this->skin = skin;
+    this->options = std::make_unique<Options>("resources/default.json", config);
     handler = new MidiHandler();
     textures = readTextures(std::string(skin).append("/skin.json"));
     for (auto &elem : textures)
@@ -15,6 +16,7 @@ Synthmania::Synthmania(std::string skin) {
 void Synthmania::init() {
     Game::init();
     this->menus.emplace("main", new MainMenu(this));
+    // TODO song folder as option
     this->menus.emplace("song select",
                         new SongSelectMenu(this, "resources/songs"));
     this->menus.emplace("options", new OptionMenu(this));
@@ -208,6 +210,8 @@ void Synthmania::loadSong(std::string songFolder) {
     addGui(precision);
     begTime = std::chrono::high_resolution_clock::now();
 }
+
+Options *Synthmania::getOptions() { return options.get(); }
 
 void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
                              int mods) {

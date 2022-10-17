@@ -13,6 +13,7 @@ class Synthmania;
 
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 
 #include "AudioHandler.hpp"
@@ -28,6 +29,7 @@ class Synthmania;
 #include "MidiHandler.hpp"
 #include "Note.hpp"
 #include "OptionMenu.hpp"
+#include "Options.hpp"
 #include "Precision.hpp"
 #include "Renderer.hpp"
 #include "SongSelectMenu.hpp"
@@ -55,7 +57,7 @@ std::vector<Gui *> printShakingString(std::string text,
 
 class Synthmania : public Game {
    public:
-    Synthmania(std::string skin);
+    Synthmania(std::string skin, std::string config);
 
     void loadSong(std::string songFolder);
 
@@ -74,6 +76,7 @@ class Synthmania : public Game {
 
     Chart getChart();
     TrackPartition getPartition();
+    Options* getOptions();
 
     std::string getSongFolder();
 
@@ -108,4 +111,5 @@ class Synthmania : public Game {
     std::string songFolder, skin;
     Judgement *line = NULL;
     bool autoPlay = false, drum = false;
+    std::unique_ptr<Options> options;
 };

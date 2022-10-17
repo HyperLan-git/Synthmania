@@ -5,9 +5,9 @@
 // TODO put consts everywhere relevant
 // TODO put inlines everywhere relevant
 int main(int argc, char **argv) {
-    std::string skin = "resources/textures";
+    std::string skin = "resources/textures", config = "bin/config.json";
     if (argc > 1 && argv[1][0] != '\0') skin = std::string(argv[1]);
-    Synthmania instance(skin);
+    Synthmania instance(skin, config);
     instance.setWindow(new Window(1920, 1080, "Synthmania", false));
     instance.setRenderer(new Renderer(&instance, instance.getWindow()));
     instance.init();

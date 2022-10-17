@@ -1,33 +1,35 @@
 #include "Options.hpp"
 
 Options::Options(std::string defaults, std::string current) {
+    this->path = current;
     tree *def = readJson(defaults.c_str()), *cur = readJson(current.c_str());
+    boost::optional<int> opt = cur->get_optional<int>("audio.device");
 
-    defaultValues = *def;
-    options = *cur;
-
-    delete def;
-    delete cur;
+    defaultValues = def;
+    options = cur;
 }
 
-template <typename T>
-std::optional<T> Options::getValue(std::string path) {
-    std::optional<T> result = this->options.get_optional<T>(path);
-    if (result.has_value()) return result;
-    return this->defaultValues.get_optional<T>(path);
+std::optional<tree> Options::getValues(std::string path) {
+    auto result = this->options->get_child_optional(path);
+    if (result.has_value()) return std::make_optional(result.get());
+    result = this->defaultValues->get_child_optional(path);
+    return result.has_value() ? std::make_optional(*result)
+                              : std::optional<tree>();
 }
 
-template <typename T>
-void Options::setValue(std::string path, T value) {
-    tree t;
-    t.put_value<T>(value);
-    this->options.put_child(path, t);
+void Options::setValues(std::string path, tree arr) {
+    this->options->put_child(path, arr);
 }
+
+std::string Options::getPath() { return path; }
 
 std::string Options::save() {
     std::ostringstream oss;
-    boost::property_tree::json_parser::write_json(oss, options);
+    boost::property_tree::json_parser::write_json(oss, *options);
     return oss.str();
 }
 
-Options::~Options() {}
+Options::~Options() {
+    delete defaultValues;
+    delete options;
+}

@@ -28,6 +28,7 @@ class TextArea : public MenuElement {
 
     std::wstring getText();
     void setText(std::wstring text);
+    void setTextStr(std::string text);
 
     std::vector<Gui*> getGuis();
 

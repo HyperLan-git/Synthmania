@@ -2,6 +2,8 @@
 
 class OptionMenu;
 
+#include <fstream>
+
 #include "Checkbox.hpp"
 #include "Menu.hpp"
 #include "Renderer.hpp"
@@ -17,10 +19,15 @@ class OptionMenu : public Menu {
 
     virtual void onPressed(Button* b);
 
+    void save();
+
     ~OptionMenu();
 
    private:
+    Slider *volume, *music, *synth;
     TextArea *audioLatency, *graphicLatency, *audioLeniency, *bufSize, *bufAmt,
         *pluginFolders;
+    Selector *midiDevice, *audioDevice, *notation, *skin;
     Checkbox* fullscreen;
+    Options* options;
 };
