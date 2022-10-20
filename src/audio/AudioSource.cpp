@@ -114,7 +114,12 @@ void AudioSource::setSampleOffset(ALfloat value) {
 
 void AudioSource::setLooping(bool looping) { setSourcei(AL_LOOPING, looping); }
 
-void AudioSource::setGain(ALfloat gain) { setSourcef(AL_GAIN, gain); }
+void AudioSource::setGain(ALfloat gain) {
+    int err;
+    while ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when gain:" << err << std::endl;
+    setSourcef(AL_GAIN, gain);
+}
 
 void AudioSource::setSourcef(ALenum param, ALfloat value) {
     alSourcef(sourceID, param, value);

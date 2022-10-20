@@ -20,9 +20,9 @@ Window::Window(const uint32_t width, const uint32_t height, const char *title,
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    window = glfwCreateWindow(width, height, title,
-                              fullscreen ? glfwGetPrimaryMonitor() : nullptr,
-                              nullptr);
+    window =
+        glfwCreateWindow(width, height, title,
+                         fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
@@ -92,12 +92,17 @@ bool Window::mousePressed(int button) {
 }
 
 void Window::fullscreen(bool fullscreen) {
-    GLFWmonitor *m = fullscreen ? glfwGetWindowMonitor(window) : NULL;
-    const GLFWvidmode *mode = fullscreen ? glfwGetVideoMode(m) : NULL;
-    uint32_t w, h;
-    getFramebufferSize(&w, &h);
-    glfwSetWindowMonitor(window, m, 0, 0, fullscreen ? mode->width : w,
-                         fullscreen ? mode->height : h, GLFW_DONT_CARE);
+    if (!fullscreen) {
+        uint32_t w, h;
+        getFramebufferSize(&w, &h);
+        glfwSetWindowMonitor(window, NULL, 0, 0, w, h, GLFW_DONT_CARE);
+        return;
+    }
+    GLFWmonitor *m = glfwGetWindowMonitor(window);
+    if (m == NULL) m = glfwGetPrimaryMonitor();
+    const GLFWvidmode *mode = glfwGetVideoMode(m);
+    glfwSetWindowMonitor(window, m, 0, 0, mode->width, mode->height,
+                         GLFW_DONT_CARE);
 }
 
 Window::~Window() { glfwDestroyWindow(window); }

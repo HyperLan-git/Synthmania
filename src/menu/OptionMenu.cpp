@@ -163,11 +163,10 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
         g->setSize(t.size);
         guis.push_back(g);
     }
-    wchar_t chars[] = {'I', 0};
-    std::wstring str = chars;  //"│";
-    audioLatency = new TextArea(getTextureByName(textures, "text_area"),
-                                "audio latency", text, "Stupid", 4, 4,
-                                (unsigned long)str[0], 8, integerPredicate);
+    wchar_t c = L'I';  //"│";
+    audioLatency =
+        new TextArea(getTextureByName(textures, "text_area"), "audio latency",
+                     text, "Stupid", 4, 4, c, 8, integerPredicate);
     audioLatency->setSize({.4, .125});
     audioLatency->setPosition({.8, -.1});
     std::string latency =
@@ -184,9 +183,9 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
         g->setSize(t.size);
         guis.push_back(g);
     }
-    graphicLatency = new TextArea(getTextureByName(textures, "text_area"),
-                                  "video latency", text, "Stupid", 4, 4,
-                                  (unsigned long)str[0], 8, integerPredicate);
+    graphicLatency =
+        new TextArea(getTextureByName(textures, "text_area"), "video latency",
+                     text, "Stupid", 4, 4, c, 8, integerPredicate);
     graphicLatency->setSize({.4, .125});
     graphicLatency->setPosition({.8, -.3});
     latency =
@@ -203,9 +202,9 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
         g->setSize(t.size);
         guis.push_back(g);
     }
-    audioLeniency = new TextArea(getTextureByName(textures, "text_area"),
-                                 "audio leniency", text, "Stupid", 5, 5,
-                                 (unsigned long)str[0], 8, integerPredicate);
+    audioLeniency =
+        new TextArea(getTextureByName(textures, "text_area"), "audio leniency",
+                     text, "Stupid", 5, 5, c, 8, integerPredicate);
     audioLeniency->setSize({.4, .125});
     audioLeniency->setPosition({-.7, .1});
     audioLeniency->setText(
@@ -259,9 +258,9 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
         g->setSize(t.size);
         guis.push_back(g);
     }
-    bufSize = new TextArea(getTextureByName(textures, "text_area"),
-                           "buffer size", text, "Stupid", 4, 4,
-                           (unsigned long)str[0], 8, integerPredicate);
+    bufSize =
+        new TextArea(getTextureByName(textures, "text_area"), "buffer size",
+                     text, "Stupid", 4, 4, c, 8, integerPredicate);
     bufSize->setSize({.4, .125});
     bufSize->setPosition({-.3, .6});
     bufSize->setText(
@@ -271,8 +270,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     bufSize->recalculateCursor();
     this->elements.push_back(bufSize);
     bufAmt = new TextArea(getTextureByName(textures, "text_area"), "buffer amt",
-                          text, "Stupid", 2, 2, (unsigned long)str[0], 8,
-                          integerPredicate);
+                          text, "Stupid", 2, 2, c, 8, integerPredicate);
     bufAmt->setSize({.4, .125});
     bufAmt->setPosition({.7, .6});
     bufAmt->setText(
@@ -288,9 +286,9 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
         g->setSize(t.size);
         guis.push_back(g);
     }
-    pluginFolders = new TextArea(getTextureByName(textures, "text_area"),
-                                 "plugin folders", text, "Stupid", 23, 256,
-                                 (unsigned long)str[0], 8, truePredicate);
+    pluginFolders =
+        new TextArea(getTextureByName(textures, "text_area"), "plugin folders",
+                     text, "Stupid", 23, 256, c, 8, truePredicate);
     pluginFolders->setSize({1.4, .125});
     pluginFolders->setPosition({.3, .8});
     std::string folders = "";
@@ -310,6 +308,8 @@ void OptionMenu::onPressed(Button* b) {
     Synthmania* s = dynamic_cast<Synthmania*>(game);
     if (s != NULL) {
         save();
+        s->applyOptions();
+        s->resetAudio();
         s->playSound("click");
         s->resetScene();
         s->loadMenu("main");

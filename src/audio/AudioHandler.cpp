@@ -9,7 +9,7 @@ std::vector<std::string> getAudioDevices() {
     if (list != NULL) {
         size_t l = strlen(list);
         while (l > 0) {
-            devices.push_back(list);
+            devices.push_back(std::string(list));
             list += l + 1;
             l = strlen(list);
         }
@@ -42,17 +42,39 @@ void AudioHandler::addSound(std::string name, AudioBuffer* sound) {
 AudioSource* AudioHandler::playSound(std::string name) {
     AudioSource* result = new AudioSource(*(sounds[name]));
     sources.push_back(result);
+    int err;
+    while ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when playing:" << err << std::endl;
+    result->setGain(volume);
     result->play();
     return result;
 }
 
-void AudioHandler::addSource(AudioSource* source) { sources.push_back(source); }
+void AudioHandler::addSource(AudioSource* source) {
+    source->setGain(volume);
+    int err;
+    while ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when adding:" << err << std::endl;
+    sources.push_back(source);
+}
 
 ALCint AudioHandler::getSampleRate() { return sampleRate; }
 
+void AudioHandler::setVolume(float volume) {
+    this->volume = volume;
+    for (AudioSource* source : this->sources) source->setGain(volume);
+}
+
 void AudioHandler::setDevice(const ALCchar* device) {
+    clearSounds();
+    ALCcontext* old = alcGetCurrentContext();
+    alcDestroyContext(old);
     alcCloseDevice(this->device);
     this->device = alcOpenDevice(device);
+    ALCcontext* context = alcCreateContext(this->device, nullptr);
+    if (context == NULL) throw std::runtime_error("Couldn't create context !");
+    if (!alcMakeContextCurrent(context))
+        throw std::runtime_error("Couldn't bind context !");
 }
 
 bool AudioHandler::update() {
@@ -66,6 +88,14 @@ bool AudioHandler::update() {
         }
     }
     return !sources.empty();
+}
+
+void AudioHandler::clearSounds() {
+    for (AudioSource* source : sources) delete source;
+    sources.clear();
+    for (std::pair<std::string, AudioBuffer*> buffer : sounds)
+        delete buffer.second;
+    sounds.clear();
 }
 
 AudioHandler::~AudioHandler() {

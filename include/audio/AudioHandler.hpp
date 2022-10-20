@@ -26,6 +26,10 @@ class AudioHandler {
     void addSound(std::string name, AudioBuffer* sound);
     AudioSource* playSound(std::string name);
 
+    void clearSounds();
+
+    void setVolume(float volume);
+
     void setDevice(const ALCchar* device);
 
     void addSource(AudioSource* source);
@@ -41,4 +45,5 @@ class AudioHandler {
     int sampleRate;
     std::vector<AudioSource*> sources;
     std::map<std::string, AudioBuffer*> sounds;
+    float volume;
 };

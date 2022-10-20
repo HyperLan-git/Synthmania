@@ -13,6 +13,7 @@ class Synthmania;
 
 #include <algorithm>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <stdexcept>
 
@@ -61,6 +62,8 @@ class Synthmania : public Game {
 
     void loadSong(std::string songFolder);
 
+    void resetAudio();
+
     virtual void init();
 
     virtual void update();
@@ -76,7 +79,7 @@ class Synthmania : public Game {
 
     Chart getChart();
     TrackPartition getPartition();
-    Options* getOptions();
+    Options *getOptions();
 
     std::string getSongFolder();
 
@@ -89,6 +92,10 @@ class Synthmania : public Game {
     virtual void freeFinalUBO(void *&ubo);
 
     virtual void addGui(Gui *gui);
+
+    bool isFullscreen();
+
+    void applyOptions();
 
     ~Synthmania();
 
@@ -112,4 +119,13 @@ class Synthmania : public Game {
     Judgement *line = NULL;
     bool autoPlay = false, drum = false;
     std::unique_ptr<Options> options;
+    float musicVol = 1;
+    int64_t audioLatency = 0, graphicalLatency = 0, audioLeniency = 20000;
+    bool fullscreen = false;
+
+#ifndef NOVST
+    int bufSize = 1024, bufAmt = 3;
+    std::vector<std::string> pluginFolders = {"./plugins"};
+    std::map<std::string, std::string> availablePlugins;
+#endif
 };

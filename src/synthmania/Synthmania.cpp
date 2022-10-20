@@ -9,8 +9,19 @@ Synthmania::Synthmania(std::string skin, std::string config) {
     for (auto &elem : textures)
         elem.second = std::string(skin).append("/").append(elem.second);
     audio = new AudioHandler();
+    applyOptions();
+}
+
+void Synthmania::resetAudio() {
+    audio->clearSounds();
     AudioBuffer *buffer = new AudioBuffer("resources/sounds/click.wav");
     audio->addSound("click", buffer);
+    if (music != NULL) {
+        // TODO recreate current music
+    }
+#ifndef NOVST
+    if (plugin != NULL) delete plugin;
+#endif
 }
 
 void Synthmania::init() {
@@ -186,14 +197,19 @@ void Synthmania::loadSong(std::string songFolder) {
 
         audio->addSound("song", buffer);
         music = audio->playSound("song");
-        music->setGain(.5f);
+        music->setGain(musicVol);
     }
-    std::string pdata = songFolder;
-    pdata.append("/");
-    pdata.append(chart.plugindata);
-    if (chart.plugindata.compare("None") == 0) pdata = "None";
+    std::string pdata = "None";
+    if (chart.plugindata.compare("None") != 0) {
+        pdata = songFolder;
+        pdata.append("/");
+        pdata.append(chart.plugindata);
+    }
 #ifndef NOVST
-    plugin = new AudioPluginHandler("./plugins/Vital.vst3", audio, pdata);
+    if (this->availablePlugins.find(chart.plugin) !=
+        this->availablePlugins.end())
+        plugin = new AudioPluginHandler(this->availablePlugins[chart.plugin],
+                                        audio, pdata);
 #endif
     std::string text = chart.name;
     text.append(" by ");
@@ -323,7 +339,7 @@ void Synthmania::noteMiss(Note *note) {
 void Synthmania::setTimeMicros(int64_t time) {
     Game::setTimeMicros(time);
     if (music != NULL)
-        music->setSampleOffset((getCurrentTimeMicros() + startTime) * 44100. /
+        music->setSampleOffset((getCurrentTimeMicros() + startTime) * 44100 /
                                1000000.f);
 }
 
@@ -335,10 +351,6 @@ void Synthmania::resetScene() {
         mod = NULL;
     }
 }
-// TODO config
-uint64_t audioLatency = 10000;
-
-uint32_t multiplier = 0;
 
 void Synthmania::update() {
     int64_t time_from_start = getCurrentTimeMicros();
@@ -431,7 +443,7 @@ void Synthmania::update() {
         }
     }
     if (music != NULL) {  // audio latency study
-        long long j = music->getSampleOffset() * 1000000.;
+        long long j = music->getSampleOffset() * 1000000L;
         int64_t a = getCurrentTimeMicros();
         int64_t res = j / (uint64_t)44100 - this->startTime;
         int err;
@@ -440,17 +452,51 @@ void Synthmania::update() {
                       << std::endl;
         int64_t b = res - a;
         if (b < 0) b = -b;
-        // std::cout << std::dec << a << "\n";
-        //  If music gets more than 10ms off reset it
-        //  Most people can play with 10ms off right? (I'm sorry rythm gamers)
-        if (b > audioLatency * (1 + .1 * multiplier)) {
-            setTimeMicros(a);
-            multiplier++;
-        }
+        std::cout << std::dec << audioLeniency << ':' << j << ',' << b << ','
+                  << a << "\n";
+        //   If music gets more than 10ms off reset it
+        //   Most people can play with 10ms off right? (I'm sorry rythm gamers)
+        if (b > audioLeniency) setTimeMicros(a);
     }
 
-    // if (multiplier > 0 && std::rand() % 300 == 0) multiplier--;
     std::this_thread::yield();
+}
+// TODO find a good way to handle fullscreen (link options to window creation)
+bool Synthmania::isFullscreen() { return fullscreen; }
+
+void Synthmania::applyOptions() {
+    // XXX determine if this is too slow/tedious
+    float volume = *options->getValue<float>("audio.volume");
+    this->musicVol = volume * *options->getValue<float>("audio.music");
+    volume *= *options->getValue<float>("audio.hitsounds");
+    int audio = *options->getValue<int>("audio.device");
+    if (audio >= 0) {
+        std::vector<std::string> devices = getAudioDevices();
+        if (audio < devices.size()) {
+            std::string device = devices.begin()[audio];
+            this->audio->setDevice(device.c_str());
+            resetAudio();
+        }
+    }
+    this->audio->setVolume(volume);
+    if (music != NULL) music->setGain(musicVol);
+    int midi = *options->getValue<int>("midi.device");
+    if (midi != this->handler->getOpenPort() &&
+        midi < this->handler->getMidiPorts().size())
+        this->handler->openPort(midi);
+    // TODO appearance : note names
+    this->audioLatency = *options->getValue<long>("gameplay.audio latency");
+    this->graphicalLatency =
+        *options->getValue<long>("gameplay.graphical latency");
+    this->audioLeniency = *options->getValue<long>("gameplay.adjusting delay");
+    this->fullscreen = *options->getValue<bool>("appearance.fullscreen");
+    this->bufSize = *options->getValue<int>("plugin.buffer size");
+    this->bufAmt = *options->getValue<int>("plugin.buffers");
+    this->pluginFolders = std::vector<std::string>({"./plugins"});
+    /*    for (auto entry : *options->getValues("plugin.folders"))
+        this->pluginFolders.push_back(
+            entry.second.get_value<std::string>("plugins"));*/
+    this->availablePlugins = readPlugins(this->pluginFolders);
 }
 
 size_t Synthmania::updateUBO(void *&ubo) {
