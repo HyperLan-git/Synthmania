@@ -14,8 +14,17 @@ Synthmania::Synthmania(std::string skin, std::string config) {
 
 void Synthmania::resetAudio() {
     audio->clearSounds();
-    AudioBuffer *buffer = new AudioBuffer("resources/sounds/click.wav");
-    audio->addSound("click", buffer);
+    // TODO json file again xd
+    audio->addSound("click", new AudioBuffer("resources/sounds/click.wav"));
+    audio->addSound("piano", new AudioBuffer("resources/sounds/pianoC4.wav"));
+    audio->addSound("kick", new AudioBuffer("resources/sounds/kick.wav"));
+    audio->addSound("snare", new AudioBuffer("resources/sounds/snare.wav"));
+    audio->addSound("hat", new AudioBuffer("resources/sounds/hat.wav"));
+    audio->addSound("ride", new AudioBuffer("resources/sounds/ride.wav"));
+    audio->addSound("crash", new AudioBuffer("resources/sounds/crash.wav"));
+    audio->addSound("tom-high", new AudioBuffer("resources/sounds/tom1.wav"));
+    audio->addSound("tom-mid", new AudioBuffer("resources/sounds/tom2.wav"));
+    audio->addSound("tom-low", new AudioBuffer("resources/sounds/tom3.wav"));
     if (music != NULL) {
         // TODO recreate current music
     }
@@ -74,6 +83,7 @@ void Synthmania::loadSong(std::string songFolder) {
     path.append("/");
     path.append(diff.midi);
     partition = handler->readMidi(path.c_str());
+    this->drum = partition.drumming;
     Model *model =
         new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
                   renderer->getDevice());
@@ -92,16 +102,17 @@ void Synthmania::loadSong(std::string songFolder) {
     addGui(key);
     bg->setSize({5, 30});
     part->setSize({5, 1});
-    key->setPosition({-1.7f, 0.1f});
+    key->setPosition({-1.6f, 0.1f});
     key->setSize({0.8f, 0.8f});
     precision->setSize({1.5f, 0.5f});
     precision->setPosition({0, 0.9f});
     Judgement *bar = new Judgement("judgement", textures, partition);
     line = bar;
-    bar->setPosition({-1.4f, bar->getPosition().y});
+    bar->setPosition({-1.3f, bar->getPosition().y});
     bar->setSize({0.25f, 1.f});
     addGui(bar);
     std::vector<Gui *> tempNotes;
+    Key k = drum ? Key::DRUM : Key::SOL;
     for (MidiNote note : partition.notes) {
         std::string name = "Note_";
         std::string hash = std::to_string(std::hash<MidiNote>()(note));
@@ -116,10 +127,12 @@ void Synthmania::loadSong(std::string songFolder) {
             cutDown[1] += cutDown[0];
             cutDown.erase(cutDown.begin());
         }
-        Note *n = new Note(name.c_str(), note.timestamp, note.note,
-                           totalDuration, cutDown[0], partition.MPQ, textures);
+        Note *n =
+            new Note(name.c_str(), note.timestamp, note.note, totalDuration,
+                     cutDown[0], partition.MPQ, textures, k);
         notes.push_back(n);
-        int diff = getDifferenceFromC4(note.note);
+        int diff =
+            getDifferenceFromC4(transposePitch(k, note.note)) + getOffset(k);
         if (diff <= 0 || diff >= 12) {
             bool up = diff >= 12;
             for (int i = up ? 12 : 0; (up && i <= diff) || (!up && i >= diff);
@@ -145,7 +158,7 @@ void Synthmania::loadSong(std::string songFolder) {
             p += .2;
         }
 
-        if (!isFromCMajor(note.note)) {
+        if (k != Key::DRUM && !isFromCMajor(note.note)) {
             std::string sharpName = "Sharp_";
             sharpName.append(hash);
             ParentedGui *sharp = new ParentedGui(
@@ -162,9 +175,8 @@ void Synthmania::loadSong(std::string songFolder) {
             name2.append(std::to_string(i));
             double d = cutDown[i];
             ParentedGui *p = new ParentedGui(
-                getTextureForNote(textures, note.note, d, Key::SOL),
-                name2.c_str(), n);
-            glm::vec2 temp = getSizeAndLocForNote(d);
+                getTextureForNote(textures, note.note, d, k), name2.c_str(), n);
+            glm::vec2 temp = getSizeAndLocForNote(d, k, note.note);
             p->setPosition({(t - note.timestamp) / 300000.f, 0});
             p->addEffect(
                 new GraphicalEffect(applyOffset, new float[]{0, temp.x}));
@@ -184,8 +196,8 @@ void Synthmania::loadSong(std::string songFolder) {
     }
     std::vector<Gui *> tmp;
     for (Note *note : notes) tmp.push_back(note);
-    sortGuis(tmp, cmpGuisByTexture);
-    sortGuis(tempNotes, cmpGuisByTexture);
+    if (tmp.size() > 0) sortGuis(tmp, cmpGuisByTexture);
+    if (tempNotes.size() > 0) sortGuis(tempNotes, cmpGuisByTexture);
     for (Gui *note : tmp) addGui(note);
     for (Gui *gui : tempNotes) addGui(gui);
     music = NULL;
@@ -198,6 +210,7 @@ void Synthmania::loadSong(std::string songFolder) {
         audio->addSound("song", buffer);
         music = audio->playSound("song");
         music->setGain(musicVol);
+        music->setDestroyOnFinished(false);
     }
     std::string pdata = "None";
     if (chart.plugindata.compare("None") != 0) {
@@ -210,6 +223,8 @@ void Synthmania::loadSong(std::string songFolder) {
         this->availablePlugins.end())
         plugin = new AudioPluginHandler(this->availablePlugins[chart.plugin],
                                         audio, pdata);
+    else if (chart.plugin.compare("None") != 0)
+        std::cout << "Could not find plugin : " << chart.plugin << std::endl;
 #endif
     std::string text = chart.name;
     text.append(" by ");
@@ -217,7 +232,7 @@ void Synthmania::loadSong(std::string songFolder) {
 
     for (Gui *g :
          printShadowedString(text, renderer->getTextHandler(), "title_",
-                             "Stupid", 11, {-2, -.9}, {.2, .2, 1, 1}))
+                             "Stupid", 11, {-1.75, -.9}, {.2, .2, 1, 1}))
         addGui(g);
 
     /*for (Gui *g : printShakingString("ANGERY", renderer, "scary_", "Stupid",
@@ -244,21 +259,23 @@ void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
         return;
     }
     if (game->autoPlay) return;
-    int k = 0;
+    /*int k = 0;
     int keys[] = {GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_X, GLFW_KEY_D,
                   GLFW_KEY_C, GLFW_KEY_V, GLFW_KEY_G, GLFW_KEY_B,
                   GLFW_KEY_H, GLFW_KEY_N, GLFW_KEY_J, GLFW_KEY_M};
     for (k = 0; k < 12; k++) {
         if (keys[k] == key) break;
-    }
+    }*/
     for (Note *note : game->notes) {
         // This is ADOFAI for now
         if (  // note->getPitch() == k &&
             note->getStatus() == WAITING &&
             std::abs(note->getTime() - game->getCurrentTimeMicros()) <
-                HIT_WINDOW  // && next note not skipped/close?? or just
-                            // set OD to a value that prevents the need
-                            // for notelock idk hmm
+                (game->drum
+                     ? DRUM_HIT_WINDOW
+                     : HIT_WINDOW)  // && next note not skipped/close?? or just
+                                    // set OD to a value that prevents the need
+                                    // for notelock idk hmm
         ) {
             game->noteHit(note);
             break;
@@ -277,32 +294,75 @@ void Synthmania::noteHit(Note *note) {
     prec->setPosition({0, 0.9f});
     addGui(prec);
     delta = std::clamp<int64_t>(delta, 0, note->getTotalDuration() / 2);
+    // TODO velocity
+    if (!drum) {
 #ifndef NOVST
-    if (plugin != NULL)
-        plugin->playNote(note->getPitch(), 90,
-                         time + note->getTotalDuration() - delta);
+        if (plugin != NULL)
+            plugin->playNote(note->getPitch(), 90,
+                             time + note->getTotalDuration() - delta);
+        else
 #endif
+            playPianoSound(note->getPitch());
+    } else
+        playDrumSound(note->getPitch());
     note->setStatus(HIT);
     note->kill(time + note->getTotalDuration());
 
     std::string text = "Good!";
     int i = 0;
-    for (Text t : renderer->getTextHandler()->createText(
+    std::string name = "hit_";
+    name.append(std::to_string((size_t)note));
+    name.append("_");
+    /*for (Text t : renderer->getTextHandler()->createText(
              text, "Stupid", 11,
              {-2, (double)(-.25 + line->getPosition().y +
                            line->getSize().y / 2.)})) {
-        std::string name = "hit_";
-        name.append(std::to_string((size_t)note));
-        name.append("_");
-        name.append(std::to_string(i++));
-        Gui *gui = new Gui(t.character.texture, name.c_str());
+        Gui *gui =
+            new Gui(t.character.texture, (name + std::to_string(i++)).c_str());
         gui->addEffect(new GraphicalEffect(applyTemp));
         gui->setColor({.3, 1, .3, 1});
         gui->setNegate(true);
         gui->setPosition(t.pos);
         gui->setSize(t.size);
         addGui(gui);
+    }*/
+}
+
+void Synthmania::playDrumSound(unsigned char pitch) {
+    switch (pitch) {
+        case MidiPercussion::KICK:
+            audio->playSound("kick");
+            break;
+        case MidiPercussion::SNARE:
+            audio->playSound("snare");
+            break;
+        case MidiPercussion::RIDE:
+            audio->playSound("ride");
+            break;
+        case MidiPercussion::CRASH:
+            audio->playSound("crash");
+            break;
+        case MidiPercussion::HAT:
+            audio->playSound("hat");
+            break;
+        case MidiPercussion::TOM_HIGH:
+            audio->playSound("tom-high");
+            break;
+        case MidiPercussion::TOM_MID:
+            audio->playSound("tom-mid");
+            break;
+        case MidiPercussion::TOM_LOW:
+            audio->playSound("tom-low");
+            break;
+        default:
+            std::cout << "bruh : " << (unsigned int)pitch << std::endl;
     }
+}
+
+void Synthmania::playPianoSound(unsigned char pitch) {
+    AudioSource *source = audio->playSound("piano");
+    float p = std::pow(1. + 1. / 12., (pitch - 60));
+    source->setPitch(p);
 }
 
 void Synthmania::addGui(Gui *gui) {
@@ -353,6 +413,27 @@ void Synthmania::resetScene() {
 }
 
 void Synthmania::update() {
+    if ((music != NULL && music->getState() != AL_PLAYING) ||
+        (music == NULL && menu == NULL && this->notes.size() == 0)) {
+        // End of map
+        if (music != NULL) {
+            this->music->setDestroyOnFinished(true);
+            this->music = NULL;
+        }
+        this->autoPlay = false;
+        this->drum = false;
+        if (this->mod != NULL) {
+            delete this->mod;
+            this->mod = NULL;
+        }
+        if (this->plugin != NULL) {
+            delete this->plugin;
+            this->plugin = NULL;
+        }
+        resetScene();
+        loadMenu("main");
+        return;
+    }
     int64_t time_from_start = getCurrentTimeMicros();
     // std::cout << std::dec << time_from_start << " ";
     if (autoPlay)
@@ -423,7 +504,7 @@ void Synthmania::update() {
                     if (note->getStatus() == WAITING &&
                         note->getPitch() == m.data1 &&
                         std::abs(note->getTime() - time_from_start) <
-                            HIT_WINDOW) {
+                            (drum ? DRUM_HIT_WINDOW : HIT_WINDOW)) {
                         noteHit(note);
                         got_one = true;
                         break;
@@ -433,7 +514,7 @@ void Synthmania::update() {
                     for (Note *note : notes) {
                         if (note->getStatus() == WAITING &&
                             std::abs(note->getTime() - time_from_start) <
-                                HIT_WINDOW) {
+                                (drum ? DRUM_HIT_WINDOW : HIT_WINDOW)) {
                             noteMiss(note);
                         }
                     }
@@ -452,10 +533,10 @@ void Synthmania::update() {
                       << std::endl;
         int64_t b = res - a;
         if (b < 0) b = -b;
-        std::cout << std::dec << audioLeniency << ':' << j << ',' << b << ','
-                  << a << "\n";
-        //   If music gets more than 10ms off reset it
-        //   Most people can play with 10ms off right? (I'm sorry rythm gamers)
+        // std::cout << std::dec << audioLeniency << ':' << j << ',' << b << ','
+        //           << a << "\n";
+        // If music gets more than 10ms off reset it
+        // Most people can play with 10ms off right? (I'm sorry rythm gamers)
         if (b > audioLeniency) setTimeMicros(a);
     }
 
@@ -490,6 +571,7 @@ void Synthmania::applyOptions() {
         *options->getValue<long>("gameplay.graphical latency");
     this->audioLeniency = *options->getValue<long>("gameplay.adjusting delay");
     this->fullscreen = *options->getValue<bool>("appearance.fullscreen");
+#ifndef NOVST
     this->bufSize = *options->getValue<int>("plugin.buffer size");
     this->bufAmt = *options->getValue<int>("plugin.buffers");
     this->pluginFolders = std::vector<std::string>({"./plugins"});
@@ -497,6 +579,7 @@ void Synthmania::applyOptions() {
         this->pluginFolders.push_back(
             entry.second.get_value<std::string>("plugins"));*/
     this->availablePlugins = readPlugins(this->pluginFolders);
+#endif
 }
 
 size_t Synthmania::updateUBO(void *&ubo) {

@@ -23,6 +23,14 @@ class AudioHandler {
     AudioHandler();
     AudioHandler(const ALCchar* device);
 
+    /**
+     * @brief Will put a sound in the string map. If a sound with the same name
+     * already exists, will destroy the sound, so make sure that no source is
+     * playing with this sound !
+     *
+     * @param name The name of the sound to be used in playSound
+     * @param sound The buffer of the sound
+     */
     void addSound(std::string name, AudioBuffer* sound);
     AudioSource* playSound(std::string name);
 

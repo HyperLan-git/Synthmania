@@ -13,7 +13,8 @@
     "charter": "HyperLan",
     "audio": "None",
     "offset": 0,
-    "plugin": "Vital",
+    "plugin": "None",
+    "plugin2": "Vital",
     "plugindata": "mysynth.dat",
     "animation": "None"
 }

@@ -1,0 +1,17 @@
+{
+    "diffs": [
+        {
+            "name": "Normal",
+            "midi": "drums.mid",
+            "track": 10
+        }
+    ],
+    "name": "Test",
+    "artist": "HyperLan",
+    "charter": "HyperLan",
+    "audio": "None",
+    "offset": 0,
+    "plugin": "None",
+    "plugindata": "None",
+    "animation": "None"
+}

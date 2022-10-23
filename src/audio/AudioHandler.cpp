@@ -36,6 +36,11 @@ AudioHandler::AudioHandler(const ALCchar* device) {
 AudioHandler::AudioHandler() : AudioHandler(NULL) {}
 
 void AudioHandler::addSound(std::string name, AudioBuffer* sound) {
+    auto iter = sounds.find(name);
+    if (iter != sounds.end()) {
+        delete sounds[name];
+        sounds.erase(iter);
+    }
     sounds.emplace(name, sound);
 }
 

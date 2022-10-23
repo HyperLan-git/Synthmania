@@ -13,40 +13,36 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
 
     // CDE
     buttons.push_back(new Button(piano, piano_pressed, "start",
-                                 glm::vec2({-1.75, .5f}),
-                                 glm::vec2({.5, 1.f})));
+                                 glm::vec2({-1.4, .5f}), glm::vec2({.4, 1.f})));
     buttons.push_back(new Button(piano, piano_pressed, "edit",
-                                 glm::vec2({-1.25, .5f}),
-                                 glm::vec2({.5, 1.f})));
+                                 glm::vec2({-1.f, .5f}), glm::vec2({.4, 1.f})));
     buttons.push_back(new Button(piano, piano_pressed, "options",
-                                 glm::vec2({-.75, .5f}), glm::vec2({.5, 1.f})));
+                                 glm::vec2({-.6, .5f}), glm::vec2({.4, 1.f})));
 
     // FGAB
     buttons.push_back(new Button(piano, piano_pressed, "tests",
-                                 glm::vec2({-.25, .5f}), glm::vec2({.5, 1.f})));
+                                 glm::vec2({-.2, .5f}), glm::vec2({.4, 1.f})));
     buttons.push_back(new Button(piano, piano_pressed, "social",
-                                 glm::vec2({.25f, .5f}), glm::vec2({.5, 1.f})));
+                                 glm::vec2({.2, .5f}), glm::vec2({.4, 1.f})));
     buttons.push_back(new Button(piano, piano_pressed, "updates",
-                                 glm::vec2({.75f, .5f}), glm::vec2({.5, 1.f})));
+                                 glm::vec2({.6f, .5f}), glm::vec2({.4, 1.f})));
     buttons.push_back(new Button(piano, piano_pressed, "maps",
-                                 glm::vec2({1.25f, .5f}),
-                                 glm::vec2({.5, 1.f})));
+                                 glm::vec2({1.f, .5f}), glm::vec2({.4, 1.f})));
 
     buttons.push_back(new Button(piano, piano_pressed, "extra",
-                                 glm::vec2({1.75f, .5f}),
-                                 glm::vec2({.5, 1.f})));
+                                 glm::vec2({1.4f, .5f}), glm::vec2({.4, 1.f})));
 
     buttons.push_back(new Button(black_key, black_key_pressed, "start*",
-                                 glm::vec2({-1.5, .3f}), glm::vec2({.2, .6f})));
+                                 glm::vec2({-1.2, .3f}), glm::vec2({.2, .6f})));
     buttons.push_back(new Button(black_key, black_key_pressed, "edit*",
-                                 glm::vec2({-1, .3f}), glm::vec2({.2, .6f})));
+                                 glm::vec2({-.8, .3f}), glm::vec2({.2, .6f})));
 
     buttons.push_back(new Button(black_key, black_key_pressed, "tests*",
                                  glm::vec2({0, .3f}), glm::vec2({.2, .6f})));
     buttons.push_back(new Button(black_key, black_key_pressed, "social*",
-                                 glm::vec2({.5, .3f}), glm::vec2({.2, .6f})));
+                                 glm::vec2({.4, .3f}), glm::vec2({.2, .6f})));
     buttons.push_back(new Button(black_key, black_key_pressed, "updates*",
-                                 glm::vec2({1, .3f}), glm::vec2({.2, .6f})));
+                                 glm::vec2({.8, .3f}), glm::vec2({.2, .6f})));
 
     for (Text t :
          text->createVerticalText("PLAY", "Stupid", 12, glm::vec2({0, -.4}))) {

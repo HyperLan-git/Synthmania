@@ -4,7 +4,7 @@ SongSelectMenu::SongSelectMenu(Game *g, std::string folder) : Menu(g) {
     std::vector<ImageView *> tex = g->getRenderer()->getTextures();
     Button *back = new Button(getTextureByName(tex, "button"),
                               getTextureByName(tex, "button-pressed"), "back",
-                              {-1.7, .85}, {.6, .3});
+                              {-1.5, .85}, {.6, .3});
     buttons.push_back(back);
     for (Text t : g->getTextHandler()->createText("Back", "Stupid", 12,
                                                   glm::vec2({-.1, 0}))) {
@@ -27,7 +27,7 @@ SongSelectMenu::SongSelectMenu(Game *g, std::string folder) : Menu(g) {
                 getTextureByName(g->getRenderer()->getTextures(), "button"),
                 getTextureByName(g->getRenderer()->getTextures(),
                                  "button-pressed"),
-                name.c_str(), {0, pos}, {1, .5});
+                name.c_str(), {0, pos}, {1, .25});
             this->buttons.push_back(but);
             for (Text t : g->getTextHandler()->createText(
                      name, "Stupid", 10, glm::vec2({-.45, 0}))) {
@@ -37,7 +37,7 @@ SongSelectMenu::SongSelectMenu(Game *g, std::string folder) : Menu(g) {
                 g->setSize(t.size);
                 guis.push_back(g);
             }
-            pos -= 0.5;
+            pos -= 0.25;
         }
     }
 }

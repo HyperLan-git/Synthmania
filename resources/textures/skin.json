@@ -24,6 +24,7 @@
     "dot": "dot.png",
     "room": "viking_room.png",
     "note": {
+        "cross": "hat.png",
         "32th": "deathstreams.png",
         "16th": "streams.png",
         "8th": "taptap.png",

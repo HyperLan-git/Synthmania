@@ -9,8 +9,8 @@ class Precision;
 
 class Precision : public Gui {
    public:
-    Precision(ImageView* texture, std::string name, int64_t time,
-              int64_t delta);
+    Precision(ImageView* texture, std::string name, int64_t time, int64_t delta,
+              int64_t hit_window = HIT_WINDOW);
 
     virtual bool update(int64_t time);
 

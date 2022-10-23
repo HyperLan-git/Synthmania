@@ -56,6 +56,7 @@ std::vector<Gui *> printShakingString(std::string text,
                                       double size, glm::vec2 pos, float shake,
                                       glm::vec4 color = {0, 0, 0, 1});
 
+// TODO check for note length
 class Synthmania : public Game {
    public:
     Synthmania(std::string skin, std::string config);
@@ -93,6 +94,9 @@ class Synthmania : public Game {
 
     virtual void addGui(Gui *gui);
 
+    void playDrumSound(unsigned char pitch);
+    void playPianoSound(unsigned char pitch);
+
     bool isFullscreen();
 
     void applyOptions();
@@ -110,6 +114,7 @@ class Synthmania : public Game {
     TrackPartition partition;
     Chart chart;
     Diff diff;
+    // Discord reference
     ChartHandler *mod = NULL;
 
     std::map<unsigned char, unsigned char> midiMapping;

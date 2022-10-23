@@ -19,11 +19,21 @@ bool isFromCMajor(unsigned char pitch) {
     return !(key == 1 || key == 3 || key == 6 || key == 8 || key == 10);
 }
 
+int getOffset(Key key) {
+    switch (key) {
+        case FA:
+            return 8;
+    }
+    return 0;
+}
+
 PartitionNotation::PartitionNotation(std::string name, int64_t time,
-                                     unsigned char pitch, ImageView* texture)
+                                     unsigned char pitch, ImageView* texture,
+                                     Key key)
     : Gui(texture, name) {
     this->time = time;
-    this->position.y = 0.5f - 0.083f * getDifferenceFromC4(pitch);
+    this->position.y =
+        0.5f - 0.083f * (getDifferenceFromC4(pitch) + getOffset(key));
 }
 
 PartitionNotation::PartitionNotation(std::string name, int64_t time,
@@ -37,6 +47,6 @@ PartitionNotation::PartitionNotation(std::string name, int64_t time,
 int64_t PartitionNotation::getTime() { return time; }
 
 bool PartitionNotation::update(int64_t time) {
-    this->position.x = (this->time - time) / 300000. - 1.4f;
+    this->position.x = (this->time - time) / 300000. - 1.3f;
     return false;
 }

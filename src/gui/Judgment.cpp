@@ -4,13 +4,17 @@ Judgement::Judgement(std::string name, std::vector<ImageView*> textures,
                      TrackPartition notes)
     : Gui(getTextureByName(textures, "judgement_line"), name) {
     this->partition = notes;
+    if (this->partition.drumming) {
+        this->position.y = 0;
+        return;
+    }
     if (this->partition.notes.empty()) return;
     auto n = this->partition.notes;
     this->position.y = 0.25 - 0.083f * getDifferenceFromC4(n[0].note);
 }
 
 bool Judgement::update(int64_t time) {
-    if (this->partition.notes.empty()) return false;
+    if (this->partition.notes.empty() || this->partition.drumming) return false;
     auto notes = this->partition.notes;
     MidiNote prev = (notes[0]), next = (notes[notes.size() - 1]);
     if (time < 0) {

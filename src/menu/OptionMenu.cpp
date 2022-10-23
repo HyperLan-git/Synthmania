@@ -8,7 +8,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
               *sliderTex = getTextureByName(textures, "slider_button");
     Button* back = new Button(getTextureByName(textures, "button"),
                               getTextureByName(textures, "button-pressed"),
-                              "back", {-1.7, .85}, {.6, .3});
+                              "back", {-1.5, .85}, {.6, .3});
     buttons.push_back(back);
     for (Text t : text->createText("Save", "Stupid", 12, glm::vec2({-.1, 0}))) {
         ParentedGui* g =

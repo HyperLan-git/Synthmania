@@ -3,8 +3,10 @@
 class Note;
 
 #include "ImageView.hpp"
+#include "MidiNote.hpp"
 #include "PartitionNotation.hpp"
 #include "Utils.hpp"
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -12,11 +14,17 @@ class Note;
 #include <string>
 
 #define HIT_WINDOW 150000
+#define DRUM_HIT_WINDOW 100000
 #define DELETE_ANIM 50000
 
-enum Key { SOL, FA, DRUM };
+enum NoteStatus {
+    WAITING,   // IDLE
+    HIT,       // SUCCESSFULLY HIT
+    FINISHED,  // FADING AWAY
+    MISSED     // FAILED
+};
 
-enum NoteStatus { WAITING, HIT, FINISHED, MISSED };
+unsigned char transposePitch(Key k, unsigned char pitch);
 
 std::vector<double> splitDuration(double duration);
 
@@ -24,13 +32,13 @@ ImageView* getTextureForNote(std::vector<ImageView*> textures,
                              unsigned char pitch, double duration,
                              Key currentKey);
 
-glm::vec2 getSizeAndLocForNote(double duration);
+glm::vec2 getSizeAndLocForNote(double duration, Key k, unsigned char pitch);
 
 class Note : public PartitionNotation {
    public:
     Note(std::string name, int64_t time, unsigned char pitch,
          double totalDuration, double duration, uint64_t MPQ,
-         std::vector<ImageView*> textures);
+         std::vector<ImageView*> textures, Key key);
 
     bool justMissed();
     void setStatus(NoteStatus status);

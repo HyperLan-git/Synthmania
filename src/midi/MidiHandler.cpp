@@ -83,10 +83,13 @@ TrackPartition MidiHandler::readMidi(const char *path) {
     uint64_t MPQ = 250000 * 60 / r.startingTempo;
 
     // If parsing succeeded, use the parsed data
-    if (result == libremidi::reader::invalid) return TrackPartition{MPQ, notes};
+    if (result == libremidi::reader::invalid)
+        return TrackPartition{false, MPQ, notes};
     // Pitch wheel : 0x2000 = 8192 = +-0 semitones 0x0 = -2 semitones
     // and 0x3FFF = +2 semitones
     std::vector<MidiNote> currentNotes;
+    bool drum = false;
+    // TODO track chosen
     for (auto &track : r.tracks) {
         unsigned long long t = 0;
         for (auto &event : track) {
@@ -96,6 +99,8 @@ TrackPartition MidiHandler::readMidi(const char *path) {
             t += dt;
             switch (message.get_message_type()) {
                 case libremidi::message_type::NOTE_ON:
+                    if (message.get_channel() == 10)
+                        drum = true;  // 10 = drumming
                     for (auto iter = currentNotes.begin();
                          iter != currentNotes.end(); iter++) {
                         if ((*iter).note == message.bytes[1]) {
@@ -176,7 +181,7 @@ TrackPartition MidiHandler::readMidi(const char *path) {
 
     file.close();
 
-    return TrackPartition{MPQ, notes};
+    return TrackPartition{drum, MPQ, notes};
 }
 
 bool MidiHandler::hasMessage() { return !messages.empty(); }

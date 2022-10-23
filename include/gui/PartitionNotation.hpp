@@ -2,14 +2,18 @@
 
 #include "Gui.hpp"
 
+enum Key { SOL, FA, DRUM };
+
 int getDifferenceFromC4(unsigned char pitch);
 
 bool isFromCMajor(unsigned char pitch);
 
+int getOffset(Key key);
+
 class PartitionNotation : public Gui {
    public:
     PartitionNotation(std::string name, int64_t time, unsigned char pitch,
-                      ImageView* texture);
+                      ImageView* texture, Key key);
 
     PartitionNotation(std::string name, int64_t time, double verticalPosition,
                       ImageView* texture);
