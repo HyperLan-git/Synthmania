@@ -1,7 +1,7 @@
 #include "RenderPass.hpp"
 
 RenderPass::RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
-                       VkFormat imageFormat) {
+                       VkFormat imageFormat, VkImageLayout finalLayout) {
     this->device = device;
     this->pass = new VkRenderPass();
     VkAttachmentDescription colorAttachment{};
@@ -12,7 +12,8 @@ RenderPass::RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
     colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    // Needed for no validation warnings
+    colorAttachment.finalLayout = finalLayout;
 
     VkAttachmentDescription depthAttachment{};
     depthAttachment.format = findDepthFormat(*physicalDevice);

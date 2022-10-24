@@ -2,7 +2,6 @@
 
 #include "Synthmania.hpp"
 
-// TODO fix ratios because on fullscreen buttons go past the edge
 MainMenu::MainMenu(Game* g) : Menu(g) {
     TextHandler* text = g->getTextHandler();
     std::vector<ImageView*> tex = g->getRenderer()->getTextures();

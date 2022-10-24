@@ -153,6 +153,7 @@ class Renderer {
     Semaphore* imageAvailableSemaphore = NULL;
     Buffer* uniformBuffer = NULL;
     TextureSampler* sampler = NULL;
+    RenderPass* renderPass = NULL;
 
     ShaderDescriptorSetLayout* shaderLayout = NULL;
     ShaderDescriptorSetLayout* guiShaderLayout = NULL;

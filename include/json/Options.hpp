@@ -17,10 +17,9 @@ class Options {
     template <typename T>
     std::optional<T> getValue(std::string path) {
         boost::optional<T> result = this->options->get_optional<T>(path);
-        if (result.has_value()) return std::make_optional<T>(*result);
+        if (result) return std::make_optional<T>(*result);
         result = this->defaultValues->get_optional<T>(path);
-        return result.has_value() ? std::make_optional<T>(*result)
-                                  : std::optional<T>();
+        return result ? std::make_optional<T>(*result) : std::optional<T>();
     }
 
     template <typename T>

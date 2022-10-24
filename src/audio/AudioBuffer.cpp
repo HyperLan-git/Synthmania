@@ -14,8 +14,8 @@ AudioBuffer::AudioBuffer(ALuint id) { this->bufferID = id; }
 AudioBuffer::AudioBuffer(std::string file) {
     bufferID = alutCreateBufferFromFile(file.c_str());
     if (bufferID == AL_NONE)
-        throw std::runtime_error("Could not read " + file + "\nCause : " +
-                                 alutGetErrorString(alutGetError()));
+        throw std::runtime_error("Could not read " + file +
+                                 "\nCause : " + std::to_string(alutGetError()));
 }
 
 void AudioBuffer::write(ALenum format, const ALvoid* data, ALsizei size,
@@ -55,7 +55,7 @@ AudioBuffer::~AudioBuffer() {
     if ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error when deleting buffer:" << err << std::endl;
 }
-
+/*
 #include <complex>
 #include <iostream>
 #include <valarray>
@@ -109,3 +109,4 @@ void fft(CArray& x) {
     // for (unsigned int i = 0; i < N; i++)
     //	x[i] *= f;
 }
+*/

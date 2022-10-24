@@ -23,6 +23,8 @@ RenderModule::RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
             *(sampler->getSampler()));
     commandPool = new CommandPool(device);
     commandBuffer = new CommandBuffer(device, commandPool, false);
+    setName(functions, device, name + " command buffer",
+            VK_OBJECT_TYPE_COMMAND_BUFFER, *(renderLayout->getLayout()));
 
     renderLayout = new ShaderDescriptorSetLayout(device, bindings, nBindings);
     setName(functions, device, name + " layout",

@@ -1,3 +1,3 @@
 @echo off
-"./bin/Synthmania"
+"./bin/Synthmania"2>err.log
 pause

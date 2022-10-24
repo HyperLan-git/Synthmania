@@ -27,6 +27,8 @@ AudioHandler::AudioHandler(const ALCchar* device) {
         throw std::runtime_error("Couldn't bind context !");
     if (!alutInitWithoutContext(NULL, NULL))
         throw std::runtime_error("Couldn't init ALUT !");
+    while (alutGetError() != NULL)
+        ;
     alcGetIntegerv(this->device, ALC_FREQUENCY, 1, &sampleRate);
     int err;
     while ((err = alGetError()) != AL_NO_ERROR)

@@ -12,7 +12,8 @@ class RenderPass;
 class RenderPass {
    public:
     RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
-               VkFormat imageFormat);
+               VkFormat imageFormat,
+               VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
     VkRenderPass *getPass();
 

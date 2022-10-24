@@ -21,7 +21,9 @@ SongSelectMenu::SongSelectMenu(Game *g, std::string folder) : Menu(g) {
     float pos = 1;
     for (const auto &iter : std::filesystem::directory_iterator(folder)) {
         if (iter.is_directory()) {
-            songs.emplace_back(iter.path().filename().c_str());
+            std::filesystem::path p = iter.path().filename();
+            std::string filename = p.string();
+            songs.emplace_back(filename);
             std::string &name = songs[songs.size() - 1];
             Button *but = new Button(
                 getTextureByName(g->getRenderer()->getTextures(), "button"),

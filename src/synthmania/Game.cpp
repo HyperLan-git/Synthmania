@@ -76,8 +76,9 @@ void Game::run() {
                 } else if (pressed && b->isInside(pos)) {
                     if (!b->isPressed()) b->onPressed(pos);
                     break;
-                } else if (!pressed && b->isPressed())
+                } else if (!pressed && b->isPressed()) {
                     b->onReleased();
+                }
             }
         }
         if (audio != NULL) audio->update();

@@ -53,6 +53,7 @@ void Renderer::initVulkan() {
     createGuiPipeline();
 
     createMainPipeline();
+    std::cout << "them" << std::endl;
 
     guiModel = new Model({{{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
                           {{0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
@@ -83,6 +84,7 @@ void Renderer::initVulkan() {
 
     createUniformBuffers();
     createCommandBuffers();
+    std::cout << "umom" << std::endl;
 }
 
 void Renderer::createCommandBuffers() {
@@ -152,10 +154,11 @@ void Renderer::createSwapchain() {
     setName(functions, device, "depth image view", VK_OBJECT_TYPE_IMAGE_VIEW,
             *(depthImageView->getView()));
 
-    /*renderPass =
-        new RenderPass(&physicalDevice, device, VK_FORMAT_R8G8B8A8_SRGB);
+    renderPass =
+        new RenderPass(&physicalDevice, device, VK_FORMAT_B8G8R8A8_SRGB,
+                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     setName(functions, device, "render pass", VK_OBJECT_TYPE_RENDER_PASS,
-            *(renderPass->getPass()));*/
+            *(renderPass->getPass()));
 
     framebuffer = new Framebuffer(device, swapchain->getRenderPass(), {w, h},
                                   {renderImageView, depthImageView});
@@ -213,7 +216,7 @@ Renderer::~Renderer() {
     delete renderImage;
     delete depthImage;
     delete depthImageView;
-    // delete renderPass;
+    delete renderPass;
     delete framebuffer;
     delete renderCommandBuffer;
     delete renderDescriptor;
@@ -287,7 +290,7 @@ void Renderer::recreateSwapchain() {
     delete sampler;
     delete depthImage;
     delete depthImageView;
-    // delete renderPass;
+    delete renderPass;
     delete framebuffer;
     delete renderPipeline;
     delete renderLayout;
@@ -640,6 +643,8 @@ Image* Renderer::createTextureImage(const char* path) {
 void Renderer::transitionImageLayout(Image* image, VkImageLayout oldLayout,
                                      VkImageLayout newLayout) {
     CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
+    setName(getDebugFunctions(this->instance), device, "transitioncmdbuf",
+            VK_OBJECT_TYPE_COMMAND_BUFFER, *(commandBuffer->getBuffer()));
     commandBuffer->begin();
 
     commandBuffer->setImageLayout(image, oldLayout, newLayout);
@@ -652,6 +657,8 @@ void Renderer::transitionImageLayout(Image* image, VkImageLayout oldLayout,
 void Renderer::copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
                                  uint32_t height) {
     CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
+    setName(getDebugFunctions(this->instance), device, "copybufToImgcmdbuf",
+            VK_OBJECT_TYPE_COMMAND_BUFFER, *(commandBuffer->getBuffer()));
     commandBuffer->begin();
 
     commandBuffer->copyBufferToImage(buffer, image, {width, height, 1});
@@ -664,6 +671,8 @@ void Renderer::copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
 void Renderer::copyImage(Image* src, VkImageLayout srcLayout, Image* dst,
                          VkImageLayout dstLayout) {
     CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
+    setName(getDebugFunctions(this->instance), device, "copyImgcmdbuf",
+            VK_OBJECT_TYPE_COMMAND_BUFFER, *(commandBuffer->getBuffer()));
     commandBuffer->begin();
 
     commandBuffer->copyImage(src, srcLayout, dst, dstLayout);
@@ -677,6 +686,8 @@ void Renderer::convertImage(Image* src, VkImageLayout srcImageLayout,
                             Image* dst, VkImageLayout dstImageLayout,
                             VkFilter filter) {
     CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
+    setName(getDebugFunctions(this->instance), device, "convertImgcmdbuf",
+            VK_OBJECT_TYPE_COMMAND_BUFFER, *(commandBuffer->getBuffer()));
     commandBuffer->begin();
 
     commandBuffer->convertImage(src, srcImageLayout, dst, dstImageLayout,
@@ -986,8 +997,6 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
                                    2);
 
     commandBuffer->bindPipeline(renderPipeline);
-    transitionImageLayout(renderImage, VK_IMAGE_LAYOUT_UNDEFINED,
-                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     guiModel->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue("main"),
                                        commandPool);
@@ -1117,17 +1126,18 @@ void Renderer::drawFrame() {
     /*drawScreenCommandBuffer(
         commandBuffers[currentFrame], swapchain->getRenderPass(),
         swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());*/
-    drawScreenCommandBuffer(renderCommandBuffer, swapchain->getRenderPass(),
-                            framebuffer);
+    // transitionImageLayout(renderImage, VK_IMAGE_LAYOUT_UNDEFINED,
+    //                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    drawScreenCommandBuffer(renderCommandBuffer, renderPass, framebuffer);
     recordCommandBuffer(commandBuffers[currentFrame],
                         swapchain->getRenderPass(),
                         swapchain->getFramebuffers()[imageIndex]);
 
+    renderCommandBuffer->submit(device->getQueue("main"));
     commandBuffers[currentFrame]->submit(
         device->getQueue("main"), imageAvailableSemaphores[currentFrame],
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
         renderFinishedSemaphores[currentFrame], inFlightFences[currentFrame]);
-    renderCommandBuffer->submit(device->getQueue("main"));
 
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

@@ -294,7 +294,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     std::string folders = "";
 
     std::optional<tree> values = options->getValues("plugin.folders");
-    if (values.has_value())
+    if (values)
         for (auto entry : *values)
             folders += entry.second.get_value<std::string>("") + ';';
     pluginFolders->setTextStr(folders);

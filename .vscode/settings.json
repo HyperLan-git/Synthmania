@@ -98,7 +98,10 @@
         "xmemory": "cpp",
         "xstddef": "cpp",
         "xtr1common": "cpp",
-        "cerrno": "cpp"
+        "cerrno": "cpp",
+        "resumable": "cpp",
+        "xthread": "cpp",
+        "xmemory0": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "editor.formatOnSave": true,

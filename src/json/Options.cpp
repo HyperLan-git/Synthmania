@@ -11,10 +11,9 @@ Options::Options(std::string defaults, std::string current) {
 
 std::optional<tree> Options::getValues(std::string path) {
     auto result = this->options->get_child_optional(path);
-    if (result.has_value()) return std::make_optional(result.get());
+    if (result) return std::make_optional(result.get());
     result = this->defaultValues->get_child_optional(path);
-    return result.has_value() ? std::make_optional(*result)
-                              : std::optional<tree>();
+    return result ? std::make_optional(*result) : std::optional<tree>();
 }
 
 void Options::setValues(std::string path, tree arr) {

@@ -10,6 +10,7 @@ Synthmania::Synthmania(std::string skin, std::string config) {
         elem.second = std::string(skin).append("/").append(elem.second);
     audio = new AudioHandler();
     applyOptions();
+    resetAudio();
 }
 
 void Synthmania::resetAudio() {
@@ -426,10 +427,12 @@ void Synthmania::update() {
             delete this->mod;
             this->mod = NULL;
         }
+#ifndef NOVST
         if (this->plugin != NULL) {
             delete this->plugin;
             this->plugin = NULL;
         }
+#endif
         resetScene();
         loadMenu("main");
         return;
@@ -562,7 +565,7 @@ void Synthmania::applyOptions() {
     this->audio->setVolume(volume);
     if (music != NULL) music->setGain(musicVol);
     int midi = *options->getValue<int>("midi.device");
-    if (midi != this->handler->getOpenPort() &&
+    if (midi != -1 && midi != this->handler->getOpenPort() &&
         midi < this->handler->getMidiPorts().size())
         this->handler->openPort(midi);
     // TODO appearance : note names
