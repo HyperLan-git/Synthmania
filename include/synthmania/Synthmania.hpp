@@ -63,6 +63,8 @@ class Synthmania : public Game {
 
     void loadSong(std::string songFolder);
 
+    void endSong();
+
     void resetAudio();
 
     virtual void init();
@@ -93,6 +95,8 @@ class Synthmania : public Game {
     virtual void freeFinalUBO(void *&ubo);
 
     virtual void addGui(Gui *gui);
+
+    void spawnNote(MidiNote note);
 
     void playDrumSound(unsigned char pitch);
     void playPianoSound(unsigned char pitch);
@@ -126,7 +130,7 @@ class Synthmania : public Game {
     std::unique_ptr<Options> options;
     float musicVol = 1;
     int64_t audioLatency = 0, graphicalLatency = 0, audioLeniency = 20000;
-    bool fullscreen = false;
+    bool fullscreen = false, playing = false;
 
 #ifndef NOVST
     int bufSize = 1024, bufAmt = 3;

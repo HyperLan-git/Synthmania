@@ -16,6 +16,14 @@ class Image {
           VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
     Image(Device *device, VkImage *image, VkExtent2D extent);
     VkImage *getImage();
+    /**
+     * @brief Get the Memory associated with this image.
+     *
+     * A memory pointer that is NULL indicates an image from a swapchain with no
+     * memory associated.
+     *
+     * @return Memory*
+     */
     Memory *getMemory();
     VkExtent3D getExtent();
     VkSubresourceLayout getImageSubresourceLayout(

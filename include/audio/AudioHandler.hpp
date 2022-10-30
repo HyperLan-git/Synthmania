@@ -34,6 +34,8 @@ class AudioHandler {
     void addSound(std::string name, AudioBuffer* sound);
     AudioSource* playSound(std::string name);
 
+    void removeSound(AudioSource* source);
+
     void clearSounds();
 
     void setVolume(float volume);

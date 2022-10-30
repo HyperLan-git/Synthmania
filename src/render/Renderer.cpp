@@ -6,8 +6,6 @@
 
 #include <map>
 
-// FIXME when window resize vulkan error -> sussy
-
 Renderer::Renderer(Game* game, Window* window) {
     this->game = game;
     this->window = window;
@@ -53,7 +51,6 @@ void Renderer::initVulkan() {
     createGuiPipeline();
 
     createMainPipeline();
-    std::cout << "them" << std::endl;
 
     guiModel = new Model({{{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}},
                           {{0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}},
@@ -84,7 +81,6 @@ void Renderer::initVulkan() {
 
     createUniformBuffers();
     createCommandBuffers();
-    std::cout << "umom" << std::endl;
 }
 
 void Renderer::createCommandBuffers() {

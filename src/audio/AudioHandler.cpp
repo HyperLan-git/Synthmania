@@ -27,7 +27,8 @@ AudioHandler::AudioHandler(const ALCchar* device) {
         throw std::runtime_error("Couldn't bind context !");
     if (!alutInitWithoutContext(NULL, NULL))
         throw std::runtime_error("Couldn't init ALUT !");
-    while (alutGetError() != NULL)
+    // Clear alut errors
+    while (alutGetError() != 0)
         ;
     alcGetIntegerv(this->device, ALC_FREQUENCY, 1, &sampleRate);
     int err;
@@ -95,6 +96,15 @@ bool AudioHandler::update() {
         }
     }
     return !sources.empty();
+}
+
+void AudioHandler::removeSound(AudioSource* source) {
+    delete source;
+    for (auto iter = this->sources.begin(); iter != this->sources.end(); iter++)
+        if (*iter == source) {
+            this->sources.erase(iter);
+            break;
+        }
 }
 
 void AudioHandler::clearSounds() {

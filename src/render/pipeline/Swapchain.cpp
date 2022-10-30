@@ -2,14 +2,12 @@
 
 Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
                      Window *window, VkSurfaceKHR *surface) {
-    SwapchainSupportDetails swapchainSupport =
-        querySwapchainSupport(*physicalDevice, *surface);
-
     this->device = device;
-    this->extent = chooseSwapExtent(swapchainSupport.capabilities, window);
     this->physicalDevice = physicalDevice;
     this->swapchain = new VkSwapchainKHR();
 
+    SwapchainSupportDetails swapchainSupport =
+        querySwapchainSupport(*physicalDevice, *surface);
     VkSurfaceFormatKHR surfaceFormat =
         chooseSwapSurfaceFormat(swapchainSupport.formats);
     VkPresentModeKHR presentMode =
@@ -21,20 +19,23 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
         imageCount = swapchainSupport.capabilities.maxImageCount;
     }
 
-    VkSwapchainCreateInfoKHR createInfo{};
+    uint32_t queueFamilyIndices[] = {
+        device->getQueue("main")->getFamily(),
+        device->getQueue("secondary")->getFamily()};
+
+    VkSwapchainCreateInfoKHR createInfo;
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = *surface;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
+    // TODO oldSwapchain
+    createInfo.oldSwapchain = NULL;
 
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = surfaceFormat.format;
     createInfo.imageColorSpace = surfaceFormat.colorSpace;
-    createInfo.imageExtent = extent;
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-    uint32_t queueFamilyIndices[] = {
-        device->getQueue("main")->getFamily(),
-        device->getQueue("secondary")->getFamily()};
 
     if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -50,6 +51,10 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
+    // Keep the choosing of the extent close to createSwapchain
+    swapchainSupport = querySwapchainSupport(*physicalDevice, *surface);
+    this->extent = chooseSwapExtent(swapchainSupport.capabilities, window);
+    createInfo.imageExtent = extent;
 
     if (vkCreateSwapchainKHR(*(device->getDevice()), &createInfo, nullptr,
                              swapchain) != VK_SUCCESS) {
@@ -60,11 +65,10 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
 
     images = createImagesForSwapchain(device, *swapchain, &imageCount, extent);
 
-    for (uint32_t i = 0; i < images.size(); i++) {
+    for (uint32_t i = 0; i < images.size(); i++)
         imageViews.push_back(new ImageView(device, images[i], imageFormat,
                                            VK_IMAGE_ASPECT_COLOR_BIT,
-                                           "swapimage"));
-    }
+                                           "swapimage" + i));
 
     VkFormat depthFormat = findDepthFormat(*physicalDevice);
 

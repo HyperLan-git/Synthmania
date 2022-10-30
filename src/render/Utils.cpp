@@ -122,7 +122,9 @@ VkPresentModeKHR chooseSwapPresentMode(
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
                             Window* window) {
     if (capabilities.currentExtent.width !=
-        std::numeric_limits<uint32_t>::max()) {
+            std::numeric_limits<uint32_t>::max() &&
+        capabilities.currentExtent.height !=
+            std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
     } else {
         uint32_t width, height;

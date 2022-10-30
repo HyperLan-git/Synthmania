@@ -9,6 +9,7 @@ class PipelineLayout;
 #include "Device.hpp"
 #include "ShaderDescriptorSetLayout.hpp"
 
+// TODO get device from other arguments when possible
 class PipelineLayout {
    public:
     PipelineLayout(Device* device, ShaderDescriptorSetLayout* shaderLayout,

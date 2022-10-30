@@ -33,6 +33,13 @@ class ShaderDescriptorSet {
     void updateAccess(VkStructureType allowed, uint32_t binding,
                       VkDescriptorType type, VkDescriptorBufferInfo* bInfo,
                       VkDescriptorImageInfo* iInfo);
+
+    void updateAccess(VkStructureType allowed, uint32_t binding,
+                      VkDescriptorType type, VkDescriptorBufferInfo* bInfo);
+
+    void updateAccess(VkStructureType allowed, uint32_t binding,
+                      VkDescriptorType type, VkDescriptorImageInfo* iInfo);
+
     void resetAccess();
 
     VkDescriptorSet* getSet();
@@ -43,5 +50,5 @@ class ShaderDescriptorSet {
     Device* device;
     VkDescriptorSet* set;
     ShaderDescriptorPool* pool;
-    VkWriteDescriptorSet* writeDescriptor = nullptr;
+    VkWriteDescriptorSet* writeDescriptor = NULL;
 };

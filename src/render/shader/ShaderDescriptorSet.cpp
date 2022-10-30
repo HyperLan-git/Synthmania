@@ -10,6 +10,7 @@ VkDescriptorBufferInfo *createBufferInfo(Buffer *buffer) {
     return bufferInfo;
 }
 
+// TODO put that in sampler class
 VkDescriptorImageInfo *createImageInfo(ImageView *view,
                                        TextureSampler *sampler) {
     VkDescriptorImageInfo *imageInfo = new VkDescriptorImageInfo();
@@ -73,6 +74,18 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
     }
     vkUpdateDescriptorSets(*(device->getDevice()), 1, descriptorWrites, 0,
                            NULL);
+}
+
+void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
+                                       uint32_t binding, VkDescriptorType type,
+                                       VkDescriptorBufferInfo *bInfo) {
+    updateAccess(allowed, binding, type, bInfo, NULL);
+}
+
+void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
+                                       uint32_t binding, VkDescriptorType type,
+                                       VkDescriptorImageInfo *iInfo) {
+    updateAccess(allowed, binding, type, NULL, iInfo);
 }
 
 VkDescriptorSet *ShaderDescriptorSet::getSet() { return set; }

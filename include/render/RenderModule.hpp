@@ -8,7 +8,11 @@ class RenderModule;
 #include "ImageView.hpp"
 #include "RenderPass.hpp"
 #include "Renderer.hpp"
-
+/**
+ * @brief A simplified class for creating a pipeline that can be used for
+ * parallel/multi-pass rendering. All setters will wait for the device to be
+ * available and recreate the inner pipeline !
+ */
 class RenderModule {
    public:
     RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
@@ -16,16 +20,28 @@ class RenderModule {
                  RenderPass* renderPass, VkDescriptorSetLayoutBinding* bindings,
                  uint32_t nBindings,
                  VkPipelineShaderStageCreateInfo* shaderStages,
-                 uint32_t nShaders);
+                 uint32_t nShaders, VkPushConstantRange* constantRanges,
+                 uint32_t nConstantRange);
+
+    void setExtent(uint32_t w, uint32_t h);
+    void setShaders(VkPipelineShaderStageCreateInfo* shaderStages,
+                    uint32_t nShaders);
 
     void recreate();
-    void recreateImage(int w, int h);
 
     ~RenderModule();
 
-   private:
+    // private:
+    Instance* instance = NULL;
+    VkPhysicalDevice physicalDevice = NULL;
+    Device* device = NULL;
+
     Image* renderImage = NULL;
     ImageView* renderImageView = NULL;
+    // TODO make depth optional
+    Image* depthImage = NULL;
+    ImageView* depthImageView = NULL;
+    Framebuffer* framebuffer = NULL;
     Pipeline* renderPipeline = NULL;
     PipelineLayout* renderPipelineLayout = NULL;
     ShaderDescriptorSetLayout* renderLayout = NULL;
@@ -35,7 +51,21 @@ class RenderModule {
     TextureSampler* sampler = NULL;
     CommandPool* commandPool = NULL;
     CommandBuffer* commandBuffer = NULL;
+    RenderPass* renderPass = NULL;
+
+    // For debugging xdd
+    std::string name;
+
+    VkDescriptorSetLayoutBinding* descriptorBindings;
+    uint32_t nDescriptorBindings;
+    VkPipelineShaderStageCreateInfo* shaderStages;
+    uint32_t nShaders;
+    VkPushConstantRange* constantRanges;
+    uint32_t nConstantRange;
 };
 
 void updateDescriptorSet(ShaderDescriptorSet* descriptor, ImageView* texture,
-                         TextureSampler* sampler, Buffer* uniformBuffer);
+                         TextureSampler* sampler, int binding);
+
+void updateDescriptorSet(ShaderDescriptorSet* descriptor, Buffer* uniformBuffer,
+                         int binding);

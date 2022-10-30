@@ -1,6 +1,5 @@
 #include "ShaderDescriptorPool.hpp"
 
-#include <iostream>
 ShaderDescriptorPool::ShaderDescriptorPool(Device *device,
                                            VkDescriptorType *types,
                                            uint32_t count) {

@@ -93,18 +93,32 @@ void Synthmania::loadSong(std::string songFolder) {
         new Entity(model, getTextureByName(textures, "room"), "Bob");
     renderer->addModel(model);
     entities.push_back(la_creatura76);
+    Key k = drum ? Key::DRUM : Key::SOL;
+    std::string keyName = (drum) ? "drum_key" : "sol_key";
     Gui *part = new Gui(getTextureByName(textures, "partition"), "partition"),
         *bg = new Gui(getTextureByName(textures, "background"), "bg"),
-        *key = new Gui(getTextureByName(textures, "sol_key"), "key"),
         *precision =
-            new Gui(getTextureByName(textures, "precision"), "precision");
+            new Gui(getTextureByName(textures, "precision"), "precision"),
+        *key = new Gui(getTextureByName(textures, keyName), "key");
+    switch (k) {
+        case Key::SOL:
+            key->setPosition({-1.6f, 0.1f});
+            key->setSize({0.8f, 0.8f});
+            break;
+        case Key::DRUM:
+            key->setPosition({-1.6f, 0});
+            key->setSize({0.43f, 0.43f});
+            break;
+        case Key::FA:
+            key->setPosition({-1.6f, 0.1f});
+            key->setSize({0.8f, 0.8f});
+            break;
+    }
     addGui(bg);
     addGui(part);
     addGui(key);
     bg->setSize({5, 30});
     part->setSize({5, 1});
-    key->setPosition({-1.6f, 0.1f});
-    key->setSize({0.8f, 0.8f});
     precision->setSize({1.5f, 0.5f});
     precision->setPosition({0, 0.9f});
     Judgement *bar = new Judgement("judgement", textures, partition);
@@ -113,7 +127,6 @@ void Synthmania::loadSong(std::string songFolder) {
     bar->setSize({0.25f, 1.f});
     addGui(bar);
     std::vector<Gui *> tempNotes;
-    Key k = drum ? Key::DRUM : Key::SOL;
     for (MidiNote note : partition.notes) {
         std::string name = "Note_";
         std::string hash = std::to_string(std::hash<MidiNote>()(note));
@@ -243,6 +256,32 @@ void Synthmania::loadSong(std::string songFolder) {
     begTime = std::chrono::high_resolution_clock::now();
 }
 
+void Synthmania::endSong() {
+    if (music != NULL) {
+        audio->removeSound(this->music);
+        this->music = NULL;
+    }
+    this->autoPlay = false;
+    this->drum = false;
+    if (this->mod != NULL) {
+        delete this->mod;
+        this->mod = NULL;
+        renderer->loadGuiShaders("bin/gui.vert.spv", "bin/def.geom.spv",
+                                 "bin/def.frag.spv",
+                                 sizeof(UniformBufferObject));
+        renderer->loadFinalShaders("bin/pass.vert.spv", "bin/pass.geom.spv",
+                                   "bin/pass.frag.spv",
+                                   sizeof(UniformBufferObject));
+    }
+#ifndef NOVST
+    if (this->plugin != NULL) {
+        delete this->plugin;
+        this->plugin = NULL;
+    }
+#endif
+    resetScene();
+}
+
 Options *Synthmania::getOptions() { return options.get(); }
 
 void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
@@ -257,6 +296,11 @@ void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
     }
     if (key == GLFW_KEY_RIGHT) {
         game->setTimeMicros(game->getCurrentTimeMicros() + 2000000);
+        return;
+    }
+    if (key == GLFW_KEY_ESCAPE) {
+        game->endSong();
+        game->loadMenu("song select");
         return;
     }
     if (game->autoPlay) return;
@@ -416,24 +460,7 @@ void Synthmania::resetScene() {
 void Synthmania::update() {
     if ((music != NULL && music->getState() != AL_PLAYING) ||
         (music == NULL && menu == NULL && this->notes.size() == 0)) {
-        // End of map
-        if (music != NULL) {
-            this->music->setDestroyOnFinished(true);
-            this->music = NULL;
-        }
-        this->autoPlay = false;
-        this->drum = false;
-        if (this->mod != NULL) {
-            delete this->mod;
-            this->mod = NULL;
-        }
-#ifndef NOVST
-        if (this->plugin != NULL) {
-            delete this->plugin;
-            this->plugin = NULL;
-        }
-#endif
-        resetScene();
+        endSong();
         loadMenu("main");
         return;
     }
