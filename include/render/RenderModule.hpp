@@ -2,12 +2,11 @@
 
 class RenderModule;
 
-#include "CommandBuffer.hpp"
 #include "Framebuffer.hpp"
 #include "Image.hpp"
 #include "ImageView.hpp"
 #include "RenderPass.hpp"
-#include "Renderer.hpp"
+
 /**
  * @brief A simplified class for creating a pipeline that can be used for
  * parallel/multi-pass rendering. All setters will wait for the device to be
@@ -18,7 +17,7 @@ class RenderModule {
     RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
                  Device* device, std::string name, uint32_t w, uint32_t h,
                  RenderPass* renderPass, VkDescriptorSetLayoutBinding* bindings,
-                 uint32_t nBindings,
+                 uint32_t* nDescriptorSets, uint32_t nBindings,
                  VkPipelineShaderStageCreateInfo* shaderStages,
                  uint32_t nShaders, VkPushConstantRange* constantRanges,
                  uint32_t nConstantRange);
@@ -26,6 +25,11 @@ class RenderModule {
     void setExtent(uint32_t w, uint32_t h);
     void setShaders(VkPipelineShaderStageCreateInfo* shaderStages,
                     uint32_t nShaders);
+    void setDescriptorLayouts(VkDescriptorSetLayoutBinding* bindings,
+                              uint32_t* nDescriptorSets, uint32_t nBindings);
+
+    void recreateDescriptorPool(VkDescriptorType* types,
+                                uint32_t* nDescriptorSets, uint32_t nTypes);
 
     void recreate();
 
@@ -45,9 +49,10 @@ class RenderModule {
     Pipeline* renderPipeline = NULL;
     PipelineLayout* renderPipelineLayout = NULL;
     ShaderDescriptorSetLayout* renderLayout = NULL;
-    ShaderDescriptorSet* renderDescriptor = NULL;
-    ShaderDescriptorPool* renderDescriptorPool = NULL;
-    Buffer* uniformBuffer = NULL;
+    ShaderDescriptorPool* descriptorPool = NULL;
+    std::vector<ShaderDescriptorSet*> descriptorSets;
+    std::vector<Buffer*> guiUniformBuffers;
+    std::vector<Buffer*> guiConstantBuffers;
     TextureSampler* sampler = NULL;
     CommandPool* commandPool = NULL;
     CommandBuffer* commandBuffer = NULL;
@@ -62,10 +67,9 @@ class RenderModule {
     uint32_t nShaders;
     VkPushConstantRange* constantRanges;
     uint32_t nConstantRange;
+
+    VkExtent2D extent;
 };
 
 void updateDescriptorSet(ShaderDescriptorSet* descriptor, ImageView* texture,
-                         TextureSampler* sampler, int binding);
-
-void updateDescriptorSet(ShaderDescriptorSet* descriptor, Buffer* uniformBuffer,
-                         int binding);
+                         TextureSampler* sampler, Buffer* uniformBuffer);

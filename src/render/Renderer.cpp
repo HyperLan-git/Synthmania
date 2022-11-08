@@ -62,9 +62,6 @@ void Renderer::initVulkan() {
     setName(functions, device, "Gui vertex buffer", VK_OBJECT_TYPE_BUFFER,
             *(guiModel->toVertexBuffer()->getBuffer()));
 
-    guiSampler = new TextureSampler(&physicalDevice, device);
-    setName(functions, device, "Gui sampler", VK_OBJECT_TYPE_SAMPLER,
-            *(guiSampler->getSampler()));
     textureSampler = new TextureSampler(&physicalDevice, device);
     setName(functions, device, "3D sampler", VK_OBJECT_TYPE_SAMPLER,
             *(textureSampler->getSampler()));
@@ -179,13 +176,16 @@ void Renderer::loadTextures(std::map<std::string, std::string> textures) {
     VkDescriptorType* tp = types.data();
 
     pool = new ShaderDescriptorPool(device, tp, type_sz);
-    guiPool = new ShaderDescriptorPool(device, tp, type_sz);
+    setName(getDebugFunctions(instance), device, "mainDescriptorPool",
+            VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(pool->getPool()));
+    uint32_t sz = textures.size();
+    uint32_t i[] = {sz, sz};
     VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
+    guiModule->recreateDescriptorPool(type, i, 2);
     renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
     setName(getDebugFunctions(instance), device, "renderDescriptorPool",
             VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(renderDescriptorPool->getPool()));
-    createDescriptorSets();
 }
 
 VkPhysicalDevice* Renderer::getPhysicalDevice() { return &physicalDevice; }
@@ -224,8 +224,6 @@ Renderer::~Renderer() {
 
     delete graphicsPipelineLayout;
     delete graphicsPipeline;
-    delete guiPipelineLayout;
-    delete guiPipeline;
 
     for (size_t i = 0; i < uniformBuffers.size(); i++) {
         delete constantBuffers[i];
@@ -234,19 +232,16 @@ Renderer::~Renderer() {
         delete guiUniformBuffers[i];
     }
 
-    for (int i = 0; i < guiDescriptorSets.size(); i++)
-        delete guiDescriptorSets[i];
     for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
 
     delete pool;
-    delete guiPool;
     delete renderDescriptorPool;
 
     delete textureSampler;
-    delete guiSampler;
 
     delete shaderLayout;
-    delete guiShaderLayout;
+
+    delete guiModule;
 
     delete indexBuffer;
 
@@ -296,11 +291,11 @@ void Renderer::recreateSwapchain() {
 
     delete graphicsPipeline;
     delete graphicsPipelineLayout;
-    delete guiPipeline;
-    delete guiPipelineLayout;
 
     delete shaderLayout;
-    delete guiShaderLayout;
+    delete guiModule;
+    for (auto d : descriptorSets) delete d;
+    descriptorSets.clear();
 
     createSwapchain();
 
@@ -310,10 +305,8 @@ void Renderer::recreateSwapchain() {
     VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
     renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
-    renderDescriptor =
-        new ShaderDescriptorSet(device, renderDescriptorPool, renderLayout);
-    updateDescriptorSet(renderDescriptor, renderImageView, sampler,
-                        uniformBuffer);
+
+    createDescriptorSets();
 }
 
 void Renderer::createInstance() {
@@ -418,7 +411,6 @@ void Renderer::createGuiPipeline() {
     textureSampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     textureSampler.pImmutableSamplers = NULL;
     VkDescriptorSetLayoutBinding bindings[] = {ubo, textureSampler};
-    guiShaderLayout = new ShaderDescriptorSetLayout(device, bindings, 2);
 
     auto vertShaderCode = readFile(guiVertShader);
     auto geomShaderCode = readFile(guiGeomShader);
@@ -447,15 +439,14 @@ void Renderer::createGuiPipeline() {
                                                       geomShader->toPipeline(),
                                                       fragShader->toPipeline()};
 
-    guiPipelineLayout = new PipelineLayout(device, guiShaderLayout, 1, range);
-    setName(functions, device, "2D pipeline layout",
-            VK_OBJECT_TYPE_PIPELINE_LAYOUT, *(guiPipelineLayout->getLayout()));
+    uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
+    if (sz == 0) sz = 1;
+    uint32_t nDescriptorSets[] = {sz, sz};
+    guiModule = new RenderModule(
+        instance, &physicalDevice, device, "2D", swapchain->getExtent().width,
+        swapchain->getExtent().height, renderPass, bindings, nDescriptorSets, 2,
+        shaderStages, 3, range, 1);
 
-    guiPipeline =
-        new Pipeline(device, guiPipelineLayout, swapchain->getRenderPass(),
-                     shaderStages, 3, swapchain->getExtent());
-    setName(functions, device, "2D pipeline", VK_OBJECT_TYPE_PIPELINE,
-            *(guiPipeline->getPipeline()));
     delete range;
     delete vertShader;
     delete geomShader;
@@ -563,21 +554,6 @@ void Renderer::addTexture(Image* texture, const char* name) {
     setName(getDebugFunctions(instance), device, n, VK_OBJECT_TYPE_IMAGE_VIEW,
             *(view->getView()));
     this->textures.push_back(view);
-}
-
-Image* Renderer::createSamplerImage(int width, int height) {
-    VkDeviceSize imageSize = width * height * 4;
-
-    Image* image =
-        new Image(&physicalDevice, device, width, height,
-                  VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
-                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-    transitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
-                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-    return image;
 }
 
 ImageView* Renderer::readTexture(const char* path, const char* name) {
@@ -775,16 +751,17 @@ void Renderer::createDescriptorSets() {
                     VK_OBJECT_TYPE_DESCRIPTOR_SET,
                     *(descriptorSets[i]->getSet()));
 
-            guiDescriptorSets.push_back(
-                new ShaderDescriptorSet(device, guiPool, guiShaderLayout));
+            // TODO the
+            guiModule->descriptorSets.push_back(new ShaderDescriptorSet(
+                device, guiModule->descriptorPool, guiModule->renderLayout));
             setName(functions, device, name + "Gui_" + std::to_string(i),
                     VK_OBJECT_TYPE_DESCRIPTOR_SET,
-                    *(guiDescriptorSets[i]->getSet()));
+                    *(guiModule->descriptorSets[i]->getSet()));
 
             updateDescriptorSet(descriptorSets[j + i], img, textureSampler,
                                 uniformBuffers[i]);
-            updateDescriptorSet(guiDescriptorSets[j + i], img, guiSampler,
-                                guiUniformBuffers[i]);
+            updateDescriptorSet(guiModule->descriptorSets[j + i], img,
+                                guiModule->sampler, guiUniformBuffers[i]);
         }
         j += MAX_FRAMES_IN_FLIGHT;
     }
@@ -804,14 +781,14 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     if (!fShader.empty()) this->guiFragShader = fShader;
 
     device->wait();
-    for (int i = 0; i < guiDescriptorSets.size(); i++)
-        delete guiDescriptorSets[i];
-    guiDescriptorSets.clear();
+    for (int i = 0; i < guiModule->descriptorSets.size(); i++)
+        delete guiModule->descriptorSets[i];
+    guiModule->descriptorSets.clear();
     for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
     descriptorSets.clear();
     delete renderDescriptor;
     delete pool;
-    delete guiPool;
+    delete guiModule->descriptorPool;
     delete renderDescriptorPool;
     // TODO use vkResetDescriptorPool and other pools aswell
     for (size_t i = 0; i < uniformBuffers.size(); i++) {
@@ -838,7 +815,7 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     // TODO This is so fucking stupid I'm just going to prepare in advance a
     // big pool and then scale it up when needed
     pool = new ShaderDescriptorPool(device, tp, type_sz);
-    guiPool = new ShaderDescriptorPool(device, tp, type_sz);
+    guiModule->descriptorPool = new ShaderDescriptorPool(device, tp, type_sz);
     VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
     renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
@@ -855,14 +832,14 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
     if (!fShader.empty()) this->finalFragShader = fShader;
 
     device->wait();
-    for (int i = 0; i < guiDescriptorSets.size(); i++)
-        delete guiDescriptorSets[i];
-    guiDescriptorSets.clear();
+    for (int i = 0; i < guiModule->descriptorSets.size(); i++)
+        delete guiModule->descriptorSets[i];
+    guiModule->descriptorSets.clear();
     for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
     descriptorSets.clear();
     delete renderDescriptor;
     delete pool;
-    delete guiPool;
+    delete guiModule->descriptorPool;
     delete renderDescriptorPool;
 
     delete uniformBuffer;
@@ -876,7 +853,7 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
     VkDescriptorType* tp = types.data();
 
     pool = new ShaderDescriptorPool(device, tp, type_sz);
-    guiPool = new ShaderDescriptorPool(device, tp, type_sz);
+    guiModule->descriptorPool = new ShaderDescriptorPool(device, tp, type_sz);
     VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
     renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
@@ -936,7 +913,7 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
         }
     }
 
-    commandBuffer->bindPipeline(guiPipeline);
+    commandBuffer->bindPipeline(guiModule->renderPipeline);
 
     guiModel->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue("main"),
                                        commandPool);
@@ -944,9 +921,6 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
                                         commandPool);
     commandBuffer->bindVertexBuffers(vertexBuffer, 1);
     commandBuffer->bindIndexBuffer(indexBuffer);
-
-    commandBuffer->bindDescriptorSet(guiPipeline,
-                                     guiDescriptorSets[currentFrame]);
 
     std::vector<Gui*> guis = game->getGuis();
     for (auto iter = guis.begin(); iter != guis.end(); iter++) {
@@ -968,7 +942,8 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
                 throw std::runtime_error(err);
             }
             commandBuffer->bindDescriptorSet(
-                guiPipeline, guiDescriptorSets[idx * 2 + currentFrame]);
+                guiModule->renderPipeline,
+                guiModule->descriptorSets[idx * 2 + currentFrame]);
         }
         drawGui(g, commandBuffer);
         lastTexture = texture;
@@ -1026,8 +1001,9 @@ void Renderer::drawGui(Gui* gui, CommandBuffer* commandBuffer) {
     Model* model = guiModel;
 
     ShaderData* data = gui->getShaderData();
-    commandBuffer->pushConstants(guiPipeline, VK_SHADER_STAGE_VERTEX_BIT, 0,
-                                 data->data, data->size);
+    commandBuffer->pushConstants(guiModule->renderPipeline,
+                                 VK_SHADER_STAGE_VERTEX_BIT, 0, data->data,
+                                 data->size);
 
     commandBuffer->draw(model->getIndexes().size());
     free(data->data);

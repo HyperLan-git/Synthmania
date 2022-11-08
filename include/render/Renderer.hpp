@@ -56,6 +56,7 @@ class Renderer;
 #include "ParentedGui.hpp"
 #include "Pipeline.hpp"
 #include "PipelineLayout.hpp"
+#include "RenderModule.hpp"
 #include "RenderPass.hpp"
 #include "Semaphore.hpp"
 #include "Shader.hpp"
@@ -150,21 +151,21 @@ class Renderer {
     ShaderDescriptorSetLayout* renderLayout = NULL;
     ShaderDescriptorSet* renderDescriptor = NULL;
     ShaderDescriptorPool* renderDescriptorPool = NULL;
-    Semaphore* imageAvailableSemaphore = NULL;
     Buffer* uniformBuffer = NULL;
     TextureSampler* sampler = NULL;
     RenderPass* renderPass = NULL;
 
+    RenderModule* guiModule = NULL;
+
+    Semaphore* imageAvailableSemaphore = NULL;
+
     ShaderDescriptorSetLayout* shaderLayout = NULL;
-    ShaderDescriptorSetLayout* guiShaderLayout = NULL;
 
     std::vector<ShaderDescriptorSet*> descriptorSets;
-    std::vector<ShaderDescriptorSet*> guiDescriptorSets;
 
     CommandPool* commandPool = NULL;
 
     TextureSampler* textureSampler = NULL;
-    TextureSampler* guiSampler = NULL;
 
     Buffer* vertexBuffer = NULL;
     Buffer* indexBuffer = NULL;
@@ -172,16 +173,12 @@ class Renderer {
     PipelineLayout* graphicsPipelineLayout = NULL;
     Pipeline* graphicsPipeline = NULL;
 
-    PipelineLayout* guiPipelineLayout = NULL;
-    Pipeline* guiPipeline = NULL;
-
     std::vector<Buffer*> uniformBuffers;
     std::vector<Buffer*> guiUniformBuffers;
     std::vector<Buffer*> constantBuffers;
     std::vector<Buffer*> guiConstantBuffers;
 
     ShaderDescriptorPool* pool = NULL;
-    ShaderDescriptorPool* guiPool = NULL;
 
     std::vector<CommandBuffer*> commandBuffers;
 
@@ -192,7 +189,6 @@ class Renderer {
 
     std::vector<Model*> models;
     std::vector<ImageView*> textures;
-    std::vector<ShaderDescriptorSet*> textureAccessors;
 
     TextHandler* textHandler = NULL;
 
@@ -238,7 +234,6 @@ class Renderer {
     bool hasStencilComponent(VkFormat format);
 
     Image* createTextureImage(const char* path);
-    Image* createSamplerImage(int width, int height);
 
     ImageView* readTexture(const char* path, const char* name);
 

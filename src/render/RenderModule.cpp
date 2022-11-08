@@ -1,11 +1,14 @@
 #include "RenderModule.hpp"
 
-RenderModule::RenderModule(
-    Instance* instance, VkPhysicalDevice* physicalDevice, Device* device,
-    std::string name, uint32_t w, uint32_t h, RenderPass* renderPass,
-    VkDescriptorSetLayoutBinding* bindings, uint32_t nBindings,
-    VkPipelineShaderStageCreateInfo* shaderStages, uint32_t nShaders,
-    VkPushConstantRange* constantRanges, uint32_t nConstantRange) {
+RenderModule::RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
+                           Device* device, std::string name, uint32_t w,
+                           uint32_t h, RenderPass* renderPass,
+                           VkDescriptorSetLayoutBinding* bindings,
+                           uint32_t* nDescriptorSets, uint32_t nBindings,
+                           VkPipelineShaderStageCreateInfo* shaderStages,
+                           uint32_t nShaders,
+                           VkPushConstantRange* constantRanges,
+                           uint32_t nConstantRange) {
     this->descriptorBindings = new VkDescriptorSetLayoutBinding[nBindings];
     for (int i = 0; i < nBindings; i++)
         this->descriptorBindings[i] = bindings[i];
@@ -17,6 +20,7 @@ RenderModule::RenderModule(
     this->nConstantRange = nConstantRange;
     for (int i = 0; i < nConstantRange; i++)
         this->constantRanges[i] = constantRanges[i];
+    this->extent = {w, h};
 
     this->instance = instance;
     this->physicalDevice = *physicalDevice;
@@ -54,7 +58,7 @@ RenderModule::RenderModule(
     commandPool = new CommandPool(device);
     commandBuffer = new CommandBuffer(device, commandPool, false);
     setName(functions, device, name + " command buffer",
-            VK_OBJECT_TYPE_COMMAND_BUFFER, *(renderLayout->getLayout()));
+            VK_OBJECT_TYPE_COMMAND_BUFFER, *(commandBuffer->getBuffer()));
 
     renderLayout = new ShaderDescriptorSetLayout(device, bindings, nBindings);
     setName(functions, device, name + " layout",
@@ -67,27 +71,21 @@ RenderModule::RenderModule(
             *(renderPipelineLayout->getLayout()));
 
     renderPipeline = new Pipeline(device, renderPipelineLayout, renderPass,
-                                  shaderStages, nShaders, VkExtent2D({w, h}));
+                                  shaderStages, nShaders, extent);
     setName(functions, device, name + " pipeline", VK_OBJECT_TYPE_PIPELINE,
             *(renderPipeline->getPipeline()));
 
     VkDescriptorType types[nBindings];
     for (int i = 0; i < nBindings; i++) types[i] = bindings[i].descriptorType;
-    renderDescriptorPool = new ShaderDescriptorPool(device, types, nBindings);
-    renderDescriptor =
-        new ShaderDescriptorSet(device, renderDescriptorPool, renderLayout);
-    setName(functions, device, name + " descriptor",
-            VK_OBJECT_TYPE_DESCRIPTOR_SET, *(renderDescriptor->getSet()));
-    // TODO arbitrary bindings
-    updateDescriptorSet(renderDescriptor, uniformBuffer, 0);
-    updateDescriptorSet(renderDescriptor, renderImageView, sampler, 1);
-    renderPass = new RenderPass(physicalDevice, device, VK_FORMAT_B8G8R8A8_SRGB,
-                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    setName(functions, device, name + " render pass",
-            VK_OBJECT_TYPE_RENDER_PASS, *(renderPass->getPass()));
+    this->descriptorPool =
+        new ShaderDescriptorPool(device, types, nDescriptorSets, nBindings);
+    setName(functions, device, name + " descriptor pool",
+            VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(this->descriptorPool->getPool()));
+    this->renderPass = renderPass;
 }
 
 void RenderModule::setExtent(uint32_t w, uint32_t h) {
+    this->extent = {w, h};
     delete renderImageView;
     delete renderImage;
     delete depthImageView;
@@ -129,10 +127,11 @@ void RenderModule::setExtent(uint32_t w, uint32_t h) {
                                   shaderStages, nShaders, VkExtent2D({w, h}));
     setName(functions, device, name + " pipeline", VK_OBJECT_TYPE_PIPELINE,
             *(renderPipeline->getPipeline()));
-
-    renderDescriptor->resetAccess();
-    updateDescriptorSet(renderDescriptor, uniformBuffer, 0);
-    updateDescriptorSet(renderDescriptor, renderImageView, sampler, 1);
+    std::vector<VkDescriptorType> types;
+    for (int i = 0; i < nDescriptorBindings; i++)
+        types.push_back(descriptorBindings[i].descriptorType);
+    descriptorPool =
+        new ShaderDescriptorPool(device, types.data(), nDescriptorBindings);
 }
 
 void RenderModule::setShaders(VkPipelineShaderStageCreateInfo* shaderStages,
@@ -153,6 +152,58 @@ void RenderModule::setShaders(VkPipelineShaderStageCreateInfo* shaderStages,
             *(renderPipeline->getPipeline()));
 }
 
+void RenderModule::setDescriptorLayouts(VkDescriptorSetLayoutBinding* bindings,
+                                        uint32_t* nDescriptorSets,
+                                        uint32_t nBindings) {
+    this->descriptorBindings = new VkDescriptorSetLayoutBinding[nBindings];
+    for (int i = 0; i < nBindings; i++)
+        this->descriptorBindings[i] = bindings[i];
+    this->nDescriptorBindings = nBindings;
+
+    delete renderLayout;
+    delete renderPipelineLayout;
+    delete renderPipeline;
+    for (ShaderDescriptorSet* descriptor : descriptorSets) delete descriptor;
+    delete descriptorPool;
+
+    DebugFunc functions = getDebugFunctions(instance);
+    renderLayout = new ShaderDescriptorSetLayout(device, bindings, nBindings);
+    setName(functions, device, name + " layout",
+            VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, *(renderLayout->getLayout()));
+
+    renderPipelineLayout = new PipelineLayout(device, renderLayout,
+                                              nConstantRange, constantRanges);
+    setName(functions, device, name + " pipeline layout",
+            VK_OBJECT_TYPE_PIPELINE_LAYOUT,
+            *(renderPipelineLayout->getLayout()));
+
+    renderPipeline = new Pipeline(device, renderPipelineLayout, renderPass,
+                                  shaderStages, nShaders, extent);
+    setName(functions, device, name + " pipeline", VK_OBJECT_TYPE_PIPELINE,
+            *(renderPipeline->getPipeline()));
+
+    VkDescriptorType types[nBindings];
+    for (int i = 0; i < nBindings; i++) types[i] = bindings[i].descriptorType;
+    this->descriptorPool =
+        new ShaderDescriptorPool(device, types, nDescriptorSets, nBindings);
+    setName(functions, device, name + " descriptor pool",
+            VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(this->descriptorPool->getPool()));
+}
+
+void RenderModule::recreateDescriptorPool(VkDescriptorType* types,
+                                          uint32_t* nDescriptorSets,
+                                          uint32_t nTypes) {
+    for (ShaderDescriptorSet* set : descriptorSets) delete set;
+    descriptorSets.clear();
+    delete descriptorPool;
+
+    DebugFunc functions = getDebugFunctions(instance);
+    this->descriptorPool =
+        new ShaderDescriptorPool(device, types, nDescriptorSets, nTypes);
+    setName(functions, device, name + " descriptor pool",
+            VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(this->descriptorPool->getPool()));
+}
+
 RenderModule::~RenderModule() {
     delete[] descriptorBindings;
     delete[] shaderStages;
@@ -161,37 +212,30 @@ RenderModule::~RenderModule() {
     delete renderImage;
     delete depthImageView;
     delete depthImage;
-    delete renderImage;
     delete sampler;
-    delete depthImage;
-    delete depthImageView;
-    delete renderPass;
     delete framebuffer;
     delete renderPipeline;
     delete renderLayout;
-    delete renderDescriptor;
     delete renderPipelineLayout;
-    delete renderDescriptorPool;
+    for (ShaderDescriptorSet* descriptor : descriptorSets) delete descriptor;
+    delete descriptorPool;
+
+    delete commandBuffer;
+    delete commandPool;
 }
 
 void updateDescriptorSet(ShaderDescriptorSet* descriptor, ImageView* texture,
-                         TextureSampler* sampler, int binding) {
+                         TextureSampler* sampler, Buffer* uniformBuffer) {
     VkDescriptorImageInfo* imageInfo = createImageInfo(texture, sampler);
-
-    descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, binding,
-                             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NULL,
-                             imageInfo);
-
-    delete imageInfo;
-}
-
-void updateDescriptorSet(ShaderDescriptorSet* descriptor, Buffer* uniformBuffer,
-                         int binding) {
     VkDescriptorBufferInfo* bufferInfo = createBufferInfo(uniformBuffer);
 
-    descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, binding,
+    descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
+                             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NULL,
+                             imageInfo);
+    descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 0,
                              VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo,
                              NULL);
 
     delete bufferInfo;
+    delete imageInfo;
 }
