@@ -9,6 +9,7 @@ RenderModule::RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
                            uint32_t nShaders,
                            VkPushConstantRange* constantRanges,
                            uint32_t nConstantRange) {
+    this->name = name;
     this->descriptorBindings = new VkDescriptorSetLayoutBinding[nBindings];
     for (int i = 0; i < nBindings; i++)
         this->descriptorBindings[i] = bindings[i];
@@ -82,6 +83,34 @@ RenderModule::RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
     setName(functions, device, name + " descriptor pool",
             VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(this->descriptorPool->getPool()));
     this->renderPass = renderPass;
+}
+
+Pipeline* RenderModule::getPipeline() { return this->renderPipeline; }
+
+ShaderDescriptorSet* RenderModule::getDescriptorSet(ImageView* texture,
+                                                    size_t current) {
+    return descriptorSets[texture][current];
+}
+
+ShaderDescriptorSet* RenderModule::addDescriptorSet(ImageView* img,
+                                                    Buffer* buffer) {
+    DebugFunc functions = getDebugFunctions(instance);
+    ShaderDescriptorSet* descriptor = new ShaderDescriptorSet(
+        device, this->descriptorPool, this->renderLayout);
+    updateDescriptorSet(descriptor, img, sampler, buffer);
+    auto iter = this->descriptorSets.find(img);
+    if (iter == this->descriptorSets.end()) {
+        std::vector<ShaderDescriptorSet*> set = {descriptor};
+        this->descriptorSets.emplace(img, set);
+        setName(functions, device, name + img->getName(),
+                VK_OBJECT_TYPE_DESCRIPTOR_SET, *(descriptor->getSet()));
+    } else {
+        setName(functions, device,
+                name + img->getName() + std::to_string(iter->second.size()),
+                VK_OBJECT_TYPE_DESCRIPTOR_SET, *(descriptor->getSet()));
+        iter->second.push_back(descriptor);
+    }
+    return descriptor;
 }
 
 void RenderModule::setExtent(uint32_t w, uint32_t h) {
@@ -163,7 +192,9 @@ void RenderModule::setDescriptorLayouts(VkDescriptorSetLayoutBinding* bindings,
     delete renderLayout;
     delete renderPipelineLayout;
     delete renderPipeline;
-    for (ShaderDescriptorSet* descriptor : descriptorSets) delete descriptor;
+    for (auto entry : descriptorSets)
+        for (ShaderDescriptorSet* descriptor : entry.second) delete descriptor;
+    descriptorSets.clear();
     delete descriptorPool;
 
     DebugFunc functions = getDebugFunctions(instance);
@@ -193,7 +224,8 @@ void RenderModule::setDescriptorLayouts(VkDescriptorSetLayoutBinding* bindings,
 void RenderModule::recreateDescriptorPool(VkDescriptorType* types,
                                           uint32_t* nDescriptorSets,
                                           uint32_t nTypes) {
-    for (ShaderDescriptorSet* set : descriptorSets) delete set;
+    for (auto entry : descriptorSets)
+        for (ShaderDescriptorSet* descriptor : entry.second) delete descriptor;
     descriptorSets.clear();
     delete descriptorPool;
 
@@ -217,7 +249,8 @@ RenderModule::~RenderModule() {
     delete renderPipeline;
     delete renderLayout;
     delete renderPipelineLayout;
-    for (ShaderDescriptorSet* descriptor : descriptorSets) delete descriptor;
+    for (auto entry : descriptorSets)
+        for (ShaderDescriptorSet* descriptor : entry.second) delete descriptor;
     delete descriptorPool;
 
     delete commandBuffer;
@@ -226,8 +259,8 @@ RenderModule::~RenderModule() {
 
 void updateDescriptorSet(ShaderDescriptorSet* descriptor, ImageView* texture,
                          TextureSampler* sampler, Buffer* uniformBuffer) {
-    VkDescriptorImageInfo* imageInfo = createImageInfo(texture, sampler);
-    VkDescriptorBufferInfo* bufferInfo = createBufferInfo(uniformBuffer);
+    VkDescriptorImageInfo* imageInfo = sampler->createImageInfo(texture);
+    VkDescriptorBufferInfo* bufferInfo = uniformBuffer->createBufferInfo();
 
     descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
                              VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NULL,

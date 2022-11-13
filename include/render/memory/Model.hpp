@@ -1,7 +1,6 @@
 #pragma once
 
 struct Vertex;
-struct UniformBufferObject;
 class Model;
 
 #include <vulkan/vulkan.h>
@@ -32,17 +31,16 @@ struct std::hash<Vertex> {
     size_t operator()(Vertex const& vertex) const;
 };
 
-// TODO this shouldn't be here
-struct UniformBufferObject {
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-};
-
 class Model {
    public:
     Model(const std::vector<Vertex> vdata, const std::vector<uint16_t> idata,
           VkPhysicalDevice* physicalDevice, Device* device);
     Model(const char* obj, VkPhysicalDevice* physicalDevice, Device* device);
+
+    Model(const Model&) = delete;
+    Model& operator=(const Model&) = delete;
+    Model(Model&&);
+    Model& operator=(Model&&);
 
     Buffer* toVertexBuffer();
     Buffer* toIndicesBuffer();

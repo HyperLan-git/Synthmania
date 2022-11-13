@@ -16,6 +16,15 @@ class Buffer {
    public:
     Buffer(VkPhysicalDevice* physicalDevice, Device* device, VkDeviceSize size,
            VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+
+    Buffer(const Buffer& buf) = delete;
+    Buffer& operator=(const Buffer& buf) = delete;
+
+    Buffer(Buffer&& buf);
+    Buffer& operator=(Buffer&& buf);
+
+    VkDescriptorBufferInfo* createBufferInfo();
+
     VkBuffer* getBuffer();
     void copyTo(Buffer* other, Queue* graphicsQueue, CommandPool* commandPool);
     Memory* getMemory();

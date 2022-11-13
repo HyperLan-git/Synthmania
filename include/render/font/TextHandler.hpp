@@ -24,6 +24,9 @@ class TextHandler {
     TextHandler(VkPhysicalDevice* physicalDevice, Device* device,
                 unsigned int textureSize);
 
+    TextHandler(const TextHandler&) = delete;
+    TextHandler& operator=(const TextHandler&) = delete;
+
     Image* loadCharacter(FT_Face face, unsigned long character,
                          CommandPool* commandPool);
 

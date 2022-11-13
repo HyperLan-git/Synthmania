@@ -17,6 +17,20 @@ Memory::Memory(VkPhysicalDevice* physicalDevice, Device* device,
     }
 }
 
+Memory::Memory(Memory&& other) {
+    this->memory = other.memory;
+    this->device = other.device;
+    other.memory = NULL;
+}
+
+Memory& Memory::operator=(Memory&& other) {
+    if (memory) delete memory;
+    this->memory = other.memory;
+    this->device = other.device;
+    other.memory = NULL;
+    return *this;
+}
+
 void Memory::write(const void* data, VkDeviceSize sz, VkDeviceSize offset) {
     void* d;
     vkMapMemory(*(device->getDevice()), *memory, offset, sz, 0, &d);
@@ -34,6 +48,7 @@ void Memory::read(void* data, VkDeviceSize sz, VkDeviceSize offset) {
 VkDeviceMemory* Memory::getMemory() { return memory; }
 
 Memory::~Memory() {
-    vkFreeMemory(*(device->getDevice()), *memory, nullptr);
+    if (!memory) return;
+    vkFreeMemory(*(device->getDevice()), *memory, NULL);
     delete memory;  // I wish I could do that
 }

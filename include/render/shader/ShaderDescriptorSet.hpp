@@ -17,10 +17,6 @@ class ShaderDescriptorSet;
 #include "ShaderDescriptorSetLayout.hpp"
 #include "TextureSampler.hpp"
 
-VkDescriptorBufferInfo* createBufferInfo(Buffer* buffer);
-VkDescriptorImageInfo* createImageInfo(ImageView* view,
-                                       TextureSampler* sampler);
-
 /**
  * @brief The descriptor set is the immutable list of descriptors associated
  * with a single swapchain. It needs to be instantiated before uniforms and

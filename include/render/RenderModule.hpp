@@ -22,6 +22,12 @@ class RenderModule {
                  uint32_t nShaders, VkPushConstantRange* constantRanges,
                  uint32_t nConstantRange);
 
+    Pipeline* getPipeline();
+
+    ShaderDescriptorSet* getDescriptorSet(ImageView* texture, size_t current);
+
+    ShaderDescriptorSet* addDescriptorSet(ImageView* img, Buffer* buffer);
+
     void setExtent(uint32_t w, uint32_t h);
     void setShaders(VkPipelineShaderStageCreateInfo* shaderStages,
                     uint32_t nShaders);
@@ -35,7 +41,7 @@ class RenderModule {
 
     ~RenderModule();
 
-    // private:
+   private:
     Instance* instance = NULL;
     VkPhysicalDevice physicalDevice = NULL;
     Device* device = NULL;
@@ -50,7 +56,7 @@ class RenderModule {
     PipelineLayout* renderPipelineLayout = NULL;
     ShaderDescriptorSetLayout* renderLayout = NULL;
     ShaderDescriptorPool* descriptorPool = NULL;
-    std::vector<ShaderDescriptorSet*> descriptorSets;
+    std::map<ImageView*, std::vector<ShaderDescriptorSet*>> descriptorSets;
     std::vector<Buffer*> guiUniformBuffers;
     std::vector<Buffer*> guiConstantBuffers;
     TextureSampler* sampler = NULL;

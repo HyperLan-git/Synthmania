@@ -1,25 +1,5 @@
 #include "ShaderDescriptorSet.hpp"
 
-// TODO put that in buffer class
-VkDescriptorBufferInfo *createBufferInfo(Buffer *buffer) {
-    VkDescriptorBufferInfo *bufferInfo = new VkDescriptorBufferInfo();
-
-    bufferInfo->buffer = *(buffer->getBuffer());
-    bufferInfo->offset = 0;
-    bufferInfo->range = buffer->getSize();
-    return bufferInfo;
-}
-
-// TODO put that in sampler class
-VkDescriptorImageInfo *createImageInfo(ImageView *view,
-                                       TextureSampler *sampler) {
-    VkDescriptorImageInfo *imageInfo = new VkDescriptorImageInfo();
-    imageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo->imageView = *(view->getView());
-    imageInfo->sampler = *(sampler->getSampler());
-    return imageInfo;
-}
-
 ShaderDescriptorSet::ShaderDescriptorSet(Device *device,
                                          ShaderDescriptorPool *pool,
                                          ShaderDescriptorSetLayout *layout) {

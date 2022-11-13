@@ -68,6 +68,11 @@ class Renderer;
 #include "Utils.hpp"
 #include "Window.hpp"
 
+struct UniformBufferObject {
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
+};
+
 // Font texture sizes
 const unsigned long FONT_SIZE = 128;
 
@@ -156,6 +161,7 @@ class Renderer {
     RenderPass* renderPass = NULL;
 
     RenderModule* guiModule = NULL;
+    RenderModule* objModule = NULL;
 
     Semaphore* imageAvailableSemaphore = NULL;
 

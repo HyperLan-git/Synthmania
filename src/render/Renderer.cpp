@@ -178,7 +178,8 @@ void Renderer::loadTextures(std::map<std::string, std::string> textures) {
     pool = new ShaderDescriptorPool(device, tp, type_sz);
     setName(getDebugFunctions(instance), device, "mainDescriptorPool",
             VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(pool->getPool()));
-    uint32_t sz = textures.size();
+    uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
+    if (sz == 0) sz = 1;
     uint32_t i[] = {sz, sz};
     VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
@@ -360,29 +361,30 @@ void Renderer::createGraphicsPipeline() {
     auto geomShaderCode = readFile("bin/def.geom.spv");
     auto fragShaderCode = readFile("bin/def.frag.spv");
 
-    Shader* vertShader =
-        new Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
-    Shader* geomShader = new Shader("main", device, geomShaderCode,
-                                    VK_SHADER_STAGE_GEOMETRY_BIT);
-    Shader* fragShader = new Shader("main", device, fragShaderCode,
-                                    VK_SHADER_STAGE_FRAGMENT_BIT);
+    Shader vertShader =
+        Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
+    Shader geomShader =
+        Shader("main", device, geomShaderCode, VK_SHADER_STAGE_GEOMETRY_BIT);
+    Shader fragShader =
+        Shader("main", device, fragShaderCode, VK_SHADER_STAGE_FRAGMENT_BIT);
     DebugFunc functions = getDebugFunctions(instance);
     setName(functions, device, "3D vertex shader", VK_OBJECT_TYPE_SHADER_MODULE,
-            *(vertShader->getModule()));
+            *(vertShader.getModule()));
     setName(functions, device, "3D geometry shader",
-            VK_OBJECT_TYPE_SHADER_MODULE, *(geomShader->getModule()));
+            VK_OBJECT_TYPE_SHADER_MODULE, *(geomShader.getModule()));
     setName(functions, device, "3D fragment shader",
-            VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader->getModule()));
-    VkPushConstantRange* range = new VkPushConstantRange();
-    range->size = sizeof(EntityData);
-    range->offset = 0;
-    range->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+            VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader.getModule()));
+    VkPushConstantRange range;
+    range.size = sizeof(EntityData);
+    range.offset = 0;
+    range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
-                                                      geomShader->toPipeline(),
-                                                      fragShader->toPipeline()};
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader.toPipeline(),
+                                                      geomShader.toPipeline(),
+                                                      fragShader.toPipeline()};
 
-    graphicsPipelineLayout = new PipelineLayout(device, shaderLayout, 1, range);
+    graphicsPipelineLayout =
+        new PipelineLayout(device, shaderLayout, 1, &range);
     setName(functions, device, "3D pipeline layout",
             VK_OBJECT_TYPE_PIPELINE_LAYOUT,
             *(graphicsPipelineLayout->getLayout()));
@@ -392,10 +394,6 @@ void Renderer::createGraphicsPipeline() {
                      shaderStages, 3, swapchain->getExtent());
     setName(functions, device, "3D pipeline", VK_OBJECT_TYPE_PIPELINE,
             *(graphicsPipeline->getPipeline()));
-    delete range;
-    delete vertShader;
-    delete geomShader;
-    delete fragShader;
 }
 
 void Renderer::createGuiPipeline() {
@@ -416,28 +414,28 @@ void Renderer::createGuiPipeline() {
     auto geomShaderCode = readFile(guiGeomShader);
     auto fragShaderCode = readFile(guiFragShader);
 
-    Shader* vertShader =
-        new Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
-    Shader* geomShader = new Shader("main", device, geomShaderCode,
-                                    VK_SHADER_STAGE_GEOMETRY_BIT);
-    Shader* fragShader = new Shader("main", device, fragShaderCode,
-                                    VK_SHADER_STAGE_FRAGMENT_BIT);
+    Shader vertShader =
+        Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
+    Shader geomShader =
+        Shader("main", device, geomShaderCode, VK_SHADER_STAGE_GEOMETRY_BIT);
+    Shader fragShader =
+        Shader("main", device, fragShaderCode, VK_SHADER_STAGE_FRAGMENT_BIT);
 
     DebugFunc functions = getDebugFunctions(instance);
     setName(functions, device, "2D vertex shader", VK_OBJECT_TYPE_SHADER_MODULE,
-            *(vertShader->getModule()));
+            *(vertShader.getModule()));
     setName(functions, device, "2D geom shader", VK_OBJECT_TYPE_SHADER_MODULE,
-            *(geomShader->getModule()));
+            *(geomShader.getModule()));
     setName(functions, device, "2D fragment shader",
-            VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader->getModule()));
-    VkPushConstantRange* range = new VkPushConstantRange();
-    range->offset = 0;
-    range->size = sizeof(GuiData);
-    range->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+            VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader.getModule()));
+    VkPushConstantRange range;
+    range.offset = 0;
+    range.size = sizeof(GuiData);
+    range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
-                                                      geomShader->toPipeline(),
-                                                      fragShader->toPipeline()};
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader.toPipeline(),
+                                                      geomShader.toPipeline(),
+                                                      fragShader.toPipeline()};
 
     uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
     if (sz == 0) sz = 1;
@@ -445,12 +443,7 @@ void Renderer::createGuiPipeline() {
     guiModule = new RenderModule(
         instance, &physicalDevice, device, "2D", swapchain->getExtent().width,
         swapchain->getExtent().height, renderPass, bindings, nDescriptorSets, 2,
-        shaderStages, 3, range, 1);
-
-    delete range;
-    delete vertShader;
-    delete geomShader;
-    delete fragShader;
+        shaderStages, 3, &range, 1);
 }
 
 void Renderer::createMainPipeline() {
@@ -475,22 +468,22 @@ void Renderer::createMainPipeline() {
     auto geomShaderCode = readFile(finalGeomShader);
     auto fragShaderCode = readFile(finalFragShader);
 
-    Shader* vertShader =
-        new Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
-    Shader* geomShader = new Shader("main", device, geomShaderCode,
-                                    VK_SHADER_STAGE_GEOMETRY_BIT);
-    Shader* fragShader = new Shader("main", device, fragShaderCode,
-                                    VK_SHADER_STAGE_FRAGMENT_BIT);
+    Shader vertShader =
+        Shader("main", device, vertShaderCode, VK_SHADER_STAGE_VERTEX_BIT);
+    Shader geomShader =
+        Shader("main", device, geomShaderCode, VK_SHADER_STAGE_GEOMETRY_BIT);
+    Shader fragShader =
+        Shader("main", device, fragShaderCode, VK_SHADER_STAGE_FRAGMENT_BIT);
     setName(functions, device, "Pass vertex shader",
-            VK_OBJECT_TYPE_SHADER_MODULE, *(vertShader->getModule()));
+            VK_OBJECT_TYPE_SHADER_MODULE, *(vertShader.getModule()));
     setName(functions, device, "Pass geometry shader",
-            VK_OBJECT_TYPE_SHADER_MODULE, *(geomShader->getModule()));
+            VK_OBJECT_TYPE_SHADER_MODULE, *(geomShader.getModule()));
     setName(functions, device, "Pass fragment shader",
-            VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader->getModule()));
+            VK_OBJECT_TYPE_SHADER_MODULE, *(fragShader.getModule()));
 
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader->toPipeline(),
-                                                      geomShader->toPipeline(),
-                                                      fragShader->toPipeline()};
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShader.toPipeline(),
+                                                      geomShader.toPipeline(),
+                                                      fragShader.toPipeline()};
 
     renderPipelineLayout = new PipelineLayout(device, renderLayout, 0, NULL);
     setName(functions, device, "Pass pipeline layout",
@@ -511,9 +504,6 @@ void Renderer::createMainPipeline() {
                      shaderStages, 3, VkExtent2D({w, h}));
     setName(functions, device, "Pass pipeline", VK_OBJECT_TYPE_PIPELINE,
             *(renderPipeline->getPipeline()));
-    delete vertShader;
-    delete geomShader;
-    delete fragShader;
 }
 
 void Renderer::createLogicalDevice() {
@@ -723,9 +713,9 @@ void Renderer::createUniformBuffers() {
 void Renderer::updateDescriptorSet(ShaderDescriptorSet* descriptor,
                                    ImageView* texture, TextureSampler* sampler,
                                    Buffer* uniformBuffer) {
-    VkDescriptorBufferInfo* bufferInfo = createBufferInfo(uniformBuffer);
+    VkDescriptorBufferInfo* bufferInfo = uniformBuffer->createBufferInfo();
 
-    VkDescriptorImageInfo* imageInfo = createImageInfo(texture, sampler);
+    VkDescriptorImageInfo* imageInfo = sampler->createImageInfo(texture);
 
     descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 0,
                              VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo,
@@ -751,17 +741,10 @@ void Renderer::createDescriptorSets() {
                     VK_OBJECT_TYPE_DESCRIPTOR_SET,
                     *(descriptorSets[i]->getSet()));
 
-            // TODO the
-            guiModule->descriptorSets.push_back(new ShaderDescriptorSet(
-                device, guiModule->descriptorPool, guiModule->renderLayout));
-            setName(functions, device, name + "Gui_" + std::to_string(i),
-                    VK_OBJECT_TYPE_DESCRIPTOR_SET,
-                    *(guiModule->descriptorSets[i]->getSet()));
-
             updateDescriptorSet(descriptorSets[j + i], img, textureSampler,
                                 uniformBuffers[i]);
-            updateDescriptorSet(guiModule->descriptorSets[j + i], img,
-                                guiModule->sampler, guiUniformBuffers[i]);
+
+            guiModule->addDescriptorSet(img, guiUniformBuffers[i]);
         }
         j += MAX_FRAMES_IN_FLIGHT;
     }
@@ -781,14 +764,10 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     if (!fShader.empty()) this->guiFragShader = fShader;
 
     device->wait();
-    for (int i = 0; i < guiModule->descriptorSets.size(); i++)
-        delete guiModule->descriptorSets[i];
-    guiModule->descriptorSets.clear();
     for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
     descriptorSets.clear();
     delete renderDescriptor;
     delete pool;
-    delete guiModule->descriptorPool;
     delete renderDescriptorPool;
     // TODO use vkResetDescriptorPool and other pools aswell
     for (size_t i = 0; i < uniformBuffers.size(); i++) {
@@ -815,9 +794,12 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     // TODO This is so fucking stupid I'm just going to prepare in advance a
     // big pool and then scale it up when needed
     pool = new ShaderDescriptorPool(device, tp, type_sz);
-    guiModule->descriptorPool = new ShaderDescriptorPool(device, tp, type_sz);
+    uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
+    if (sz == 0) sz = 1;
+    uint32_t i[] = {sz, sz};
     VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
+    guiModule->recreateDescriptorPool(type, i, 2);
     renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
     createDescriptorSets();
 
@@ -832,14 +814,10 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
     if (!fShader.empty()) this->finalFragShader = fShader;
 
     device->wait();
-    for (int i = 0; i < guiModule->descriptorSets.size(); i++)
-        delete guiModule->descriptorSets[i];
-    guiModule->descriptorSets.clear();
     for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
     descriptorSets.clear();
     delete renderDescriptor;
     delete pool;
-    delete guiModule->descriptorPool;
     delete renderDescriptorPool;
 
     delete uniformBuffer;
@@ -853,9 +831,12 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
     VkDescriptorType* tp = types.data();
 
     pool = new ShaderDescriptorPool(device, tp, type_sz);
-    guiModule->descriptorPool = new ShaderDescriptorPool(device, tp, type_sz);
+    uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
+    if (sz == 0) sz = 1;
+    uint32_t i[] = {sz, sz};
     VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
+    guiModule->recreateDescriptorPool(type, i, 2);
     renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
 
     uniformBuffer = new Buffer(&physicalDevice, device, finalUBOSize,
@@ -913,7 +894,7 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
         }
     }
 
-    commandBuffer->bindPipeline(guiModule->renderPipeline);
+    commandBuffer->bindPipeline(guiModule->getPipeline());
 
     guiModel->toVertexBuffer()->copyTo(vertexBuffer, device->getQueue("main"),
                                        commandPool);
@@ -930,21 +911,11 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
             continue;
         ImageView* texture = g->getTexture();
         if (texture == NULL) texture = getTextureByName(textures, "missing");
-        if (lastTexture != texture) {
-            size_t idx = 0;
-            // TODO I should have a map instead or store texture index somewhere
-            for (idx = 0; idx < textures.size(); idx++)
-                if (textures[idx] == texture) break;
-            if (idx >= textures.size()) {
-                std::string err = "Texture ";
-                err.append(texture->getName());
-                err.append(" not found !");
-                throw std::runtime_error(err);
-            }
+        if (lastTexture != texture)
             commandBuffer->bindDescriptorSet(
-                guiModule->renderPipeline,
-                guiModule->descriptorSets[idx * 2 + currentFrame]);
-        }
+                guiModule->getPipeline(),
+                guiModule->getDescriptorSet(texture, currentFrame));
+
         drawGui(g, commandBuffer);
         lastTexture = texture;
     }
@@ -1001,7 +972,7 @@ void Renderer::drawGui(Gui* gui, CommandBuffer* commandBuffer) {
     Model* model = guiModel;
 
     ShaderData* data = gui->getShaderData();
-    commandBuffer->pushConstants(guiModule->renderPipeline,
+    commandBuffer->pushConstants(guiModule->getPipeline(),
                                  VK_SHADER_STAGE_VERTEX_BIT, 0, data->data,
                                  data->size);
 

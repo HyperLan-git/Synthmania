@@ -12,6 +12,11 @@ class Memory {
            VkMemoryRequirements memRequirements,
            VkMemoryPropertyFlags properties);
 
+    Memory(const Memory& other) = delete;
+    Memory& operator=(const Memory& other) = delete;
+    Memory(Memory&& other);
+    Memory& operator=(Memory&& other);
+
     VkDeviceMemory* getMemory();
     void write(const void* data, VkDeviceSize sz, VkDeviceSize offset);
     void read(void* data, VkDeviceSize sz, VkDeviceSize offset);

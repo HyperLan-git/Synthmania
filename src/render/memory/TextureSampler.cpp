@@ -28,6 +28,14 @@ TextureSampler::TextureSampler(VkPhysicalDevice* physicalDevice,
     }
 }
 
+VkDescriptorImageInfo* TextureSampler::createImageInfo(ImageView* view) {
+    VkDescriptorImageInfo* imageInfo = new VkDescriptorImageInfo();
+    imageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo->imageView = *(view->getView());
+    imageInfo->sampler = *sampler;
+    return imageInfo;
+}
+
 VkSampler* TextureSampler::getSampler() { return sampler; }
 
 TextureSampler::~TextureSampler() {

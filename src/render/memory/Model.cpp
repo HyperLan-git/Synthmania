@@ -62,9 +62,9 @@ Model::Model(const char* obj, VkPhysicalDevice* physicalDevice,
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, obj)) {
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, obj))
         throw std::runtime_error(warn + err);
-    }
+
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
     for (const auto& shape : shapes) {
@@ -89,6 +89,27 @@ Model::Model(const char* obj, VkPhysicalDevice* physicalDevice,
     }
     createVertexBuffer(physicalDevice, device);
     createIndexBuffer(physicalDevice, device);
+}
+
+Model::Model(Model&& other) {
+    this->idata = std::vector<uint16_t>(other.idata.begin(), other.idata.end());
+    this->vdata = std::vector<Vertex>(other.vdata.begin(), other.vdata.end());
+    this->indexBuffer = other.indexBuffer;
+    this->vertexBuffer = other.vertexBuffer;
+    other.indexBuffer = NULL;
+    other.vertexBuffer = NULL;
+}
+
+Model& Model::operator=(Model&& other) {
+    if (indexBuffer) delete indexBuffer;
+    if (vertexBuffer) delete vertexBuffer;
+    this->idata = std::vector<uint16_t>(other.idata.begin(), other.idata.end());
+    this->vdata = std::vector<Vertex>(other.vdata.begin(), other.vdata.end());
+    this->indexBuffer = other.indexBuffer;
+    this->vertexBuffer = other.vertexBuffer;
+    other.indexBuffer = NULL;
+    other.vertexBuffer = NULL;
+    return *this;
 }
 
 Buffer* Model::toVertexBuffer() { return vertexBuffer; }
@@ -131,11 +152,11 @@ void Model::createIndexBuffer(VkPhysicalDevice* physicalDevice,
                   *(indexBuffer->getMemory()->getMemory()));
 }
 
-std::vector<struct Vertex> Model::getVertexes() { return vdata; }
+std::vector<Vertex> Model::getVertexes() { return vdata; }
 
 std::vector<uint16_t> Model::getIndexes() { return idata; }
 
 Model::~Model() {
-    delete vertexBuffer;
-    delete indexBuffer;
+    if (vertexBuffer) delete vertexBuffer;
+    if (indexBuffer) delete indexBuffer;
 }
