@@ -540,7 +540,7 @@ void Synthmania::update() {
                         break;
                     }
                 }
-                if (!got_one) {
+                if (!drum && !got_one) {
                     for (Note *note : notes) {
                         if (note->getStatus() == WAITING &&
                             std::abs(note->getTime() - time_from_start) <

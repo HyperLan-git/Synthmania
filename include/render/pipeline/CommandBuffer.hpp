@@ -22,13 +22,18 @@ class CommandBuffer;
 
 class CommandBuffer {
    public:
-    CommandBuffer(Device *device, CommandPool *commandPool, bool singleTime);
+    CommandBuffer(Device *device, CommandPool *commandPool, bool singleTime,
+                  bool secondary = false);
 
     void begin();
     void reset();
     void end();
 
     VkCommandBuffer *getBuffer();
+
+    void setViewport(float width, float height);
+
+    void setScissor(VkExtent2D extent);
 
     void setImageLayout(Image *image, VkImageLayout oldLayout,
                         VkImageLayout newLayout);
@@ -67,11 +72,13 @@ class CommandBuffer {
                               uint64_t workGroups = 1,
                               uint64_t workLegions = 1);
 
+    void executeCommandBuffer(CommandBuffer *secondary);
+
     ~CommandBuffer();
 
    private:
     VkCommandBuffer *buffer;
     Device *device;
     CommandPool *pool;
-    bool singleTime;
+    bool singleTime, secondary;
 };

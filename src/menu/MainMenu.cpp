@@ -147,10 +147,12 @@ void MainMenu::onPressed(Button* b) {
         if (b->getName() == "start") {
             s->resetScene();
             s->loadMenu("song select");
-            s->setTimeMicros(-s->getChart().offset);
         } else if (b->getName() == "options") {
             s->resetScene();
             s->loadMenu("options");
+        } else if (b->getName() == "extra") {
+            if (std::system("open https://github.com/HyperLan-git/Synthmania"))
+                ;  // TODO Idk show text with error or popup idec
         }
     }
 }

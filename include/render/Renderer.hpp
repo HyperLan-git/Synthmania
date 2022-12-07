@@ -167,17 +167,12 @@ class Renderer {
 
     ShaderDescriptorSetLayout* shaderLayout = NULL;
 
-    std::vector<ShaderDescriptorSet*> descriptorSets;
-
     CommandPool* commandPool = NULL;
 
     TextureSampler* textureSampler = NULL;
 
     Buffer* vertexBuffer = NULL;
     Buffer* indexBuffer = NULL;
-
-    PipelineLayout* graphicsPipelineLayout = NULL;
-    Pipeline* graphicsPipeline = NULL;
 
     std::vector<Buffer*> uniformBuffers;
     std::vector<Buffer*> guiUniformBuffers;
@@ -259,6 +254,7 @@ class Renderer {
                       VkImageLayout dstImageLayout, VkFilter filter);
 
    private:
+    void resizeFramebuffer();
     void copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
                            uint32_t height);
     void copyImage(Image* src, VkImageLayout srcLayout, Image* dst,
