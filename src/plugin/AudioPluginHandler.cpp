@@ -69,8 +69,9 @@ int synthThread(void* arg) {
         AudioHandler* handler = params->handler;
         short buf[params->bufferSize] = {0};
         int sampleRate = handler->getSampleRate();
-        AudioBuffer* buffers = new AudioBuffer[params->buffers];
-        AudioSource* source = new AudioSource(false);
+        AudioBuffer* buffers =
+            new (params->buffers) AudioBuffer[params->buffers];
+        AudioSource* source = new AudioSource();
         for (int i = 0; i < params->buffers; i++) {
             const float** channels = host->update();
             for (int j = 0; j < params->bufferSize; j++)
@@ -83,7 +84,7 @@ int synthThread(void* arg) {
         if ((err = alGetError()) != AL_NO_ERROR)
             std::cerr << "OpenAL error when queuing buffers:" << err
                       << std::endl;
-        handler->addSource(source);
+        // handler->addSource(source);
         source->play();
         if ((err = alGetError()) != AL_NO_ERROR)
             std::cerr << "OpenAL error when playing source:" << err
@@ -127,6 +128,7 @@ int synthThread(void* arg) {
         }
         for (int i = 0; i < params->buffers; i++) buffers[i].setBuffer(0);
         delete[] buffers;
+        delete source;
         delete params;
     } catch (std::exception e) {
         std::cerr << e.what() << std::endl;

@@ -181,46 +181,6 @@ void RenderModule::setShaders(VkPipelineShaderStageCreateInfo* shaderStages,
             *(renderPipeline->getPipeline()));
 }
 
-void RenderModule::setDescriptorLayouts(VkDescriptorSetLayoutBinding* bindings,
-                                        uint32_t* nDescriptorSets,
-                                        uint32_t nBindings) {
-    this->descriptorBindings = new VkDescriptorSetLayoutBinding[nBindings];
-    for (int i = 0; i < nBindings; i++)
-        this->descriptorBindings[i] = bindings[i];
-    this->nDescriptorBindings = nBindings;
-
-    delete renderLayout;
-    delete renderPipelineLayout;
-    delete renderPipeline;
-    for (auto entry : descriptorSets)
-        for (ShaderDescriptorSet* descriptor : entry.second) delete descriptor;
-    descriptorSets.clear();
-    delete descriptorPool;
-
-    DebugFunc functions = getDebugFunctions(instance);
-    renderLayout = new ShaderDescriptorSetLayout(device, bindings, nBindings);
-    setName(functions, device, name + " layout",
-            VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, *(renderLayout->getLayout()));
-
-    renderPipelineLayout = new PipelineLayout(device, renderLayout,
-                                              nConstantRange, constantRanges);
-    setName(functions, device, name + " pipeline layout",
-            VK_OBJECT_TYPE_PIPELINE_LAYOUT,
-            *(renderPipelineLayout->getLayout()));
-
-    renderPipeline = new Pipeline(device, renderPipelineLayout, renderPass,
-                                  shaderStages, nShaders, extent);
-    setName(functions, device, name + " pipeline", VK_OBJECT_TYPE_PIPELINE,
-            *(renderPipeline->getPipeline()));
-
-    VkDescriptorType types[nBindings];
-    for (int i = 0; i < nBindings; i++) types[i] = bindings[i].descriptorType;
-    this->descriptorPool =
-        new ShaderDescriptorPool(device, types, nDescriptorSets, nBindings);
-    setName(functions, device, name + " descriptor pool",
-            VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(this->descriptorPool->getPool()));
-}
-
 void RenderModule::recreateDescriptorPool(VkDescriptorType* types,
                                           uint32_t* nDescriptorSets,
                                           uint32_t nTypes) {

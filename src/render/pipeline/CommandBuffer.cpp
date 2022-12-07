@@ -1,22 +1,23 @@
 #include "CommandBuffer.hpp"
 
 CommandBuffer::CommandBuffer(Device *device, CommandPool *commandPool,
-                             bool singleTime) {
+                             bool singleTime, bool secondary) {
     this->device = device;
     this->pool = commandPool;
     this->buffer = new VkCommandBuffer();
     this->singleTime = singleTime;
+    this->secondary = secondary;
 
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = *(commandPool->getPool());
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.level = secondary ? VK_COMMAND_BUFFER_LEVEL_SECONDARY
+                                : VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = 1;
 
     if (vkAllocateCommandBuffers(*(device->getDevice()), &allocInfo, buffer) !=
-        VK_SUCCESS) {
+        VK_SUCCESS)
         throw std::runtime_error("failed to allocate command buffers!");
-    }
 }
 
 void CommandBuffer::begin() {
@@ -30,10 +31,27 @@ void CommandBuffer::begin() {
 
 VkCommandBuffer *CommandBuffer::getBuffer() { return buffer; }
 
+void CommandBuffer::setViewport(float width, float height) {
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = width;
+    viewport.height = height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(*buffer, 0, 1, &viewport);
+}
+
+void CommandBuffer::setScissor(VkExtent2D extent) {
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = extent;
+    vkCmdSetScissor(*buffer, 0, 1, &scissor);
+}
+
 void CommandBuffer::end() {
-    if (vkEndCommandBuffer(*buffer) != VK_SUCCESS) {
+    if (vkEndCommandBuffer(*buffer) != VK_SUCCESS)
         throw std::runtime_error("failed to record command buffer!");
-    }
 }
 
 void CommandBuffer::reset() { vkResetCommandBuffer(*buffer, 0); }
@@ -262,6 +280,12 @@ void CommandBuffer::executeComputeShader(ComputeShader *shader,
                                          uint64_t workers, uint64_t workGroups,
                                          uint64_t workLegions) {
     vkCmdDispatch(*buffer, workers, workGroups, workLegions);
+}
+
+void CommandBuffer::executeCommandBuffer(CommandBuffer *secondary) {
+    if (!secondary->secondary)
+        throw std::invalid_argument("Command buffer must be secondary !");
+    vkCmdExecuteCommands(*(buffer), 1, secondary->getBuffer());
 }
 
 CommandBuffer::~CommandBuffer() {

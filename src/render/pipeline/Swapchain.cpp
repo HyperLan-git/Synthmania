@@ -53,8 +53,9 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
     createInfo.clipped = VK_TRUE;
     // Keep the choosing of the extent close to createSwapchain
     swapchainSupport = querySwapchainSupport(*physicalDevice, *surface);
-    this->extent = chooseSwapExtent(swapchainSupport.capabilities, window);
-    createInfo.imageExtent = extent;
+    createInfo.imageExtent =
+        chooseSwapExtent(swapchainSupport.capabilities, window);
+    this->extent = createInfo.imageExtent;
 
     if (vkCreateSwapchainKHR(*(device->getDevice()), &createInfo, nullptr,
                              swapchain) != VK_SUCCESS) {

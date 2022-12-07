@@ -102,19 +102,19 @@ test: Synthmania
 	./bin/Synthmania
 
 midi:
-	g++ $(CFLAGS) -o bin/MidiTest $(MIDISRC) $(LDFLAGS)
+	g++ $(CFLAGS) -o bin/MidiTest $(MIDISRC) $(LDFLAGS) $(DEBUG)
 
 audio:
-	g++ $(CFLAGS) -o bin/AudioTest $(AUDIOSRC) $(LDFLAGS)
+	g++ $(CFLAGS) -o bin/AudioTest $(AUDIOSRC) $(LDFLAGS) $(DEBUG)
 
 json:
-	g++ $(CFLAGS) -o bin/JsonTest $(JSONSRC) $(LDFLAGS)
+	g++ $(CFLAGS) -o bin/JsonTest $(JSONSRC) $(LDFLAGS) $(DEBUG)
 
 graphics:
-	g++ $(CFLAGS) -o bin/GraphicsTest $(GSRC) $(LDFLAGS)
+	g++ $(CFLAGS) -o bin/GraphicsTest $(GSRC) $(LDFLAGS) $(DEBUG)
 
 vst: $(VSTLIB)
-	g++ $(CFLAGS) -o bin/VstTest $(VSTSRC) $(VSTOBJ) $(VSTLIB) $(VSTFLAGS) $(LDFLAGS) -DNDEBUG
+	g++ $(CFLAGS) -o bin/VstTest $(VSTS-DNDEBUGRC) $(VSTOBJ) $(VSTLIB) $(VSTFLAGS) $(LDFLAGS) $(DEBUG)
 
 bin/%.spv: shader/%
 	glslc $< -o $@

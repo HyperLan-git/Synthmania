@@ -9,8 +9,6 @@ AudioBuffer::AudioBuffer() {
         std::cerr << "OpenAL error when creating buffer:" << err << std::endl;
 }
 
-AudioBuffer::AudioBuffer(ALuint id) { this->bufferID = id; }
-
 AudioBuffer::AudioBuffer(std::string file) {
     bufferID = alutCreateBufferFromFile(file.c_str());
     if (bufferID == AL_NONE)
@@ -24,6 +22,30 @@ void AudioBuffer::write(ALenum format, const ALvoid* data, ALsizei size,
     int err;
     if ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error when writing buffer:" << err << std::endl;
+}
+
+void* AudioBuffer::operator new[](size_t sz, size_t elems) noexcept {
+    if (elems == sz) sz++;
+    void* ptr = ::operator new[](sz);
+    ALuint* p = (ALuint*)ptr;
+    alGenBuffers(elems, p);
+    p[elems] = 0;
+    int err;
+    if ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when creating buffers:" << err << std::endl;
+    return ptr;
+}
+
+void AudioBuffer::operator delete[](void* ptr) noexcept {
+    size_t sz = 0;
+    for (ALuint* p = (ALuint*)ptr; *p != 0; p++) sz++;
+    std::cout << "dels:" << *((ALuint*)ptr)
+              << (alIsBuffer(*((ALuint*)ptr)) ? 't' : 'f') << std::endl;
+    alDeleteBuffers(sz, (ALuint*)ptr);
+    int err;
+    if ((err = alGetError()) != AL_NO_ERROR)
+        std::cerr << "OpenAL error when deleting buffers:" << err << std::endl;
+    ::operator delete[](ptr);
 }
 
 ALuint AudioBuffer::getBuffer() { return bufferID; }
@@ -43,9 +65,12 @@ ALint AudioBuffer::getBufferi(ALenum param) {
 }
 
 void AudioBuffer::setBuffer(ALuint id) {
+    /*std::cout << "set:" << bufferID << (alIsBuffer(bufferID) ? 't' : 'f')
+              << std::endl;
+    if (bufferID != 0) alDeleteBuffers(1, &bufferID);
     int err;
     if ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error when deleting buffer:" << err << std::endl;
+        std::cerr << "OpenAL error when deleting buffer:" << err << std::endl;*/
     bufferID = id;
 }
 
@@ -55,7 +80,7 @@ AudioBuffer::~AudioBuffer() {
     if ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error when deleting buffer:" << err << std::endl;
 }
-/*
+/* TODO will be useful for visualizer probably idk
 #include <complex>
 #include <iostream>
 #include <valarray>

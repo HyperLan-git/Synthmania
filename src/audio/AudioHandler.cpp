@@ -36,8 +36,6 @@ AudioHandler::AudioHandler(const ALCchar* device) {
         std::cerr << "OpenAL error when creating:" << err << std::endl;
 }
 
-AudioHandler::AudioHandler() : AudioHandler(NULL) {}
-
 void AudioHandler::addSound(std::string name, AudioBuffer* sound) {
     auto iter = sounds.find(name);
     if (iter != sounds.end()) {
@@ -124,7 +122,7 @@ AudioHandler::~AudioHandler() {
         delete (*iter).second;
     alutExit();
     ALCcontext* context = alcGetCurrentContext();
+    alcCloseDevice(device);
     alcMakeContextCurrent(NULL);
     alcDestroyContext(context);
-    alcCloseDevice(device);
 }

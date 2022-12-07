@@ -225,17 +225,12 @@ Renderer::~Renderer() {
     delete sampler;
     delete renderLayout;
 
-    delete graphicsPipelineLayout;
-    delete graphicsPipeline;
-
     for (size_t i = 0; i < uniformBuffers.size(); i++) {
         delete constantBuffers[i];
         delete uniformBuffers[i];
         delete guiConstantBuffers[i];
         delete guiUniformBuffers[i];
     }
-
-    for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
 
     delete pool;
     delete renderDescriptorPool;
@@ -244,6 +239,7 @@ Renderer::~Renderer() {
 
     delete shaderLayout;
 
+    delete objModule;
     delete guiModule;
 
     delete indexBuffer;
@@ -292,13 +288,9 @@ void Renderer::recreateSwapchain() {
     delete renderPipelineLayout;
     delete renderDescriptorPool;
 
-    delete graphicsPipeline;
-    delete graphicsPipelineLayout;
-
     delete shaderLayout;
+    delete objModule;
     delete guiModule;
-    for (auto d : descriptorSets) delete d;
-    descriptorSets.clear();
 
     createSwapchain();
 
@@ -385,17 +377,13 @@ void Renderer::createGraphicsPipeline() {
                                                       geomShader.toPipeline(),
                                                       fragShader.toPipeline()};
 
-    graphicsPipelineLayout =
-        new PipelineLayout(device, shaderLayout, 1, &range);
-    setName(functions, device, "3D pipeline layout",
-            VK_OBJECT_TYPE_PIPELINE_LAYOUT,
-            *(graphicsPipelineLayout->getLayout()));
-
-    graphicsPipeline =
-        new Pipeline(device, graphicsPipelineLayout, swapchain->getRenderPass(),
-                     shaderStages, 3, swapchain->getExtent());
-    setName(functions, device, "3D pipeline", VK_OBJECT_TYPE_PIPELINE,
-            *(graphicsPipeline->getPipeline()));
+    uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
+    if (sz == 0) sz = 1;
+    uint32_t nDescriptorSets[] = {sz, sz};
+    objModule = new RenderModule(
+        instance, &physicalDevice, device, "3D", swapchain->getExtent().width,
+        swapchain->getExtent().height, renderPass, bindings, nDescriptorSets, 2,
+        shaderStages, 3, &range, 1);
 }
 
 void Renderer::createGuiPipeline() {
@@ -736,16 +724,7 @@ void Renderer::createDescriptorSets() {
     DebugFunc functions = getDebugFunctions(instance);
     for (ImageView* img : textures) {
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            descriptorSets.push_back(
-                new ShaderDescriptorSet(device, pool, shaderLayout));
-            std::string name = "descriptor_";
-            setName(functions, device, name + "3D_" + std::to_string(i),
-                    VK_OBJECT_TYPE_DESCRIPTOR_SET,
-                    *(descriptorSets[i]->getSet()));
-
-            updateDescriptorSet(descriptorSets[j + i], img, textureSampler,
-                                uniformBuffers[i]);
-
+            objModule->addDescriptorSet(img, uniformBuffers[i]);
             guiModule->addDescriptorSet(img, guiUniformBuffers[i]);
         }
         j += MAX_FRAMES_IN_FLIGHT;
@@ -766,8 +745,6 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     if (!fShader.empty()) this->guiFragShader = fShader;
 
     device->wait();
-    for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
-    descriptorSets.clear();
     delete renderDescriptor;
     delete pool;
     delete renderDescriptorPool;
@@ -802,6 +779,7 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
     guiModule->recreateDescriptorPool(type, i, 2);
+    objModule->recreateDescriptorPool(type, i, 2);
     renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
     createDescriptorSets();
 
@@ -816,8 +794,6 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
     if (!fShader.empty()) this->finalFragShader = fShader;
 
     device->wait();
-    for (int i = 0; i < descriptorSets.size(); i++) delete descriptorSets[i];
-    descriptorSets.clear();
     delete renderDescriptor;
     delete pool;
     delete renderDescriptorPool;
@@ -839,6 +815,7 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
     VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
     guiModule->recreateDescriptorPool(type, i, 2);
+    objModule->recreateDescriptorPool(type, i, 2);
     renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
 
     uniformBuffer = new Buffer(&physicalDevice, device, finalUBOSize,
@@ -855,6 +832,9 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
                                        Framebuffer* framebuffer) {
     commandBuffer->reset();
     commandBuffer->begin();
+    VkExtent2D extent = framebuffer->getExtent();
+    commandBuffer->setScissor(extent);
+    commandBuffer->setViewport((float)extent.width, (float)extent.height);
 
     std::vector<VkClearValue> clearValues = {VkClearValue(), VkClearValue()};
     clearValues[0].color = {{1.0f, 1.0f, 1.0f, 0.0f}};
@@ -867,10 +847,7 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
     ImageView* lastTexture = NULL;
     std::vector<Entity*> entities = game->getEntities();
     if (!entities.empty()) {
-        commandBuffer->bindPipeline(graphicsPipeline);
-
-        commandBuffer->bindDescriptorSet(graphicsPipeline,
-                                         descriptorSets[currentFrame]);
+        commandBuffer->bindPipeline(objModule->getPipeline());
         for (Entity* e : entities) {
             Model* model = e->getModel();
             ImageView* texture = e->getTexture();
@@ -882,14 +859,13 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
                 commandBuffer->bindVertexBuffers(vertexBuffer, 1);
                 commandBuffer->bindIndexBuffer(indexBuffer);
             }
-            if (lastTexture != texture) {
-                size_t idx = 0;
-                for (idx = 0; idx < textures.size(); idx++) {
-                    if (textures[idx] == texture) break;
-                }
+            if (texture == NULL)
+                texture = getTextureByName(textures, "missing");
+            if (lastTexture != texture)
                 commandBuffer->bindDescriptorSet(
-                    graphicsPipeline, descriptorSets[idx * 2 + currentFrame]);
-            }
+                    objModule->getPipeline(),
+                    objModule->getDescriptorSet(texture, currentFrame));
+
             drawEntity(e, commandBuffer);
             lastModel = model;
             lastTexture = texture;
@@ -932,6 +908,9 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
                                    Framebuffer* framebuffer) {
     commandBuffer->reset();
     commandBuffer->begin();
+    VkExtent2D extent = framebuffer->getExtent();
+    commandBuffer->setScissor(extent);
+    commandBuffer->setViewport((float)extent.width, (float)extent.height);
 
     std::vector<VkClearValue> clearValues = {VkClearValue(), VkClearValue()};
     clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
@@ -962,8 +941,9 @@ void Renderer::drawEntity(Entity* entity, CommandBuffer* commandBuffer) {
     Model* model = entity->getModel();
 
     ShaderData* data = entity->getShaderData();
-    commandBuffer->pushConstants(graphicsPipeline, VK_SHADER_STAGE_VERTEX_BIT,
-                                 0, data->data, data->size);
+    commandBuffer->pushConstants(objModule->getPipeline(),
+                                 VK_SHADER_STAGE_VERTEX_BIT, 0, data->data,
+                                 data->size);
 
     commandBuffer->draw(model->getIndexes().size());
     free(data->data);
@@ -1044,6 +1024,21 @@ glm::vec2 Renderer::getVirtPos(glm::vec2 realPos) {
     return result;
 }
 
+void Renderer::resizeFramebuffer() {
+    delete framebuffer;
+    uint32_t w = 0, h = 0;
+    window->getFramebufferSize(&w, &h);
+    while (w == 0 || h == 0) {
+        glfwWaitEvents();
+        window->getFramebufferSize(&w, &h);
+    }
+    DebugFunc functions = getDebugFunctions(instance);
+    framebuffer = new Framebuffer(device, swapchain->getRenderPass(), {w, h},
+                                  {renderImageView, depthImageView});
+    setName(functions, device, "framebuffer", VK_OBJECT_TYPE_FRAMEBUFFER,
+            *(framebuffer->getFramebuffer()));
+}
+
 void Renderer::drawFrame() {
     if (window->hasResized()) {
         window->setResized(false);
@@ -1067,12 +1062,6 @@ void Renderer::drawFrame() {
     updateUniformBuffer(currentFrame);
 
     inFlightFences[currentFrame]->reset();
-
-    /*drawScreenCommandBuffer(
-        commandBuffers[currentFrame], swapchain->getRenderPass(),
-        swapchain->getFramebuffers()[imageIndex], swapchain->getExtent());*/
-    // transitionImageLayout(renderImage, VK_IMAGE_LAYOUT_UNDEFINED,
-    //                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     drawScreenCommandBuffer(renderCommandBuffer, renderPass, framebuffer);
     recordCommandBuffer(commandBuffers[currentFrame],
                         swapchain->getRenderPass(),

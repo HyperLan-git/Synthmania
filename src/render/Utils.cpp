@@ -127,16 +127,15 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
             std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
     } else {
-        uint32_t width, height;
-        window->getFramebufferSize(&width, &height);
-
-        VkExtent2D actualExtent = {width, height};
+        VkExtent2D actualExtent;
+        // FIXME FUCKING STOP CALLING GLFW CODE IN VULKAN AAAAAAAAAAAAAAA
+        window->getFramebufferSize(&actualExtent.width, &actualExtent.height);
 
         actualExtent.width =
-            std::clamp(width, capabilities.minImageExtent.width,
+            std::clamp(actualExtent.width, capabilities.minImageExtent.width,
                        capabilities.maxImageExtent.width);
         actualExtent.height =
-            std::clamp(height, capabilities.minImageExtent.height,
+            std::clamp(actualExtent.height, capabilities.minImageExtent.height,
                        capabilities.maxImageExtent.height);
 
         return actualExtent;

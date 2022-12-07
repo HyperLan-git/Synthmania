@@ -15,8 +15,11 @@ class AudioBuffer;
 class AudioBuffer {
    public:
     AudioBuffer();
-    AudioBuffer(ALuint id);
     AudioBuffer(std::string file);
+
+    void* operator new[](size_t buffers) noexcept = delete;
+    void* operator new[](size_t buffers, size_t elems) noexcept;
+    void operator delete[](void* ptr) noexcept;
 
     void write(ALenum format, const ALvoid* data, ALsizei size,
                ALsizei samplerate);

@@ -86,10 +86,6 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
     colorBlendAttachment.dstColorBlendFactor =
         VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-    // colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    // colorBlendAttachment.dstAlphaBlendFactor =
-    //     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    // colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     colorBlending.sType =
@@ -104,6 +100,14 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
     colorBlending.blendConstants[3] = 0.f;
     colorBlending.flags = 0;
 
+    VkDynamicState states[] = {VK_DYNAMIC_STATE_SCISSOR,
+                               VK_DYNAMIC_STATE_VIEWPORT};
+    VkPipelineDynamicStateCreateInfo dynamicState{};
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.dynamicStateCount = 2;
+    dynamicState.pDynamicStates = states;
+    dynamicState.flags = 0;
+
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = shaderCount;
@@ -115,6 +119,7 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = *(layout->getLayout());
     pipelineInfo.renderPass = *(renderPass->getPass());
     pipelineInfo.subpass = 0;
