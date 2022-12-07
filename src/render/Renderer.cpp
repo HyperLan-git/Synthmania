@@ -187,6 +187,8 @@ void Renderer::loadTextures(std::map<std::string, std::string> textures) {
     renderDescriptorPool = new ShaderDescriptorPool(device, type, 2);
     setName(getDebugFunctions(instance), device, "renderDescriptorPool",
             VK_OBJECT_TYPE_DESCRIPTOR_POOL, *(renderDescriptorPool->getPool()));
+    // This is needed trust me
+    recreateSwapchain();
 }
 
 VkPhysicalDevice* Renderer::getPhysicalDevice() { return &physicalDevice; }

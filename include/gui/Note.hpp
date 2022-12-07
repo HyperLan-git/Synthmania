@@ -14,7 +14,7 @@ class Note;
 #include <string>
 
 #define HIT_WINDOW 150000
-#define DRUM_HIT_WINDOW 100000
+#define DRUM_HIT_WINDOW 150000
 #define DELETE_ANIM 50000
 
 enum NoteStatus {

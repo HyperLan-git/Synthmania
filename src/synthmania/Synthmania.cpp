@@ -348,8 +348,8 @@ void Synthmania::noteHit(Note *note) {
         else
 #endif
             playPianoSound(note->getPitch());
-    } else
-        playDrumSound(note->getPitch());
+    } /*else
+        playDrumSound(note->getPitch());*/
     note->setStatus(HIT);
     note->kill(time + note->getTotalDuration());
 
@@ -400,7 +400,7 @@ void Synthmania::playDrumSound(unsigned char pitch) {
             audio->playSound("tom-low");
             break;
         default:
-            std::cout << "bruh : " << (unsigned int)pitch << std::endl;
+            std::cout << "bruh : " << (unsigned int)pitch << "\n";
     }
 }
 
@@ -530,6 +530,9 @@ void Synthmania::update() {
         while (m.type != libremidi::message_type::INVALID) {
             if (m.type == libremidi::message_type::NOTE_ON) {
                 short got_one = false;
+                if (drum) {
+                    playDrumSound(m.data1);
+                }
                 for (Note *note : notes) {
                     if (note->getStatus() == WAITING &&
                         note->getPitch() == m.data1 &&
@@ -540,7 +543,7 @@ void Synthmania::update() {
                         break;
                     }
                 }
-                if (!got_one) {
+                if (!drum && !got_one) {
                     for (Note *note : notes) {
                         if (note->getStatus() == WAITING &&
                             std::abs(note->getTime() - time_from_start) <
