@@ -2,7 +2,7 @@
 #ifndef NOVST
 
 #ifdef _WIN32
-#include "mingw.thread.h"
+#include <mingw.thread.h>
 #else
 #include <thread>
 #endif

@@ -11,9 +11,9 @@ class ChartHandler;
 extern "C" ChartHandler* getChartHandler(Synthmania* game);
 
 /**
- * @brief A class powerful enough (hopefully) to make modcharts to rival NotITG
- * itself. Feel free to modify or replace variables in the game, as long as you
- * know what you are doing everything will be fine
+ * @brief A class powerful enough (hopefully) to make modcharts or cool
+ * animations. Feel free to modify or replace variables in the game, as long as
+ * you know what you are doing everything will be fine
  */
 class ChartHandler {
    public:

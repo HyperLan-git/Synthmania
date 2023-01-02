@@ -193,7 +193,7 @@ void Synthmania::loadSong(std::string songFolder) {
             glm::vec2 temp = getSizeAndLocForNote(d, k, note.note);
             p->setPosition({(t - note.timestamp) / 300000.f, 0});
             p->addEffect(
-                new GraphicalEffect(applyOffset, new float[]{0, temp.x}));
+                new GraphicalEffect(applyOffset, new float[2]{0, temp.x}));
             p->setSize({temp.y, temp.y});
             tempNotes.push_back(p);
             ParentedGui *arc = new ParentedGui(
@@ -201,7 +201,7 @@ void Synthmania::loadSong(std::string songFolder) {
             arc->setPosition(
                 {(((t + last) / 2) - note.timestamp) / 300000.f, 0});
             arc->addEffect(new GraphicalEffect(applyOffset,
-                                               new float[]{0, temp.x - .15f}));
+                                               new float[2]{0, temp.x - .15f}));
             arc->setSize({(t - last) / 350000.f, .15f});
             tempNotes.push_back(arc);
             last = t;
@@ -323,6 +323,7 @@ void Synthmania::keyCallback(GLFWwindow *win, int key, int scancode, int action,
                                     // for notelock idk hmm
         ) {
             game->noteHit(note);
+            game->playDrumSound(note->getPitch());
             break;
         }
     }
@@ -468,7 +469,11 @@ void Synthmania::update() {
     // std::cout << std::dec << time_from_start << " ";
     if (autoPlay)
         for (Note *note : notes)
-            if (note->getTime() <= time_from_start) noteHit(note);
+            if (note->getStatus() == WAITING &&
+                note->getTime() <= time_from_start) {
+                noteHit(note);
+                playDrumSound(note->getPitch());
+            }
 
 #ifndef NOVST
     if (plugin != NULL) plugin->update(time_from_start);
@@ -710,7 +715,7 @@ std::vector<Gui *> printShakingString(std::string text,
         name.append(std::to_string(i++));
         Gui *gui = new Gui(t.character.texture, name.c_str());
         gui->addEffect(new GraphicalEffect(applyShaking,
-                                           new float[]{shake * (float)size}));
+                                           new float[1]{shake * (float)size}));
         gui->setColor(color);
         gui->setNegate(true);
         gui->setPosition(t.pos);

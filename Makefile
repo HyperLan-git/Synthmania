@@ -61,6 +61,7 @@ SHADERS_SPV = $(patsubst shader/%.comp, bin/%.comp.spv,\
 				$(patsubst shader/%.geom, bin/%.geom.spv, $(SHADERS)))))
 
 Synthmania: shader $(VSTLIB) bin/config.json
+#	make $(GHC)
 	make $(OBJ)
 ifeq ($(OS),Windows_NT)
 	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
@@ -121,6 +122,9 @@ bin/%.spv: shader/%
 
 shader:
 	make $(SHADERS_SPV)
+
+headers: $(GHCDIR)/stb/stb_image.h
+	g++ $(CFLAGS) -o $(GHCDIR)/stb/stb_image.h $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 
 $(VSTLIB):
 ifndef NO_VST
