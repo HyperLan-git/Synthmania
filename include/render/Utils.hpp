@@ -21,6 +21,11 @@
 #include "ImageView.hpp"
 #include "Window.hpp"
 
+struct UniformBufferObject {
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
+};
+
 struct SwapchainSupportDetails {
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;

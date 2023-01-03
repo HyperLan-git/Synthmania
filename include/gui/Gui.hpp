@@ -14,6 +14,8 @@ class Gui;
 #include "Model.hpp"
 
 #define ALIGN(type) alignas(sizeof(type)) type
+#define ALIGN_VEC(n, type) alignas(sizeof(type) * n) glm::vec<n, type>
+
 struct GuiData {
     alignas(sizeof(float) * 4) glm::vec3 pos;
     ALIGN(float) rot;

@@ -74,7 +74,6 @@ void SongSelectMenu::onPressed(Button *b) {
             s->loadMenu("main");
         } else {
             s->loadSong(folder + "/" + b->getName());
-            s->setTimeMicros(-s->getChart().offset);
         }
     }
 }

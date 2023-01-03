@@ -13,7 +13,7 @@ class Model;
 
 #include "Buffer.hpp"
 #include "Device.hpp"
-#include "tiny_obj_loader.h"
+#include "tiny_obj_loader.hpp"
 
 typedef struct VkVertexInputAttributeDescription VIADesc;
 

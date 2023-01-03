@@ -1,9 +1,6 @@
-// Must appear only once in a source file
-#define STB_IMAGE_IMPLEMENTATION
 #include "Renderer.hpp"
 
-#include <stdlib.h>
-
+#include <cstdlib>
 #include <map>
 
 Renderer::Renderer(Game* game, Window* window) {

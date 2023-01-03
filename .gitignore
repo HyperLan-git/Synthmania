@@ -1,9 +1,8 @@
 bin/
 plugins/
-libremidi/
 resources/songs/*
 !resources/songs/examplesong
 !resources/songs/exampledrums
 **/*.o
 **/*.log
-**/*.reapeaks
+**/*.gch

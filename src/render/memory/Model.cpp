@@ -1,4 +1,3 @@
-#define TINYOBJLOADER_IMPLEMENTATION
 #include "Model.hpp"
 
 typedef struct VkVertexInputAttributeDescription VIADesc;

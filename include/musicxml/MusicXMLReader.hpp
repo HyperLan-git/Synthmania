@@ -7,7 +7,7 @@ class MusicXMLReader;
 
 class MusicXMLReader {
    public:
-    MusicXMLParser(std::string xmlData);
+    MusicXMLReader(std::string xmlData);
 
    private:
     // std::vector<MusicPart> parts;

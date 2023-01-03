@@ -116,7 +116,7 @@ void AudioHandler::clearSounds() {
 AudioHandler::~AudioHandler() {
     int err;
     while ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error this session:" << err << std::endl;
+        std::cerr << "OpenAL error this session:" << err << "\n";
     for (AudioSource* source : sources) delete source;
     for (auto iter = sounds.begin(); iter != sounds.end(); iter++)
         delete (*iter).second;

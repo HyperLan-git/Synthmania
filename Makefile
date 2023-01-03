@@ -1,13 +1,13 @@
-VSTFLAGS = -L../SimplePluginHost/export/lib -l:libSimplePluginHost.a
+VSTFLAGS = -Llibs/SimplePluginHost/export/lib -l:libSimplePluginHost.a
 ifeq ($(OS),Windows_NT)
-VSTFLAGS = -L../SimplePluginHost/Builds/VisualStudio2022/x64/Release/Static\ Library -l:SimplePluginHost.lib
+VSTFLAGS = -Llibs/SimplePluginHost/Builds/VisualStudio2022/x64/Release/Static\ Library -l:SimplePluginHost.lib
 endif
-VSTINCLUDE = -I ../SimplePluginHost/export/include
-VSTOBJ = $(wildcard ../SimplePluginHost/Builds/LinuxMakefile/build/intermediate/*.o)
+VSTINCLUDE = -I libs/SimplePluginHost/export/include
+VSTOBJ = $(wildcard libs/SimplePluginHost/SimplePluginHost/Builds/LinuxMakefile/build/intermediate/*.o)
 ifeq ($(OS),Windows_NT)
 VSTOBJ = 
 endif
-VSTLIB = ../SimplePluginHost/export/lib/libSimplePluginHost.a
+VSTLIB = libs/SimplePluginHost/export/lib/libSimplePluginHost.a
 ifeq ($(NO_VST), 1)
 VSTLIB =
 VSTFLAGS =
@@ -15,15 +15,16 @@ VSTINCLUDE =
 endif
 
 IDIRS = $(addprefix -I ,$(shell find include -type d | sed -z 's/\n/ /g'))\
-			-I libremidi/include/ -I stb -I obj $(VSTINCLUDE)
+			-I libs/libremidi/include/ -I libs/stbi -I libs/obj\
+			$(VSTINCLUDE)
 
 ifeq ($(OS),Windows_NT)
 IDIRS += -I ./mingw-std-threads
 endif
 
-CFLAGS = -std=c++17 -O3 $(VSTOBJ) -D NDEBUG
+CFLAGS = -std=c++17 -O3 -D NDEBUG
 ifdef DEBUG
-CFLAGS = -std=c++17 -O3 $(VSTOBJ)
+CFLAGS = -std=c++17 -O3
 endif
 
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype
@@ -32,7 +33,7 @@ LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lalut -lwinmm -lfreetype
 endif
 
 OBJDIR = bin/obj
-LIBS = obj/tiny_obj_loader.h stb/stb_image.h
+LIBSOBJ = bin/libs/stbi/stb_image.o bin/libs/obj/tiny_obj_loader.o
 
 SRCFOLDER = src
 SRC = $(shell find $(SRCFOLDER) -type f -name '*.cpp' | sed -z 's/\n/ /g')
@@ -60,14 +61,21 @@ SHADERS_SPV = $(patsubst shader/%.comp, bin/%.comp.spv,\
 				$(patsubst shader/%.frag, bin/%.frag.spv,\
 				$(patsubst shader/%.geom, bin/%.geom.spv, $(SHADERS)))))
 
-Synthmania: shader $(VSTLIB) bin/config.json
-#	make $(GHC)
+Synthmania: shader $(LIBSOBJ) $(VSTLIB) bin/config.json
 	make $(OBJ)
 ifeq ($(OS),Windows_NT)
-	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
+	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTOBJ) $(LIBSOBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 else
-	g++ $(CFLAGS) -rdynamic -o bin/Synthmania $(OBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
+	g++ $(CFLAGS) -rdynamic -o bin/Synthmania $(OBJ) $(VSTOBJ) $(LIBSOBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 endif
+
+bin/libs/stbi/stb_image.o: libs/stbi/stb_image.c
+	@mkdir -p 'bin/libs/stbi'
+	g++ $(CFLAGS) -c $< -o $@ -D STBI_NO_BMP -D STBI_NO_PSD -D STBI_NO_TGA -D STBI_NO_GIF -D STBI_NO_HDR -D STBI_NO_PIC -D STBI_NO_PNM
+
+bin/libs/obj/tiny_obj_loader.o: libs/obj/tiny_obj_loader.cpp
+	@mkdir -p 'bin/libs/obj/'
+	g++ $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/%.o: $(SRCFOLDER)/%.cpp
 	@mkdir -p '$(@D)'
@@ -112,7 +120,7 @@ json:
 	g++ $(CFLAGS) -o bin/JsonTest $(JSONSRC) $(LDFLAGS) $(DEBUG)
 
 graphics:
-	g++ $(CFLAGS) -o bin/GraphicsTest $(GSRC) $(LDFLAGS) $(DEBUG)
+	g++ $(CFLAGS) -o bin/GraphicsTest $(GSRC) $(LIBSOBJ) $(LDFLAGS) $(DEBUG)
 
 vst: $(VSTLIB)
 	g++ $(CFLAGS) -o bin/VstTest $(VSTS-DNDEBUGRC) $(VSTOBJ) $(VSTLIB) $(VSTFLAGS) $(LDFLAGS) $(DEBUG)
@@ -123,12 +131,9 @@ bin/%.spv: shader/%
 shader:
 	make $(SHADERS_SPV)
 
-headers: $(GHCDIR)/stb/stb_image.h
-	g++ $(CFLAGS) -o $(GHCDIR)/stb/stb_image.h $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
-
 $(VSTLIB):
 ifndef NO_VST
-	make -C ../SimplePluginHost
+	make -C libs/SimplePluginHost
 endif
 
 clean:

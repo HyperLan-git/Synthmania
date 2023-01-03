@@ -1,0 +1,3 @@
+[submodule "libs/libremidi"]
+	path = libs/libremidi
+	url = https://github.com/jcelerier/libremidi

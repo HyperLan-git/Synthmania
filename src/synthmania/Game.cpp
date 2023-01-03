@@ -39,7 +39,6 @@ void Game::loadMenu(std::string m) {
 }
 
 void Game::run() {
-    setTimeMicros(-this->startTime);
     bool clicked = false, lastPressed = false;
     while (!window->shouldClose()) {
         glfwPollEvents();
@@ -96,6 +95,11 @@ Menu *Game::getMenu(std::string menu) { return menus[menu]; }
 
 Menu *Game::getCurrentMenu() { return menu; }
 
+void Game::resetClock() {
+    this->begTime = std::chrono::high_resolution_clock::now();
+    this->relativeTime = 0;
+}
+
 std::map<std::string, std::string> Game::readTextures(std::string file) {
     std::map<std::string, std::string> result;
     tree *t = readJson(file.c_str());
@@ -111,7 +115,7 @@ int64_t Game::getCurrentTimeMicros() {
                currentTime - begTime)
                    .count() /
                (uint64_t)1000 -
-           (int64_t)this->startTime - (int64_t)relativeTime;
+           (int64_t)relativeTime;
 }
 
 void Game::setRenderer(Renderer *renderer) { this->renderer = renderer; }

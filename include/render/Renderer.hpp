@@ -2,8 +2,6 @@
 
 class Renderer;
 
-//#define NDEBUG
-
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -67,11 +65,6 @@ class Renderer;
 #include "TextureSampler.hpp"
 #include "Utils.hpp"
 #include "Window.hpp"
-
-struct UniformBufferObject {
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-};
 
 // Font texture sizes
 const unsigned long FONT_SIZE = 128;
