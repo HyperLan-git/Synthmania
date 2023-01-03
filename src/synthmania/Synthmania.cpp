@@ -38,8 +38,7 @@ void Synthmania::init() {
 }
 
 void Synthmania::loadSong(std::string songFolder) {
-    if (gamemode) delete gamemode;
-    gamemode = new PlayMode(this, songFolder);
+    setGamemode(new PlayMode(this, songFolder));
 }
 
 void Synthmania::setGamemode(Gamemode *gamemode) {
@@ -56,7 +55,7 @@ void Synthmania::addGui(Gui *gui) {
 
 void Synthmania::setTimeMicros(int64_t time) {
     Game::setTimeMicros(time);
-    gamemode->onClockAdjust(time);
+    if (gamemode) gamemode->onClockAdjust(time);
 }
 
 void Synthmania::resetScene() { Game::resetScene(); }
