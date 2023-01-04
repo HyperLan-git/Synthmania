@@ -30,7 +30,7 @@ class TextArea : public MenuElement {
     void setText(std::wstring text);
     void setTextStr(std::string text);
 
-    std::vector<Gui*> getGuis();
+    std::vector<std::shared_ptr<Gui>> getGuis();
 
     void recalculateText();
     void recalculateCursor();
@@ -39,8 +39,8 @@ class TextArea : public MenuElement {
     TextHandler* handler;
     std::wstring text;
     std::string fontName;
-    std::vector<Gui*> textContents;
-    Gui* cursor;
+    std::vector<std::shared_ptr<Gui>> textContents;
+    std::shared_ptr<Gui> cursor;
     Text cursorChar;
     int cursorPos, pos, shown, maxChars, blinkTimer;
     float textSize;

@@ -266,8 +266,9 @@ class Renderer {
                                  Framebuffer* framebuffer);
     void updateUniformBuffer(uint32_t currentImage);
     void drawFrame();
-    void drawEntity(Entity* entity, CommandBuffer* commandBuffer);
-    void drawGui(Gui* gui, CommandBuffer* commandBuffer);
+    void drawEntity(std::shared_ptr<Entity>& entity,
+                    CommandBuffer* commandBuffer);
+    void drawGui(std::shared_ptr<Gui>& gui, CommandBuffer* commandBuffer);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
         const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(

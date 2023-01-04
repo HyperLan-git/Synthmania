@@ -48,7 +48,7 @@ void Synthmania::setGamemode(Gamemode *gamemode) {
 
 Options *Synthmania::getOptions() { return options.get(); }
 
-void Synthmania::addGui(Gui *gui) {
+void Synthmania::addGui(std::shared_ptr<Gui> &gui) {
     Game::addGui(gui);
     if (gamemode) gamemode->onSpawn(gui);
 }
@@ -62,36 +62,22 @@ void Synthmania::resetScene() { Game::resetScene(); }
 
 void Synthmania::update() {
     int64_t time_from_start = this->getCurrentTimeMicros();
-    std::vector<Gui *> toDestroy;
-    for (Gui *g : guis) {
-        if (g->update(time_from_start) || g->isDestroyed()) {
-            g->setDestroyed();
-            toDestroy.push_back(g);
-        }
-        g->updateGraphics(time_from_start);
-    }
-    // TODO shared_ptr for guis
-    for (Gui *g : toDestroy) {
-        for (std::vector<Gui *>::iterator iter = guis.begin();
-             iter != guis.end(); iter++)
-            if (g == *iter) {
-                guis.erase(iter);
-                delete g;
-                break;
-            }
-    }
-    std::vector<Entity *> toDelete;
-    for (Entity *e : entities) {
-        if (e->update(time_from_start)) toDelete.push_back(e);
-    }
-    for (Entity *e : toDelete)
-        for (std::vector<Entity *>::iterator iter = entities.begin();
-             iter != entities.end(); iter++)
-            if (e == *iter) {
-                entities.erase(iter);
-                delete e;
-                break;
-            }
+
+    this->guis.erase(std::remove_if(guis.begin(), guis.end(),
+                                    [=](std::shared_ptr<Gui> &g) {
+                                        return g->update(time_from_start) ||
+                                               g->isDestroyed();
+                                    }),
+                     this->guis.end());
+    // TODO send update graphics elsewhere
+    for (std::shared_ptr<Gui> &g : guis) g->updateGraphics(time_from_start);
+    if (!this->entities.empty())
+        this->entities.erase(
+            std::remove_if(entities.begin(), entities.end(),
+                           [=](std::shared_ptr<Entity> &e) {
+                               return e->update(time_from_start);
+                           }),
+            this->entities.end());
     if (gamemode && gamemode->update()) {
         delete gamemode;
         gamemode = NULL;
@@ -161,15 +147,18 @@ Synthmania::~Synthmania() {
     delete handler;
 }
 
-std::vector<Gui *> printString(std::string text, TextHandler *textHandler,
-                               std::string entityNames, std::string font,
-                               double size, glm::vec2 pos, glm::vec4 color) {
-    std::vector<Gui *> result;
+std::vector<std::shared_ptr<Gui>> printString(std::string text,
+                                              TextHandler *textHandler,
+                                              std::string entityNames,
+                                              std::string font, double size,
+                                              glm::vec2 pos, glm::vec4 color) {
+    std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
     for (Text t : textHandler->createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
-        Gui *gui = new Gui(t.character.texture, name.c_str());
+        std::shared_ptr<Gui> gui =
+            std::make_shared<Gui>(t.character.texture, name.c_str());
         gui->setColor(color);
         gui->setNegate(1);
         gui->setPosition(t.pos);
@@ -179,24 +168,23 @@ std::vector<Gui *> printString(std::string text, TextHandler *textHandler,
     return result;
 }
 
-std::vector<Gui *> printShadowedString(std::string text,
-                                       TextHandler *textHandler,
-                                       std::string entityNames,
-                                       std::string font, double size,
-                                       glm::vec2 pos, glm::vec4 color) {
-    std::vector<Gui *> result, result2;
+std::vector<std::shared_ptr<Gui>> printShadowedString(
+    std::string text, TextHandler *textHandler, std::string entityNames,
+    std::string font, double size, glm::vec2 pos, glm::vec4 color) {
+    std::vector<std::shared_ptr<Gui>> result, result2;
     glm::vec2 shadowPos = pos;
     shadowPos += glm::vec2({.0005 * size, .0005 * size});
     std::string shadowName = entityNames;
     shadowName.append("shadow_");
-    for (Gui *g : printString(text, textHandler, shadowName, font, size,
-                              shadowPos, {0, 0, 0, .7})) {
+    for (std::shared_ptr<Gui> g :
+         printString(text, textHandler, shadowName, font, size, shadowPos,
+                     {0, 0, 0, .7})) {
         glm::vec2 sz = g->getSize();
         sz *= 1.05;
         g->setSize(sz);
         result.push_back(g);
     }
-    for (Gui *g :
+    for (std::shared_ptr<Gui> g :
          printString(text, textHandler, entityNames, font, size, pos, color))
         result.push_back(g);
     for (int i = 0; i < result.size() / 2; i++) {
@@ -207,17 +195,17 @@ std::vector<Gui *> printShadowedString(std::string text,
     return result2;
 }
 
-std::vector<Gui *> printShakingString(std::string text,
-                                      TextHandler *textHandler,
-                                      std::string entityNames, std::string font,
-                                      double size, glm::vec2 pos, float shake,
-                                      glm::vec4 color) {
-    std::vector<Gui *> result;
+std::vector<std::shared_ptr<Gui>> printShakingString(
+    std::string text, TextHandler *textHandler, std::string entityNames,
+    std::string font, double size, glm::vec2 pos, float shake,
+    glm::vec4 color) {
+    std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
     for (Text t : textHandler->createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
-        Gui *gui = new Gui(t.character.texture, name.c_str());
+        std::shared_ptr<Gui> gui =
+            std::make_shared<Gui>(t.character.texture, name.c_str());
         gui->addEffect(new GraphicalEffect(applyShaking,
                                            new float[1]{shake * (float)size}));
         gui->setColor(color);
@@ -229,17 +217,16 @@ std::vector<Gui *> printShakingString(std::string text,
     return result;
 }
 
-std::vector<Gui *> printVerticalString(std::string text,
-                                       TextHandler *textHandler,
-                                       std::string entityNames,
-                                       std::string font, double size,
-                                       glm::vec2 pos, glm::vec4 color) {
-    std::vector<Gui *> result;
+std::vector<std::shared_ptr<Gui>> printVerticalString(
+    std::string text, TextHandler *textHandler, std::string entityNames,
+    std::string font, double size, glm::vec2 pos, glm::vec4 color) {
+    std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
     for (Text t : textHandler->createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
-        Gui *gui = new Gui(t.character.texture, name.c_str());
+        std::shared_ptr<Gui> gui =
+            std::make_shared<Gui>(t.character.texture, name.c_str());
         gui->setColor(color);
         gui->setNegate(1);
         gui->setPosition(t.pos);
@@ -256,6 +243,8 @@ MidiHandler *Synthmania::getMidiHandler() { return handler; }
 AudioHandler *Synthmania::getAudioHandler() { return audio; }
 Gamemode *Synthmania::getGamemode() { return gamemode; }
 
+#ifndef NOVST
 std::string Synthmania::getPlugin(std::string name) {
     return this->availablePlugins[name];
 }
+#endif

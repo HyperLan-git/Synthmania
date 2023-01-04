@@ -15,11 +15,12 @@ class Menu {
    public:
     Menu(Game *g);
 
-    std::vector<Button *> getButtons();
-    std::vector<MenuElement *> getMenuElements();
-    std::vector<Gui *> getGuis();
+    const std::vector<std::shared_ptr<Button>> &getButtons();
+    const std::vector<std::shared_ptr<MenuElement>> &getMenuElements();
+    const std::vector<std::shared_ptr<Gui>> &getGuis();
 
-    void select(MenuElement *element);
+    void unselect();
+    void select(const std::shared_ptr<MenuElement> &element);
 
     /**
      * @brief Use this function to add everything this menu needs to the game
@@ -28,7 +29,7 @@ class Menu {
      */
     virtual void show();
 
-    virtual void onPressed(Button *b);
+    virtual void onPressed(const std::shared_ptr<Button> &b);
 
     virtual void update(int64_t time);
 
@@ -39,9 +40,9 @@ class Menu {
     virtual ~Menu();
 
    protected:
-    std::vector<Gui *> guis;
-    std::vector<MenuElement *> elements;
-    std::vector<Button *> buttons;
-    MenuElement *selected;
+    std::vector<std::shared_ptr<Gui>> guis;
+    std::vector<std::shared_ptr<MenuElement>> elements;
+    std::vector<std::shared_ptr<Button>> buttons;
+    std::shared_ptr<MenuElement> selected;
     Game *game;
 };

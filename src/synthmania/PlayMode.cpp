@@ -47,17 +47,22 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
         new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
                   renderer->getDevice());
     std::vector<ImageView *> textures = renderer->getTextures();
-    Entity *la_creatura76 =
-        new Entity(model, getTextureByName(textures, "room"), "Bob");
+    std::shared_ptr<Entity> la_creatura76 = std::make_shared<Entity>(
+        model, getTextureByName(textures, "room"), "Bob");
     renderer->addModel(model);
     game->addEntity(la_creatura76);
     Key k = drum ? Key::DRUM : Key::SOL;
     std::string keyName = (drum) ? "drum_key" : "sol_key";
-    Gui *part = new Gui(getTextureByName(textures, "partition"), "partition"),
-        *bg = new Gui(getTextureByName(textures, "background"), "bg"),
-        *precision =
-            new Gui(getTextureByName(textures, "precision"), "precision"),
-        *key = new Gui(getTextureByName(textures, keyName), "key");
+    std::shared_ptr<Gui> part = std::make_shared<Gui>(
+                             getTextureByName(textures, "partition"),
+                             "partition"),
+                         bg = std::make_shared<Gui>(
+                             getTextureByName(textures, "background"), "bg"),
+                         precision = std::make_shared<Gui>(
+                             getTextureByName(textures, "precision"),
+                             "precision"),
+                         key = std::make_shared<Gui>(
+                             getTextureByName(textures, keyName), "key");
     switch (k) {
         case Key::SOL:
             key->setPosition({-1.6f, 0.1f});
@@ -79,99 +84,115 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
     part->setSize({5, 1});
     precision->setSize({1.5f, 0.5f});
     precision->setPosition({0, 0.9f});
-    Judgement *bar = new Judgement("judgement", textures, partition);
+    std::shared_ptr<Judgement> bar =
+        std::make_shared<Judgement>("judgement", textures, partition);
     line = bar;
     bar->setPosition({-1.3f, bar->getPosition().y});
     bar->setSize({0.25f, 1.f});
-    game->addGui(bar);
-    std::vector<Gui *> tempNotes;
-    for (MidiNote note : partition.notes) {
-        std::string name = "Note_";
-        std::string hash = std::to_string(std::hash<MidiNote>()(note));
-        name += hash;
-        double totalDuration = note.length / (long double)partition.MPQ / 4.;
-        std::vector<double> cutDown = splitDuration(totalDuration);
-        short firstDots = 0;
-        for (int i = 1; i < cutDown.size(); i++)
-            if (cutDown.size() > 1 && cutDown[i] == cutDown[i - 1] / 2.)
-                firstDots = i;
-        for (int i = 0; i < firstDots; i++) {
-            cutDown[1] += cutDown[0];
-            cutDown.erase(cutDown.begin());
-        }
-        Note *n =
-            new Note(name.c_str(), note.timestamp, note.note, totalDuration,
-                     cutDown[0], partition.MPQ, textures, k);
-        notes.push_back(n);
-        int diff =
-            getDifferenceFromC4(transposePitch(k, note.note)) + getOffset(k);
-        if (diff <= 0 || diff >= 12) {
-            bool up = diff >= 12;
-            for (int i = up ? 12 : 0; (up && i <= diff) || (!up && i >= diff);
-                 up ? i += 2 : i -= 2) {
-                std::string barName = "Bar_";
-                barName.append(hash);
-                PartitionNotation *readability = new PartitionNotation(
-                    barName.c_str(), note.timestamp, (0.5 - 0.083 * i),
-                    getTextureByName(textures, "bar"));
-                readability->setPosition({0, readability->getPosition().y});
-                readability->setSize({0.25, 0.15});
-                game->addGui(readability);
+    game->addTGui(bar);
+    std::vector<std::shared_ptr<Gui>> tempNotes;
+    // TODO make this less cringe
+    {
+        std::vector<std::shared_ptr<Note>> keepAlive;
+        for (MidiNote note : partition.notes) {
+            std::string name = "Note_";
+            std::string hash = std::to_string(std::hash<MidiNote>()(note));
+            name += hash;
+            double totalDuration =
+                note.length / (long double)partition.MPQ / 4.;
+            std::vector<double> cutDown = splitDuration(totalDuration);
+            short firstDots = 0;
+            for (int i = 1; i < cutDown.size(); i++)
+                if (cutDown.size() > 1 && cutDown[i] == cutDown[i - 1] / 2.)
+                    firstDots = i;
+            for (int i = 0; i < firstDots; i++) {
+                cutDown[1] += cutDown[0];
+                cutDown.erase(cutDown.begin());
+            }
+            std::shared_ptr<Note> n = std::make_shared<Note>(
+                name.c_str(), note.timestamp, note.note, totalDuration,
+                cutDown[0], partition.MPQ, textures, k);
+            keepAlive.push_back(n);
+            notes.push_back(n);
+            int diff = getDifferenceFromC4(transposePitch(k, note.note)) +
+                       getOffset(k);
+            if (diff <= 0 || diff >= 12) {
+                bool up = diff >= 12;
+                for (int i = up ? 12 : 0;
+                     (up && i <= diff) || (!up && i >= diff);
+                     up ? i += 2 : i -= 2) {
+                    std::string barName = "Bar_";
+                    barName.append(hash);
+                    std::shared_ptr<PartitionNotation> readability =
+                        std::make_shared<PartitionNotation>(
+                            barName.c_str(), note.timestamp, (0.5 - 0.083 * i),
+                            getTextureByName(textures, "bar"));
+                    readability->setPosition({0, readability->getPosition().y});
+                    readability->setSize({0.25, 0.15});
+                    game->addTGui(readability);
+                }
+            }
+
+            double p = .2;
+            for (int i = 0; i < firstDots; i++) {
+                std::shared_ptr<ParentedGui> dot =
+                    std::make_shared<ParentedGui>(
+                        getTextureByName(textures, "dot"), name.c_str(), n);
+                dot->setSize({.05, .05});
+                dot->setPosition({p, 0});
+                tempNotes.push_back(dot);
+                p += .2;
+            }
+
+            if (k != Key::DRUM && !isFromCMajor(note.note)) {
+                std::string sharpName = "Sharp_";
+                sharpName.append(hash);
+                std::shared_ptr<ParentedGui> sharp =
+                    std::make_shared<ParentedGui>(
+                        getTextureByName(textures, "sharp"), sharpName.c_str(),
+                        n);
+                sharp->setPosition({-0.25, 0});
+                sharp->setSize({0.25, 0.25});
+                tempNotes.push_back(sharp);
+            }
+            uint64_t last = note.timestamp;
+            uint64_t t = note.timestamp + cutDown[0] * partition.MPQ * 4;
+            for (int i = 1; i < cutDown.size(); i++) {
+                std::string name2 = name;
+                name2.append("_");
+                name2.append(std::to_string(i));
+                double d = cutDown[i];
+                std::shared_ptr<ParentedGui> p = std::make_shared<ParentedGui>(
+                    getTextureForNote(textures, note.note, d, k), name2.c_str(),
+                    n);
+                glm::vec2 temp = getSizeAndLocForNote(d, k, note.note);
+                p->setPosition({(t - note.timestamp) / 300000.f, 0});
+                p->addEffect(
+                    new GraphicalEffect(applyOffset, new float[2]{0, temp.x}));
+                p->setSize({temp.y, temp.y});
+                tempNotes.push_back(p);
+                std::shared_ptr<ParentedGui> arc =
+                    std::make_shared<ParentedGui>(
+                        getTextureByName(textures, "arc"), name2.c_str(), n);
+                arc->setPosition(
+                    {(((t + last) / 2) - note.timestamp) / 300000.f, 0});
+                arc->addEffect(new GraphicalEffect(
+                    applyOffset, new float[2]{0, temp.x - .15f}));
+                arc->setSize({(t - last) / 350000.f, .15f});
+                tempNotes.push_back(arc);
+                last = t;
+                t += d * partition.MPQ * 4;
             }
         }
+        std::vector<std::shared_ptr<Gui>> tmp;
+        for (std::weak_ptr<Note> &note : notes)
+            tmp.push_back(std::shared_ptr<Note>(note));
 
-        double p = .2;
-        for (int i = 0; i < firstDots; i++) {
-            ParentedGui *dot = new ParentedGui(
-                getTextureByName(textures, "dot"), name.c_str(), n);
-            dot->setSize({.05, .05});
-            dot->setPosition({p, 0});
-            tempNotes.push_back(dot);
-            p += .2;
-        }
-
-        if (k != Key::DRUM && !isFromCMajor(note.note)) {
-            std::string sharpName = "Sharp_";
-            sharpName.append(hash);
-            ParentedGui *sharp = new ParentedGui(
-                getTextureByName(textures, "sharp"), sharpName.c_str(), n);
-            sharp->setPosition({-0.25, 0});
-            sharp->setSize({0.25, 0.25});
-            tempNotes.push_back(sharp);
-        }
-        uint64_t last = note.timestamp;
-        uint64_t t = note.timestamp + cutDown[0] * partition.MPQ * 4;
-        for (int i = 1; i < cutDown.size(); i++) {
-            std::string name2 = name;
-            name2.append("_");
-            name2.append(std::to_string(i));
-            double d = cutDown[i];
-            ParentedGui *p = new ParentedGui(
-                getTextureForNote(textures, note.note, d, k), name2.c_str(), n);
-            glm::vec2 temp = getSizeAndLocForNote(d, k, note.note);
-            p->setPosition({(t - note.timestamp) / 300000.f, 0});
-            p->addEffect(
-                new GraphicalEffect(applyOffset, new float[2]{0, temp.x}));
-            p->setSize({temp.y, temp.y});
-            tempNotes.push_back(p);
-            ParentedGui *arc = new ParentedGui(
-                getTextureByName(textures, "arc"), name2.c_str(), n);
-            arc->setPosition(
-                {(((t + last) / 2) - note.timestamp) / 300000.f, 0});
-            arc->addEffect(new GraphicalEffect(applyOffset,
-                                               new float[2]{0, temp.x - .15f}));
-            arc->setSize({(t - last) / 350000.f, .15f});
-            tempNotes.push_back(arc);
-            last = t;
-            t += d * partition.MPQ * 4;
-        }
+        if (tmp.size() > 0) sortGuis(tmp, cmpGuisByTexture);
+        if (tempNotes.size() > 0) sortGuis(tempNotes, cmpGuisByTexture);
+        for (std::shared_ptr<Gui> &note : tmp) game->addGui(note);
     }
-    std::vector<Gui *> tmp;
-    for (Note *note : notes) tmp.push_back(note);
-    if (tmp.size() > 0) sortGuis(tmp, cmpGuisByTexture);
-    if (tempNotes.size() > 0) sortGuis(tempNotes, cmpGuisByTexture);
-    for (Gui *note : tmp) game->addGui(note);
-    for (Gui *gui : tempNotes) game->addGui(gui);
+    for (std::shared_ptr<Gui> &gui : tempNotes) game->addGui(gui);
     music = NULL;
     AudioHandler *audio = game->getAudioHandler();
     if (chart.audio.compare("None") != 0) {
@@ -202,7 +223,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
     text.append(" by ");
     text.append(chart.artist);
 
-    for (Gui *g :
+    for (std::shared_ptr<Gui> &g :
          printShadowedString(text, renderer->getTextHandler(), "title_",
                              "Stupid", 11, {-1.75, -.9}, {.2, .2, 1, 1}))
         game->addGui(g);
@@ -223,12 +244,14 @@ bool PlayMode::update() {
     int64_t time_from_start = game->getCurrentTimeMicros();
     // std::cout << std::dec << time_from_start << " ";
     if (autoPlay)
-        for (Note *note : notes)
-            if (note->getStatus() == WAITING &&
-                note->getTime() <= time_from_start) {
-                noteHit(note);
-                playDrumSound(note->getPitch());
+        for (std::weak_ptr<Note> &note : notes) {
+            if (note.expired()) continue;
+            std::shared_ptr<Note> n(note);
+            if (n->getStatus() == WAITING && n->getTime() <= time_from_start) {
+                noteHit(n);
+                playDrumSound(n->getPitch());
             }
+        }
 
 #ifndef NOVST
     if (plugin) plugin->update(time_from_start);
@@ -239,7 +262,9 @@ bool PlayMode::update() {
     // Accshually, if I only check a few notes (the first 5 in array for
     // instance) and if there cannot be more than this amount in the hit window
     // then I can check shit semi-optimally :nerd:
-    for (Note *n : notes) {
+    for (std::weak_ptr<Note> &note : notes) {
+        if (note.expired()) continue;
+        std::shared_ptr<Note> n(note);
         if (n->justMissed()) {
             noteMiss(n);
             continue;
@@ -259,22 +284,25 @@ bool PlayMode::update() {
                 if (drum) {
                     playDrumSound(m.data1);
                 }
-                for (Note *note : notes) {
-                    if (note->getStatus() == WAITING &&
-                        note->getPitch() == m.data1 &&
-                        std::abs(note->getTime() - time_from_start) <
+                for (const std::weak_ptr<Note> &note : notes) {
+                    if (note.expired()) continue;
+                    std::shared_ptr<Note> n(note);
+                    if (n->getStatus() == WAITING && n->getPitch() == m.data1 &&
+                        std::abs(n->getTime() - time_from_start) <
                             (drum ? DRUM_HIT_WINDOW : HIT_WINDOW)) {
-                        noteHit(note);
+                        noteHit(n);
                         got_one = true;
                         break;
                     }
                 }
                 if (!drum && !got_one) {
-                    for (Note *note : notes) {
-                        if (note->getStatus() == WAITING &&
-                            std::abs(note->getTime() - time_from_start) <
+                    for (const std::weak_ptr<Note> &note : notes) {
+                        if (note.expired()) continue;
+                        std::shared_ptr<Note> n(note);
+                        if (n->getStatus() == WAITING &&
+                            std::abs(n->getTime() - time_from_start) <
                                 (drum ? DRUM_HIT_WINDOW : HIT_WINDOW)) {
-                            noteMiss(note);
+                            noteMiss(n);
                         }
                     }
                 }
@@ -301,11 +329,11 @@ bool PlayMode::update() {
     return false;
 }
 
-void PlayMode::noteHit(Note *note) {
+void PlayMode::noteHit(const std::shared_ptr<Note> &note) {
     if (note->getStatus() != WAITING) return;
     int64_t time = game->getCurrentTimeMicros();
     int64_t delta = autoPlay ? 0 : time - note->getTime();
-    Precision *prec = new Precision(
+    std::shared_ptr<Gui> prec = std::make_shared<Precision>(
         getTextureByName(game->getRenderer()->getTextures(), "precision_tick"),
         "tick", time, delta);
     prec->setSize({0.1f, 0.4f});
@@ -330,7 +358,7 @@ void PlayMode::noteHit(Note *note) {
     std::string text = "Good!";
     int i = 0;
     std::string name = "hit_";
-    name.append(std::to_string((size_t)note));
+    name.append(std::to_string((size_t)note.get()));
     name.append("_");
     /*for (Text t : renderer->getTextHandler()->createText(
              text, "Stupid", 11,
@@ -347,7 +375,7 @@ void PlayMode::noteHit(Note *note) {
     }*/
 }
 
-void PlayMode::noteMiss(Note *note) {
+void PlayMode::noteMiss(const std::shared_ptr<Note> &note) {
     if (note->getStatus() != WAITING) return;
     int64_t time = game->getCurrentTimeMicros();
     note->setStatus(MISSED);
@@ -360,10 +388,11 @@ void PlayMode::noteMiss(Note *note) {
              {-2, (double)(-.25 + line->getPosition().y +
                            line->getSize().y / 2.)})) {
         std::string name = "miss_";
-        name.append(std::to_string((size_t)note));
+        name.append(std::to_string((size_t)note.get()));
         name.append("_");
         name.append(std::to_string(i++));
-        Gui *gui = new Gui(t.character.texture, name.c_str());
+        std::shared_ptr<Gui> gui =
+            std::make_shared<Gui>(t.character.texture, name.c_str());
         gui->addEffect(new GraphicalEffect(applyTemp));
         gui->setColor({1, 0, 0, 1});
         gui->setNegate(true);
@@ -464,19 +493,21 @@ void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,
     for (k = 0; k < 12; k++) {
         if (keys[k] == key) break;
     }*/
-    for (Note *note : inst->notes) {
+    for (std::weak_ptr<Note> &note : inst->notes) {
+        if (note.expired()) continue;
+        std::shared_ptr<Note> n(note);
         // This is ADOFAI for now
-        if (  // note->getPitch() == k &&
-            note->getStatus() == WAITING &&
-            std::abs(note->getTime() - game->getCurrentTimeMicros()) <
+        if (  // b->getPitch() == k &&
+            n->getStatus() == WAITING &&
+            std::abs(n->getTime() - game->getCurrentTimeMicros()) <
                 (inst->drum
                      ? DRUM_HIT_WINDOW
                      : HIT_WINDOW)  // && next note not skipped/close?? or
                                     // just set OD to a value that prevents
                                     // the need for notelock idk hmm
         ) {
-            inst->noteHit(note);
-            inst->playDrumSound(note->getPitch());
+            inst->noteHit(n);
+            if (inst->drum) inst->playDrumSound(n->getPitch());
             break;
         }
     }
@@ -510,6 +541,6 @@ void PlayMode::freeFinalUBO(void *&ubo) {
     if (mod) mod->freeFinalUBO(ubo);
 }
 
-void PlayMode::onSpawn(Gui *g) {
+void PlayMode::onSpawn(std::shared_ptr<Gui> &g) {
     if (mod) mod->onSpawn(g);
 }

@@ -842,10 +842,10 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
 
     Model* lastModel = NULL;
     ImageView* lastTexture = NULL;
-    std::vector<Entity*> entities = game->getEntities();
+    std::vector<std::shared_ptr<Entity>> entities = game->getEntities();
     if (!entities.empty()) {
         commandBuffer->bindPipeline(objModule->getPipeline());
-        for (Entity* e : entities) {
+        for (std::shared_ptr<Entity>& e : entities) {
             Model* model = e->getModel();
             ImageView* texture = e->getTexture();
             if (lastModel != model) {
@@ -878,9 +878,9 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->bindVertexBuffers(vertexBuffer, 1);
     commandBuffer->bindIndexBuffer(indexBuffer);
 
-    std::vector<Gui*> guis = game->getGuis();
+    std::vector<std::shared_ptr<Gui>> guis = game->getGuis();
     for (auto iter = guis.begin(); iter != guis.end(); iter++) {
-        Gui* g = *iter;
+        std::shared_ptr<Gui>& g = *iter;
         if (g->getRealPosition().x + g->getGraphicalPosition().x >
             2. + g->getSize().x)
             continue;
@@ -934,7 +934,8 @@ void Renderer::recordCommandBuffer(CommandBuffer* commandBuffer,
     commandBuffer->end();
 }
 
-void Renderer::drawEntity(Entity* entity, CommandBuffer* commandBuffer) {
+void Renderer::drawEntity(std::shared_ptr<Entity>& entity,
+                          CommandBuffer* commandBuffer) {
     Model* model = entity->getModel();
 
     ShaderData* data = entity->getShaderData();
@@ -947,7 +948,8 @@ void Renderer::drawEntity(Entity* entity, CommandBuffer* commandBuffer) {
     delete data;
 }
 
-void Renderer::drawGui(Gui* gui, CommandBuffer* commandBuffer) {
+void Renderer::drawGui(std::shared_ptr<Gui>& gui,
+                       CommandBuffer* commandBuffer) {
     Model* model = guiModel;
 
     ShaderData* data = gui->getShaderData();

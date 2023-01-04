@@ -115,19 +115,19 @@ void Note::setStatus(NoteStatus status) {
     }
 }
 
-NoteStatus Note::getStatus() { return status; }
+NoteStatus Note::getStatus() const { return status; }
 
-int64_t Note::getTime() { return this->time; }
+int64_t Note::getTime() const { return this->time; }
 
-int64_t Note::getDuration() { return this->duration; }
+int64_t Note::getDuration() const { return this->duration; }
 
-int64_t Note::getTotalDuration() { return this->totalDuration; }
+int64_t Note::getTotalDuration() const { return this->totalDuration; }
 
-unsigned char Note::getPitch() { return pitch; }
+unsigned char Note::getPitch() const { return pitch; }
 
 void Note::kill(uint64_t moment) { this->kill_moment = moment; }
 
-bool Note::justMissed() { return missed; }
+bool Note::justMissed() const { return missed; }
 
 bool Note::update(int64_t time) {
     PartitionNotation::update(time);

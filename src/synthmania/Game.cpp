@@ -22,13 +22,9 @@ void Game::init() {
 }
 
 void Game::resetScene() {
-    if (menu == NULL)
-        for (Gui *g : guis) delete g;
-    else
-        menu->select(NULL);
-    guis.clear();
+    if (menu) menu->unselect();
     menu = NULL;
-    for (Entity *e : entities) delete e;
+    guis.clear();
     entities.clear();
     window->resetCallbacks();
 }
@@ -44,17 +40,19 @@ void Game::run() {
         glfwPollEvents();
 
         // TODO handle everything with z values and do it elsewhere
-        if (menu != NULL) {
+        if (menu) {
             glm::vec2 pos = renderer->getVirtPos(window->getCursorPos());
             bool pressed = window->mousePressed();
             clicked = lastPressed && !pressed;
             lastPressed = pressed;
-            std::vector<Button *> buttons = menu->getButtons();
-            std::vector<MenuElement *> elements = menu->getMenuElements();
+            const std::vector<std::shared_ptr<Button>> &buttons =
+                menu->getButtons();
+            const std::vector<std::shared_ptr<MenuElement>> &elements =
+                menu->getMenuElements();
             if (pressed || clicked)
                 for (auto iter = elements.begin(); iter != elements.end();
                      iter++) {
-                    MenuElement *e = *iter;
+                    const std::shared_ptr<MenuElement> &e = *iter;
                     if (e->isInside(pos)) {
                         if (clicked) {
                             e->onClicked(pos);
@@ -65,7 +63,7 @@ void Game::run() {
                     }
                 }
             for (auto iter = buttons.rbegin(); iter != buttons.rend(); iter++) {
-                Button *b = *iter;
+                std::shared_ptr<Button> b = *iter;
                 if (clicked) {
                     if (b->isInside(pos)) {
                         menu->onPressed(b);
@@ -80,9 +78,9 @@ void Game::run() {
                 }
             }
         }
-        if (audio != NULL) audio->update();
+        if (audio) audio->update();
         update();
-        if (menu != NULL) menu->update(getCurrentTimeMicros());
+        if (menu) menu->update(getCurrentTimeMicros());
         renderer->render();
     }
 }
@@ -127,18 +125,20 @@ Renderer *Game::getRenderer() { return renderer; }
 
 TextHandler *Game::getTextHandler() { return renderer->getTextHandler(); }
 
-// TODO replace with render module thing
+// TODO replace with render module thingy thing
 size_t Game::updateUBO(void *&ubo) { return sizeof(UniformBufferObject); }
 void Game::freeUBO(void *&ubo) {}
 
 size_t Game::updateFinalUBO(void *&ubo) { return sizeof(UniformBufferObject); }
 void Game::freeFinalUBO(void *&ubo) {}
 
-void Game::addEntity(Entity *entity) { entities.push_back(entity); }
+void Game::addEntity(std::shared_ptr<Entity> &entity) {
+    entities.push_back(entity);
+}
 
 float prevZ = 0.9999f;
 
-void Game::addGui(Gui *gui) {
+void Game::addGui(std::shared_ptr<Gui> &gui) {
     if (guis.empty())
         prevZ = 0.9999f;
     else
@@ -147,8 +147,8 @@ void Game::addGui(Gui *gui) {
     this->guis.push_back(gui);
 }
 
-std::vector<Entity *> Game::getEntities() { return entities; }
-std::vector<Gui *> Game::getGuis() { return guis; }
+std::vector<std::shared_ptr<Entity>> Game::getEntities() { return entities; }
+std::vector<std::shared_ptr<Gui>> Game::getGuis() { return guis; }
 
 void Game::playSound(std::string sound) { this->audio->playSound(sound); }
 

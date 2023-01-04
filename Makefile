@@ -3,9 +3,9 @@ ifeq ($(OS),Windows_NT)
 VSTFLAGS = -Llibs/SimplePluginHost/Builds/VisualStudio2022/x64/Release/Static\ Library -l:SimplePluginHost.lib
 endif
 VSTINCLUDE = -I libs/SimplePluginHost/export/include
-VSTOBJ = $(wildcard libs/SimplePluginHost/SimplePluginHost/Builds/LinuxMakefile/build/intermediate/*.o)
+VSTHOBJ = $(wildcard libs/SimplePluginHost/SimplePluginHost/Builds/LinuxMakefile/build/intermediate/*.o)
 ifeq ($(OS),Windows_NT)
-VSTOBJ = 
+VSTHOBJ = 
 endif
 VSTLIB = libs/SimplePluginHost/export/lib/libSimplePluginHost.a
 ifeq ($(NO_VST), 1)
@@ -44,13 +44,20 @@ endif
 OBJ = $(SRC:$(SRCFOLDER)/%.cpp=$(OBJDIR)/%.o)
 
 # Testing files
-MIDISRC = $(wildcard src/midi/*.cpp) test/miditest.cpp
-AUDIOSRC = $(wildcard src/audio/*.cpp) test/audiotest.cpp
-JSONSRC = $(wildcard src/json/*.cpp) test/jsontest.cpp
-VSTSRC = $(wildcard src/audio/*.cpp) test/vsttest.cpp
-GSRC = test/graphicstest.cpp $(wildcard src/render/*.cpp) $(wildcard src/render/*/*.cpp) \
-				$(wildcard src/entity/*.cpp) $(wildcard src/gui/*.cpp) \
-				$(wildcard src/anim/*.cpp) $(wildcard src/json/*.cpp) src/synthmania/Game.cpp
+MIDISRC = $(wildcard src/midi/*.cpp)
+AUDIOSRC = $(wildcard src/audio/*.cpp)
+JSONSRC = $(wildcard src/json/*.cpp)
+VSTSRC = $(wildcard src/audio/*.cpp)
+GSRC = $(wildcard src/render/*.cpp) $(wildcard src/render/*/*.cpp)\
+				$(wildcard src/entity/*.cpp) $(wildcard src/gui/*.cpp)\
+				$(wildcard src/anim/*.cpp) $(wildcard src/json/*.cpp)\
+				$(wildcard src/audio/*.cpp) $(wildcard src/menu/*.cpp)\
+				$(wildcard src/synthmania/*.cpp) $(wildcard src/midi/*.cpp)
+MIDIOBJ = $(MIDISRC:$(SRCFOLDER)/%.cpp=$(OBJDIR)/%.o)
+AUDIOOBJ = $(AUDIOSRC:$(SRCFOLDER)/%.cpp=$(OBJDIR)/%.o)
+JSONOBJ = $(JSONSRC:$(SRCFOLDER)/%.cpp=$(OBJDIR)/%.o)
+VSTOBJ = $(VSTSRC:$(SRCFOLDER)/%.cpp=$(OBJDIR)/%.o)
+GOBJ = $(GSRC:$(SRCFOLDER)/%.cpp=$(OBJDIR)/%.o)
 
 MODULEDIR = module
 
@@ -62,11 +69,11 @@ SHADERS_SPV = $(patsubst shader/%.comp, bin/%.comp.spv,\
 				$(patsubst shader/%.geom, bin/%.geom.spv, $(SHADERS)))))
 
 Synthmania: shader $(LIBSOBJ) $(VSTLIB) bin/config.json
-	make $(OBJ)
+	@make $(OBJ)
 ifeq ($(OS),Windows_NT)
-	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTOBJ) $(LIBSOBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
+	g++ $(CFLAGS) -o bin/Synthmania $(OBJ) $(VSTHOBJ) $(LIBSOBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 else
-	g++ $(CFLAGS) -rdynamic -o bin/Synthmania $(OBJ) $(VSTOBJ) $(LIBSOBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
+	g++ $(CFLAGS) -rdynamic -o bin/Synthmania $(OBJ) $(VSTHOBJ) $(LIBSOBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 endif
 
 bin/libs/stbi/stb_image.o: libs/stbi/stb_image.c
@@ -93,10 +100,12 @@ ifndef MOD
 else
 ifeq ($(OS),Windows_NT)
 # We shall see if this works on windows
-	g++ $(CFLAGS) -shared -Wl,--out-implib,lib$(MOD).a $(shell find $(MODULEDIR)/$(MOD) -name '*.cpp') -I $(MODULEDIR)/$(MOD) \
+	g++ $(CFLAGS) -shared -Wl,--out-implib,lib$(MOD).a\
+			$(shell find $(MODULEDIR)/$(MOD) -name '*.cpp') -I $(MODULEDIR)/$(MOD) \
 			$(LDFLAGS) $(VSTFLAGS) $(DEBUG) -o bin/$(MOD).dll
 else
-	g++ $(CFLAGS) -fPIC -shared -rdynamic $(shell find $(MODULEDIR)/$(MOD) -name '*.cpp') -I $(MODULEDIR)/$(MOD) \
+	g++ $(CFLAGS) -fPIC -shared -rdynamic\
+			$(shell find $(MODULEDIR)/$(MOD) -name '*.cpp') -I $(MODULEDIR)/$(MOD) \
 			$(LDFLAGS) $(VSTFLAGS) $(DEBUG) -o bin/$(MOD).so
 endif
 endif
@@ -110,20 +119,25 @@ bin/config.json:
 test: Synthmania
 	./bin/Synthmania
 
-midi:
-	g++ $(CFLAGS) -o bin/MidiTest $(MIDISRC) $(LDFLAGS) $(DEBUG)
+midi: $(MIDIOBJ)
+	g++ $(CFLAGS) -o bin/MidiTest test/miditest.cpp\
+		$(MIDIOBJ) $(LDFLAGS) $(DEBUG)
 
-audio:
-	g++ $(CFLAGS) -o bin/AudioTest $(AUDIOSRC) $(LDFLAGS) $(DEBUG)
+audio: $(AUDIOOBJ)
+	g++ $(CFLAGS) -o bin/AudioTest  test/audiotest.cpp\
+		$(AUDIOOBJ) $(LDFLAGS) $(DEBUG)
 
-json:
-	g++ $(CFLAGS) -o bin/JsonTest $(JSONSRC) $(LDFLAGS) $(DEBUG)
+json: $(JSONOBJ)
+	g++ $(CFLAGS) -o bin/JsonTest test/jsontest.cpp\
+		$(JSONOBJ) $(LDFLAGS) $(DEBUG)
 
-graphics:
-	g++ $(CFLAGS) -o bin/GraphicsTest $(GSRC) $(LIBSOBJ) $(LDFLAGS) $(DEBUG)
+graphics: $(GOBJ) $(LIBSOBJ) shader
+	g++ $(CFLAGS) -o bin/GraphicsTest test/graphicstest.cpp\
+		$(GOBJ) $(LIBSOBJ) $(LDFLAGS) $(DEBUG) -D NOVST
 
-vst: $(VSTLIB)
-	g++ $(CFLAGS) -o bin/VstTest $(VSTS-DNDEBUGRC) $(VSTOBJ) $(VSTLIB) $(VSTFLAGS) $(LDFLAGS) $(DEBUG)
+vst: $(VSTOBJ) $(VSTLIB)
+	g++ $(CFLAGS) -o bin/VstTest test/vsttest.cpp\
+		$(VSTOBJ) $(VSTHOBJ) $(VSTLIB) $(VSTFLAGS) $(LDFLAGS) $(DEBUG)
 
 bin/%.spv: shader/%
 	glslc $< -o $@

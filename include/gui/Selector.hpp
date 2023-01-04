@@ -20,7 +20,7 @@ class Selector : public MenuElement {
 
     void recalculatePositions();
 
-    std::vector<Gui*> getGuis();
+    std::vector<std::shared_ptr<Gui>> getGuis();
 
     int getSelected();
     void select(int selected);
@@ -28,8 +28,8 @@ class Selector : public MenuElement {
     virtual ~Selector() = default;
 
    private:
-    std::vector<std::vector<std::pair<Text, Gui*>>> strings;
-    std::vector<Gui*> buttons;
+    std::vector<std::vector<std::pair<Text, std::shared_ptr<Gui>>>> strings;
+    std::vector<std::shared_ptr<Gui>> buttons;
     int current;
     bool opened;
     int textLimit;

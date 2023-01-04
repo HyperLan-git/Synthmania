@@ -8,11 +8,11 @@ class MainMenu : public Menu {
    public:
     MainMenu(Game *g);
 
-    virtual void show();
+    virtual void show() override;
 
-    virtual void onPressed(Button *b);
+    virtual void onPressed(const std::shared_ptr<Button> &b) override;
 
-    virtual void update(int64_t time);
+    virtual void update(int64_t time) override;
 
     virtual ~MainMenu();
 };

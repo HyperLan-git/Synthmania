@@ -1,7 +1,7 @@
 #include "Gamemode.hpp"
 Gamemode::Gamemode() {}
 
-void Gamemode::onSpawn(Gui *g) {}
+void Gamemode::onSpawn(std::shared_ptr<Gui> &g) {}
 void Gamemode::onClockAdjust(int64_t value) {}
 void Gamemode::onConfigChange() {}
 

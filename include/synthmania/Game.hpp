@@ -40,8 +40,8 @@ class Game {
 
     Renderer *getRenderer();
 
-    std::vector<Entity *> getEntities();
-    std::vector<Gui *> getGuis();
+    std::vector<std::shared_ptr<Entity>> getEntities();
+    std::vector<std::shared_ptr<Gui>> getGuis();
 
     virtual void resetScene();
     virtual void loadMenu(std::string menu);
@@ -56,8 +56,13 @@ class Game {
     virtual size_t updateFinalUBO(void *&ubo);
     virtual void freeFinalUBO(void *&ubo);
 
-    virtual void addGui(Gui *gui);
-    virtual void addEntity(Entity *entity);
+    template <typename T>
+    void addTGui(std::shared_ptr<T> &gui) {
+        std::shared_ptr<Gui> temp = std::dynamic_pointer_cast<Gui>(gui);
+        addGui(temp);
+    }
+    virtual void addGui(std::shared_ptr<Gui> &gui);
+    virtual void addEntity(std::shared_ptr<Entity> &entity);
 
     Menu *getMenu(std::string menu);
     Menu *getCurrentMenu();
@@ -84,8 +89,8 @@ class Game {
     std::map<std::string, std::string> textures;
     std::map<std::string, std::vector<unsigned long>> fontsToLoad;
 
-    std::vector<Entity *> entities;
-    std::vector<Gui *> guis;
+    std::vector<std::shared_ptr<Entity>> entities;
+    std::vector<std::shared_ptr<Gui>> guis;
 
     // What will I serve you today sir ?
     Menu *menu = NULL;

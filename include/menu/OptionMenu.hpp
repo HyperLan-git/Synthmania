@@ -15,19 +15,19 @@ class OptionMenu : public Menu {
    public:
     OptionMenu(Game* game);
 
-    virtual void show();
+    virtual void show() override;
 
-    virtual void onPressed(Button* b);
+    virtual void onPressed(const std::shared_ptr<Button>& b) override;
 
     void save();
 
     ~OptionMenu();
 
    private:
-    Slider *volume, *music, *synth;
-    TextArea *audioLatency, *graphicLatency, *audioLeniency, *bufSize, *bufAmt,
-        *pluginFolders;
-    Selector *midiDevice, *audioDevice, *notation, *skin;
-    Checkbox* fullscreen;
+    std::shared_ptr<Slider> volume, music, synth;
+    std::shared_ptr<TextArea> audioLatency, graphicLatency, audioLeniency,
+        bufSize, bufAmt, pluginFolders;
+    std::shared_ptr<Selector> midiDevice, audioDevice, notation, skin;
+    std::shared_ptr<Checkbox> fullscreen;
     Options* options;
 };

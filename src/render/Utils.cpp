@@ -202,7 +202,8 @@ void beginSection(DebugFunc debugFunctions, std::string name,
 #endif
 }
 
-void sortGuis(std::vector<Gui*>& guis, GuiOrderFunction comparator) {
+void sortGuis(std::vector<std::shared_ptr<Gui>>& guis,
+              GuiOrderFunction comparator) {
     // I'm gonna use bubble sort cause brain empty
     for (int i = 0; i < guis.size() - 1; i++)
         for (int j = 0; j < guis.size() - i - 1; j++) {
@@ -211,14 +212,14 @@ void sortGuis(std::vector<Gui*>& guis, GuiOrderFunction comparator) {
                 double tmp = guis[j]->getPosition().z;
                 guis[j]->setZ(guis[j + 1]->getPosition().z);
                 guis[j + 1]->setZ(tmp);
-                Gui* p = guis[j];
+                std::shared_ptr<Gui> p = guis[j];
                 guis[j] = guis[j + 1];
                 guis[j + 1] = p;
             }
         }
 }
 
-int cmpGuisByTexture(Gui* gui, Gui* gui2) {
+int cmpGuisByTexture(std::shared_ptr<Gui>& gui, std::shared_ptr<Gui>& gui2) {
     return gui->getTexture() - gui2->getTexture();
 }
 

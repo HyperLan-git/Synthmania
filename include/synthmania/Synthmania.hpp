@@ -40,23 +40,22 @@ class Synthmania;
 
 #define HIT_TIME 1500000
 // TODO move this elsewhere
-std::vector<Gui *> printString(std::string text, TextHandler *textHandler,
-                               std::string entityNames, std::string font,
-                               double size, glm::vec2 pos,
-                               glm::vec4 color = {0, 0, 0, 1});
+std::vector<std::shared_ptr<Gui>> printString(std::string text,
+                                              TextHandler *textHandler,
+                                              std::string entityNames,
+                                              std::string font, double size,
+                                              glm::vec2 pos,
+                                              glm::vec4 color = {0, 0, 0, 1});
 
-std::vector<Gui *> printShadowedString(std::string text,
-                                       TextHandler *textHandler,
-                                       std::string entityNames,
-                                       std::string font, double size,
-                                       glm::vec2 pos,
-                                       glm::vec4 color = {0, 0, 0, 1});
+std::vector<std::shared_ptr<Gui>> printShadowedString(
+    std::string text, TextHandler *textHandler, std::string entityNames,
+    std::string font, double size, glm::vec2 pos,
+    glm::vec4 color = {0, 0, 0, 1});
 
-std::vector<Gui *> printShakingString(std::string text,
-                                      TextHandler *textHandler,
-                                      std::string entityNames, std::string font,
-                                      double size, glm::vec2 pos, float shake,
-                                      glm::vec4 color = {0, 0, 0, 1});
+std::vector<std::shared_ptr<Gui>> printShakingString(
+    std::string text, TextHandler *textHandler, std::string entityNames,
+    std::string font, double size, glm::vec2 pos, float shake,
+    glm::vec4 color = {0, 0, 0, 1});
 
 // TODO check for note length
 // TODO merge note flags together
@@ -97,9 +96,11 @@ class Synthmania : public Game {
     virtual size_t updateFinalUBO(void *&ubo);
     virtual void freeFinalUBO(void *&ubo);
 
-    virtual void addGui(Gui *gui);
+    virtual void addGui(std::shared_ptr<Gui> &gui);
 
+#ifndef NOVST
     std::string getPlugin(std::string plugin);
+#endif
     Gamemode *getGamemode();
 
     bool isFullscreen();

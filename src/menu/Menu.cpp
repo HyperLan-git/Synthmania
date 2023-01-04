@@ -5,27 +5,36 @@ Menu::Menu(Game* g) {
     this->selected = NULL;
 }
 
-std::vector<Button*> Menu::getButtons() { return buttons; }
+const std::vector<std::shared_ptr<Button>>& Menu::getButtons() {
+    return buttons;
+}
 
-std::vector<MenuElement*> Menu::getMenuElements() { return elements; }
+const std::vector<std::shared_ptr<MenuElement>>& Menu::getMenuElements() {
+    return elements;
+}
 
-std::vector<Gui*> Menu::getGuis() { return guis; }
+const std::vector<std::shared_ptr<Gui>>& Menu::getGuis() { return guis; }
 
-void Menu::select(MenuElement* element) {
-    if (selected != NULL) selected->focus(false);
-    if (element != NULL) element->focus();
+void Menu::select(const std::shared_ptr<MenuElement>& element) {
+    if (selected) selected->focus(false);
+    if (element) element->focus();
     this->selected = element;
 }
 
+void Menu::unselect() {
+    if (selected) selected->focus(false);
+    this->selected = std::shared_ptr<MenuElement>();
+}
+
 void Menu::show() {
-    for (Button* b : buttons) game->addGui(b);
-    for (MenuElement* e : elements) game->addGui(e);
-    for (Gui* g : guis) game->addGui(g);
+    for (std::shared_ptr<Button>& b : buttons) game->addTGui(b);
+    for (std::shared_ptr<MenuElement>& e : elements) game->addTGui(e);
+    for (std::shared_ptr<Gui>& g : guis) game->addGui(g);
     game->getWindow()->setTextcallback([](GLFWwindow* window, unsigned int c) {
         Game* g = (Game*)(glfwGetWindowUserPointer(window));
-        if (g == NULL) return;
+        if (!g) return;
         Menu* menu = dynamic_cast<Menu*>(g->getCurrentMenu());
-        if (menu == NULL) return;
+        if (!menu) return;
         menu->textCallback(window, c);
     });
     game->getWindow()->setKeycallback(
@@ -38,7 +47,7 @@ void Menu::show() {
         });
 }
 
-void Menu::onPressed(Button* b) {}
+void Menu::onPressed(const std::shared_ptr<Button>& b) {}
 
 void Menu::update(int64_t time) {}
 
@@ -52,8 +61,4 @@ void Menu::keyCallback(GLFWwindow* window, int key, int scancode, int action,
         selected->onKeyPressed(key, scancode, mods);
 }
 
-Menu::~Menu() {
-    for (MenuElement* e : elements) delete e;
-    for (Button* b : buttons) delete b;
-    for (Gui* g : guis) delete g;
-}
+Menu::~Menu() {}

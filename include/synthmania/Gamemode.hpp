@@ -2,6 +2,8 @@
 
 class Gamemode;
 
+#include <memory>
+
 #include "Gui.hpp"
 
 class Gamemode {
@@ -12,7 +14,7 @@ class Gamemode {
     virtual bool update() = 0;
 
     // Gets called when a new screen element appears
-    virtual void onSpawn(Gui *g);
+    virtual void onSpawn(std::shared_ptr<Gui> &g);
     // Gets called whenever the clock gets readjusted
     virtual void onClockAdjust(int64_t value);
     // Gets called when user leaves the options menu

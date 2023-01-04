@@ -12,22 +12,23 @@
             "compilerPath": "D:/mysys64/mingw64/bin/gcc.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-gcc-x64",
-            "configurationProvider": "ms-vscode.makefile-tools"
+            "intelliSenseMode": "windows-gcc-x64"
         },
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/../SimplePluginHost/export/include",
+                "${workspaceFolder}/include/**",
+                "${workspaceFolder}/libs/stbi",
+                "${workspaceFolder}/libs/obj",
+                "${workspaceFolder}/libs/libremidi/include",
+                "${workspaceFolder}/libs/SimplePluginHost/export/include",
                 "/usr/include/freetype2"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "linux-gcc-x64",
-            "configurationProvider": "ms-vscode.makefile-tools"
+            "intelliSenseMode": "linux-gcc-x64"
         }
     ],
     "version": 4

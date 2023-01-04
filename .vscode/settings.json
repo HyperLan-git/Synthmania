@@ -105,5 +105,6 @@
     },
     "C_Cpp.errorSquiggles": "enabledIfIncludesResolve",
     "editor.formatOnSave": true,
-    "C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: Google, UseTab: Never, IndentWidth: 4, TabWidth: 4}"
+    "C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: Google, UseTab: Never, IndentWidth: 4, TabWidth: 4}",
+    "cmake.configureOnOpen": false
 }

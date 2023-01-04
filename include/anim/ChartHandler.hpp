@@ -24,7 +24,7 @@ class ChartHandler {
      *
      * @param g The gui about to appear
      */
-    virtual void onSpawn(Gui* g) = 0;
+    virtual void onSpawn(std::shared_ptr<Gui>& g) = 0;
 
     /**
      * @brief Gets the vertex shader code (if you don't know how to write

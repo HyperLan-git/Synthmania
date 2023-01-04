@@ -40,13 +40,14 @@ class Note : public PartitionNotation {
          double totalDuration, double duration, uint64_t MPQ,
          std::vector<ImageView*> textures, Key key);
 
-    bool justMissed();
     void setStatus(NoteStatus status);
-    NoteStatus getStatus();
-    int64_t getTime();
-    int64_t getDuration();
-    int64_t getTotalDuration();
-    unsigned char getPitch();
+
+    bool justMissed() const;
+    NoteStatus getStatus() const;
+    int64_t getTime() const;
+    int64_t getDuration() const;
+    int64_t getTotalDuration() const;
+    unsigned char getPitch() const;
     void kill(uint64_t moment);
 
     virtual bool update(int64_t time);

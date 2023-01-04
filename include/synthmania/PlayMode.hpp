@@ -19,8 +19,8 @@ class PlayMode : public Gamemode {
 
     virtual bool update() override;
 
-    void noteHit(Note *note);
-    void noteMiss(Note *note);
+    void noteHit(const std::shared_ptr<Note> &note);
+    void noteMiss(const std::shared_ptr<Note> &note);
 
     Chart getChart();
     TrackPartition getPartition();
@@ -32,7 +32,7 @@ class PlayMode : public Gamemode {
 
     void spawnNote(MidiNote note);
 
-    virtual void onSpawn(Gui *g) override;
+    virtual void onSpawn(std::shared_ptr<Gui> &g) override;
     virtual void onClockAdjust(int64_t value) override;
     virtual void onConfigChange() override;
 
@@ -56,10 +56,10 @@ class PlayMode : public Gamemode {
     // Discord reference
     ChartHandler *mod = NULL;
 
-    std::vector<Note *> notes;
+    std::vector<std::weak_ptr<Note>> notes;
     AudioSource *music = NULL;
     std::string songFolder;
-    Judgement *line = NULL;
+    std::shared_ptr<Judgement> line = NULL;
     bool autoPlay = false, drum = false;
 
 #ifndef NOVST

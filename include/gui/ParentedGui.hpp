@@ -2,18 +2,18 @@
 
 class ParentedGui;
 
+#include <memory>
+
 #include "Gui.hpp"
 
-// TODO fix with shared ptr or smth
-
 /**
- * @brief A gui pointing to another, that moves with it and lives with it
- * Because it gets deleted whenever the parent dies it should ALWAYS be added
- * after the parent
+ * @brief A gui pointing to another, that moves with it and lives with it.
+ * When the parent dies, this also does afterwards.
  */
 class ParentedGui : public Gui {
    public:
-    ParentedGui(ImageView* texture, std::string name, Gui* parent);
+    ParentedGui(ImageView* texture, std::string name,
+                std::weak_ptr<Gui> parent);
 
     virtual glm::vec2 getRealPosition() const;
 
@@ -22,5 +22,5 @@ class ParentedGui : public Gui {
     virtual ShaderData* getShaderData() const;
 
    private:
-    Gui* parent;
+    std::weak_ptr<Gui> parent;
 };

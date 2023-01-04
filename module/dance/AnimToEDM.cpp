@@ -81,7 +81,10 @@ extern "C" class AnimToEDM : public ChartHandler {
     std::vector<AnimData> datas;
 
     AnimToEDM(Synthmania* game) : ChartHandler(game) {
-        std::vector<char> file = readFile(game->getSongFolder() + "/anim.csv");
+        std::vector<char> file =
+            readFile(std::dynamic_pointer_cast<PlayMode>(game->getGamemode())
+                         ->getSongFolder() +
+                     "/anim.csv");
         file.push_back('\0');
 
         size_t elem;
@@ -159,7 +162,7 @@ extern "C" class AnimToEDM : public ChartHandler {
         return sizeof(UniformBufferObject3);
     }
 
-    void onSpawn(Gui* g) override {}
+    void onSpawn(std::shared_ptr<Gui>& g) override {}
 
     void update(int64_t time) override {}
 

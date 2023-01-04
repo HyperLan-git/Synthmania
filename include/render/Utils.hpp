@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -108,7 +109,7 @@ void beginSection(DebugFunc debugFunctions, std::string name,
  */
 void endSection(DebugFunc debugFunctions, CommandBuffer* buffer);
 
-typedef int (*GuiOrderFunction)(Gui*, Gui*);
+typedef int (*GuiOrderFunction)(std::shared_ptr<Gui>&, std::shared_ptr<Gui>&);
 
 /**
  * @brief This function exists to preserve Z-ordering among guis
@@ -118,7 +119,8 @@ typedef int (*GuiOrderFunction)(Gui*, Gui*);
  * @param guis the vector to sort
  * @param comparator the ordering function
  */
-void sortGuis(std::vector<Gui*>& guis, GuiOrderFunction comparator);
+void sortGuis(std::vector<std::shared_ptr<Gui>>& guis,
+              GuiOrderFunction comparator);
 
 /**
  * @brief Compares guis' pointers to textures in order to sort them and get less
@@ -128,7 +130,7 @@ void sortGuis(std::vector<Gui*>& guis, GuiOrderFunction comparator);
  * @param gui2 Second element to sort
  * @return int texture1 - texture2
  */
-int cmpGuisByTexture(Gui* gui, Gui* gui2);
+int cmpGuisByTexture(std::shared_ptr<Gui>& gui, std::shared_ptr<Gui>& gui2);
 
 /**
  * @brief This will return a pointer to a dynamic library handle, use

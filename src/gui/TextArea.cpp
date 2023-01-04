@@ -24,14 +24,15 @@ TextArea::TextArea(ImageView* texture, std::string name, TextHandler* handler,
     this->predicate = textPredicate;
     text.reserve(maxChars);
     for (int i = 0; i < chars; i++) {
-        Gui* g = new Gui(texture, name);
+        std::shared_ptr<Gui> g = std::make_shared<Gui>(texture, name);
         g->setSize({0, 0});
         this->textContents.push_back(g);
     }
     wchar_t str[2] = {(wchar_t)cursor, 0};
     this->cursorChar = handler->createText_w(std::wstring(str), fontName,
                                              textSize * .9, {0, 0})[0];
-    this->cursor = new Gui(cursorChar.character.texture, name + "_cursor");
+    this->cursor =
+        std::make_shared<Gui>(cursorChar.character.texture, name + "_cursor");
     this->cursor->setSize(cursorChar.size);
 }
 
@@ -131,8 +132,8 @@ void TextArea::setTextStr(std::string text) {
     this->text = std::wstring(contents);
 }
 
-std::vector<Gui*> TextArea::getGuis() {
-    std::vector<Gui*> result = textContents;
+std::vector<std::shared_ptr<Gui>> TextArea::getGuis() {
+    std::vector<std::shared_ptr<Gui>> result = textContents;
     result.push_back(cursor);
     return result;
 }
@@ -153,7 +154,7 @@ void TextArea::recalculateText() {
          handler->createText_w(sub, fontName, textSize,
                                {position.x - size.x * .5 + cursor->getSize().x,
                                 position.y + size.y * .25})) {
-        Gui* g = this->textContents[i++];
+        std::shared_ptr<Gui> g = this->textContents[i++];
         g->setTexture(t.character.texture);
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -175,7 +176,7 @@ void TextArea::recalculateCursor() {
                 cPos >= this->textContents.size()) &&
                cPos > 0;
     if (end) cPos--;
-    Gui* g = this->textContents[cPos];
+    std::shared_ptr<Gui> g = this->textContents[cPos];
     if (end) pos.x += g->getSize().x;
     pos.x += g->getPosition().x + g->getGraphicalPosition().x - g->getSize().x +
              cursorChar.size.x / 4;
