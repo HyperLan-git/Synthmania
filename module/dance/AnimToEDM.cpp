@@ -1,4 +1,5 @@
 #include "ChartHandler.hpp"
+#include "PlayMode.hpp"
 
 struct UniformBufferObject2 {
     alignas(16) glm::mat4 view;
@@ -32,9 +33,7 @@ glm::vec3 hsv2rgb(glm::vec3 hsv) {
     int i;
     glm::vec3 rgb;
 
-    hh = hsv.x;
-    if (hh >= 360.0) hh = 0.0;
-    hh /= 60.0;
+    hh = hsv.x >= 360.0 ? 0.0 : hsv.x / 60.0;
     i = (int)hh;
     ff = hh - i;
     p = hsv.z * (1.0 - hsv.y);
@@ -79,12 +78,12 @@ glm::vec3 hsv2rgb(glm::vec3 hsv) {
 extern "C" class AnimToEDM : public ChartHandler {
    public:
     std::vector<AnimData> datas;
+    std::string songFolder;
 
-    AnimToEDM(Synthmania* game) : ChartHandler(game) {
-        std::vector<char> file =
-            readFile(std::dynamic_pointer_cast<PlayMode>(game->getGamemode())
-                         ->getSongFolder() +
-                     "/anim.csv");
+    AnimToEDM(Gamemode* game)
+        : ChartHandler(game),
+          songFolder(dynamic_cast<PlayMode*>(game)->getSongFolder()) {
+        std::vector<char> file = readFile(songFolder + "/anim.csv");
         file.push_back('\0');
 
         size_t elem;
@@ -133,27 +132,27 @@ extern "C" class AnimToEDM : public ChartHandler {
     }
 
     const std::string getVertShaderCode() override {
-        return (game->getSongFolder() + "/v_shader.spv");
+        return songFolder + "/v_shader.spv";
     }
 
     const std::string getGeomShaderCode() override {
-        return (game->getSongFolder() + "/g_shader.spv");
+        return songFolder + "/g_shader.spv";
     }
 
     const std::string getFragShaderCode() override {
-        return (game->getSongFolder() + "/f_shader.spv");
+        return songFolder + "/f_shader.spv";
     }
 
     const std::string getFinalVertShaderCode() override {
-        return (game->getSongFolder() + "/f_v.spv");
+        return songFolder + "/f_v.spv";
     }
 
     const std::string getFinalGeomShaderCode() override {
-        return (game->getSongFolder() + "/f_g.spv");
+        return songFolder + "/f_g.spv";
     }
 
     const std::string getFinalFragShaderCode() override {
-        return (game->getSongFolder() + "/f_f.spv");
+        return songFolder + "/f_f.spv";
     }
 
     virtual VkDeviceSize getUBOSize() { return sizeof(UniformBufferObject2); }
@@ -206,7 +205,7 @@ extern "C" class AnimToEDM : public ChartHandler {
             return sizeof(UniformBufferObject2);
         }
         auto data = getData(time);
-        uint64_t MPQ = game->getPartition().MPQ;
+        uint64_t MPQ = dynamic_cast<PlayMode*>(game)->getPartition().MPQ;
         double progress = ((time % MPQ) / (double)MPQ);
         int odd = (time % (MPQ * 2)) > MPQ;
         double a = -100 * progress * (progress - 0.2) * data.kick;
@@ -242,7 +241,7 @@ extern "C" class AnimToEDM : public ChartHandler {
             return sizeof(UniformBufferObject3);
         }
         auto data = getData(time);
-        uint64_t MPQ = game->getPartition().MPQ;
+        uint64_t MPQ = dynamic_cast<PlayMode*>(game)->getPartition().MPQ;
         result->proj = u->proj;
         result->view = u->view;
         result->chroma =
@@ -259,6 +258,6 @@ extern "C" class AnimToEDM : public ChartHandler {
     virtual ~AnimToEDM() = default;
 };
 
-extern "C" ChartHandler* getChartHandler(Synthmania* game) {
+extern "C" ChartHandler* getChartHandler(Gamemode* game) {
     return new AnimToEDM(game);
 }

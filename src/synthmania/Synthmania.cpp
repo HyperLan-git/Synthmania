@@ -138,7 +138,7 @@ size_t Synthmania::updateFinalUBO(void *&ubo) {
 }
 
 void Synthmania::freeFinalUBO(void *&ubo) {
-    if (gamemode) gamemode->freeUBO(ubo);
+    if (gamemode) gamemode->freeFinalUBO(ubo);
 }
 
 Synthmania::~Synthmania() {

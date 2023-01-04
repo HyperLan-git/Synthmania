@@ -17,7 +17,7 @@ class GraphicalEffect {
     GraphicalEffect(GraphicalEffectFunction function, float* data = NULL,
                     int64_t* tData = NULL);
 
-    virtual glm::vec2 call(Gui* gui, int64_t time);
+    virtual glm::vec2 operator()(Gui* gui, int64_t time);
 
     virtual ~GraphicalEffect();
 

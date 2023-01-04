@@ -1,3 +1,3 @@
 #include "ChartHandler.hpp"
 
-extern "C" ChartHandler::ChartHandler(Synthmania* game) { this->game = game; }
+extern "C" ChartHandler::ChartHandler(Gamemode* game) : game(game) {}

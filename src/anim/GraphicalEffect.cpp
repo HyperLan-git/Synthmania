@@ -7,7 +7,7 @@ GraphicalEffect::GraphicalEffect(GraphicalEffectFunction function, float* data,
     this->tData = tData;
 }
 
-glm::vec2 GraphicalEffect::call(Gui* gui, int64_t time) {
+glm::vec2 GraphicalEffect::operator()(Gui* gui, int64_t time) {
     return this->function(time, gui, data, tData);
 }
 

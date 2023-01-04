@@ -11,19 +11,19 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
     Renderer *renderer = game->getRenderer();
     // TODO could be in a function
     if (chart.animation.compare("None") != 0) {
+        std::cout << "loading animation" << std::endl;
         void *shared = loadShared(songFolder + "/" + chart.animation);
         char *e = NULL;  // TODO dlerror();
         if (e != NULL) {
             std::cerr << "Error while loading anim ! " << e << "\n";
         } else {
-            ChartHandler *(*f)(Synthmania *) =
-                (ChartHandler * (*)(Synthmania *))
-                    getFunction(shared, "getChartHandler");
+            ChartHandler *(*f)(Gamemode *) = (ChartHandler * (*)(Gamemode *))
+                getFunction(shared, "getChartHandler");
             char *e = NULL;  // TODO dlerror();
             if (e != NULL)
                 std::cerr << "Error while loading anim ! " << e << "\n";
             else
-                this->mod = f(game);
+                this->mod = f(this);  // Shit
         }
         std::string v = this->mod->getVertShaderCode(),
                     g = this->mod->getGeomShaderCode(),
@@ -249,7 +249,7 @@ bool PlayMode::update() {
             std::shared_ptr<Note> n(note);
             if (n->getStatus() == WAITING && n->getTime() <= time_from_start) {
                 noteHit(n);
-                playDrumSound(n->getPitch());
+                if (drum) playDrumSound(n->getPitch());
             }
         }
 

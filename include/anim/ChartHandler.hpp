@@ -3,12 +3,12 @@
 class ChartHandler;
 
 #include "GraphicalEffect.hpp"
-#include "Synthmania.hpp"
+class Gamemode;
 
 /**
  * @brief Returns your Graphics handler for this mod
  */
-extern "C" ChartHandler* getChartHandler(Synthmania* game);
+extern "C" ChartHandler* getChartHandler(Gamemode* game);
 
 /**
  * @brief A class powerful enough (hopefully) to make modcharts or cool
@@ -17,7 +17,7 @@ extern "C" ChartHandler* getChartHandler(Synthmania* game);
  */
 class ChartHandler {
    public:
-    ChartHandler(Synthmania* game);
+    ChartHandler(Gamemode* game);
 
     /**
      * @brief Gets called whenever a gui appears
@@ -154,5 +154,7 @@ class ChartHandler {
     virtual ~ChartHandler() = default;
 
    protected:
-    Synthmania* game;
+    Gamemode* game;
 };
+
+#include "Gamemode.hpp"

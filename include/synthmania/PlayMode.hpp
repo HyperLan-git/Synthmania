@@ -2,6 +2,8 @@
 
 class PlayMode;
 
+class ChartHandler;
+class Synthmania;
 #include "AudioPluginHandler.hpp"
 #include "AudioSource.hpp"
 #include "Chart.hpp"
@@ -10,8 +12,6 @@ class PlayMode;
 #include "MidiNote.hpp"
 #include "Note.hpp"
 #include "Utils.hpp"
-class ChartHandler;
-class Synthmania;
 
 class PlayMode : public Gamemode {
    public:
@@ -68,3 +68,4 @@ class PlayMode : public Gamemode {
 };
 
 #include "ChartHandler.hpp"
+#include "Synthmania.hpp"
