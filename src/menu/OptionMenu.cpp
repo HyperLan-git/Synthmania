@@ -332,7 +332,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     this->elements.push_back(pluginFolders);
 }
 
-void OptionMenu::onPressed(std::shared_ptr<Button>& b) {
+void OptionMenu::onPressed(const std::shared_ptr<Button>& b) {
     Synthmania* s = dynamic_cast<Synthmania*>(game);
     if (s != NULL) {
         save();

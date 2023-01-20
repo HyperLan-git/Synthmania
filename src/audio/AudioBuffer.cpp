@@ -1,24 +1,35 @@
 #include "AudioBuffer.hpp"
 
-#include <AL/alut.h>
-
-AudioBuffer::AudioBuffer() {
+AudioBuffer::AudioBuffer() : format(AL_NONE), data(NULL) {
     alGenBuffers(1, &bufferID);
     int err;
     if ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error when creating buffer:" << err << std::endl;
 }
 
-AudioBuffer::AudioBuffer(std::string file) {
-    bufferID = alutCreateBufferFromFile(file.c_str());
-    if (bufferID == AL_NONE)
-        throw std::runtime_error("Could not read " + file +
-                                 "\nCause : " + std::to_string(alutGetError()));
+AudioBuffer::AudioBuffer(std::string file) : AudioBuffer() {
+    try {
+        AudioData* result = loadWavFile(file);
+        this->write(result->format, result->data, result->size,
+                    result->frequency);
+        this->data = new char[result->size];
+        this->format = result->format;
+        memcpy(this->data, result->data, result->size);
+        delete[] (unsigned char*)result->data;
+        delete result;
+    } catch (char* err) {
+        if (bufferID == AL_NONE)
+            throw std::runtime_error("Could not read " + file +
+                                     "\nCause : " + err);
+    }
 }
 
 void AudioBuffer::write(ALenum format, const ALvoid* data, ALsizei size,
                         ALsizei samplerate) {
     alBufferData(bufferID, format, data, size, samplerate);
+    // if (this->data) delete[] (unsigned char*)this->data;
+    // this->data = new unsigned char[size];
+    // memcpy(this->data, data, size);
     int err;
     if ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error when writing buffer:" << err << std::endl;
@@ -39,8 +50,6 @@ void* AudioBuffer::operator new[](size_t sz, size_t elems) noexcept {
 void AudioBuffer::operator delete[](void* ptr) noexcept {
     size_t sz = 0;
     for (ALuint* p = (ALuint*)ptr; *p != 0; p++) sz++;
-    std::cout << "dels:" << *((ALuint*)ptr)
-              << (alIsBuffer(*((ALuint*)ptr)) ? 't' : 'f') << std::endl;
     alDeleteBuffers(sz, (ALuint*)ptr);
     int err;
     if ((err = alGetError()) != AL_NO_ERROR)
@@ -58,6 +67,15 @@ ALint AudioBuffer::getChannels() { return getBufferi(AL_CHANNELS); }
 
 ALint AudioBuffer::getSize() { return getBufferi(AL_SIZE); }
 
+std::variant<unsigned char*, short*> AudioBuffer::getData() {
+    if (!data) throw std::runtime_error("getData null !");
+    return (format == AL_FORMAT_MONO8 || format == AL_FORMAT_STEREO8)
+               ? std::variant<unsigned char*, short*>((unsigned char*)data)
+               : std::variant<unsigned char*, short*>((short*)data);
+}
+
+ALenum AudioBuffer::getFormat() { return format; }
+
 ALint AudioBuffer::getBufferi(ALenum param) {
     ALint result;
     alGetBufferi(getBuffer(), param, &result);
@@ -70,68 +88,15 @@ void AudioBuffer::setBuffer(ALuint id) {
     if (bufferID != 0) alDeleteBuffers(1, &bufferID);
     int err;
     if ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error when deleting buffer:" << err << std::endl;*/
+        std::cerr << "OpenAL error when deleting buffer:" << err <<
+    std::endl;*/
     bufferID = id;
 }
 
 AudioBuffer::~AudioBuffer() {
-    if (bufferID != 0) alDeleteBuffers(1, &bufferID);
+    if (bufferID != 0 && alIsBuffer(bufferID)) alDeleteBuffers(1, &bufferID);
+    if (data) delete[] (char*)data;
     int err;
     if ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error when deleting buffer:" << err << std::endl;
 }
-/* TODO will be useful for visualizer probably idk
-#include <complex>
-#include <iostream>
-#include <valarray>
-
-const double PI = 3.141592653589793238460;
-
-typedef std::complex<double> Complex;
-typedef std::valarray<Complex> CArray;
-
-// Cooley-Tukey FFT (in-place, breadth-first, decimation-in-frequency)
-// Better optimized but less intuitive
-// Code "borrowed" from https://rosettacode.org/wiki/Fast_Fourier_transform#C++
-void fft(CArray& x) {
-    // DFT
-    unsigned int N = x.size(), k = N, n;
-    double thetaT = 3.14159265358979323846264338328L / N;
-    Complex phiT = Complex(cos(thetaT), -sin(thetaT)), T;
-    while (k > 1) {
-        n = k;
-        k >>= 1;
-        phiT = phiT * phiT;
-        T = 1.0L;
-        for (unsigned int l = 0; l < k; l++) {
-            for (unsigned int a = l; a < N; a += n) {
-                unsigned int b = a + k;
-                Complex t = x[a] - x[b];
-                x[a] += x[b];
-                x[b] = t * T;
-            }
-            T *= phiT;
-        }
-    }
-    // Decimate
-    unsigned int m = (unsigned int)log2(N);
-    for (unsigned int a = 0; a < N; a++) {
-        unsigned int b = a;
-        // Reverse bits
-        b = (((b & 0xaaaaaaaa) >> 1) | ((b & 0x55555555) << 1));
-        b = (((b & 0xcccccccc) >> 2) | ((b & 0x33333333) << 2));
-        b = (((b & 0xf0f0f0f0) >> 4) | ((b & 0x0f0f0f0f) << 4));
-        b = (((b & 0xff00ff00) >> 8) | ((b & 0x00ff00ff) << 8));
-        b = ((b >> 16) | (b << 16)) >> (32 - m);
-        if (b > a) {
-            Complex t = x[a];
-            x[a] = x[b];
-            x[b] = t;
-        }
-    }
-    //// Normalize (This section make it not working correctly)
-    // Complex f = 1.0 / sqrt(N);
-    // for (unsigned int i = 0; i < N; i++)
-    //	x[i] *= f;
-}
-*/

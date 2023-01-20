@@ -4,7 +4,6 @@ class AudioHandler;
 
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <AL/alut.h>
 
 #include <cstring>
 #include <iostream>

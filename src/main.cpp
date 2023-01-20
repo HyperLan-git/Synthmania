@@ -5,6 +5,7 @@
 // TODO put consts everywhere relevant
 // TODO put inlines everywhere relevant
 // XXX namespace shenanigans
+// XXX explicit constructors :crying:
 int main(int argc, char **argv) {
     std::string skin = "resources/textures", config = "bin/config.json";
     if (argc > 1 && argv[1][0] != '\0') skin = std::string(argv[1]);

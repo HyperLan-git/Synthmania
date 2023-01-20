@@ -24,12 +24,12 @@ endif
 
 CFLAGS = -std=c++17 -O3 -D NDEBUG
 ifdef DEBUG
-CFLAGS = -std=c++17 -O3
+CFLAGS = -std=c++17 -O0 -g
 endif
 
-LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lalut -lX11 -lXrandr -lcurl -lfreetype
+LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lX11 -lXrandr -lcurl -lfreetype
 ifeq ($(OS),Windows_NT)
-LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lalut -lwinmm -lfreetype
+LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lwinmm -lfreetype
 endif
 
 OBJDIR = bin/obj

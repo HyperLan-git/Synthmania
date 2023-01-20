@@ -1,6 +1,5 @@
 #pragma once
 
-struct WAVData;
 class AudioBuffer;
 
 #include <AL/al.h>
@@ -11,6 +10,8 @@ class AudioBuffer;
 #include <iosfwd>
 #include <iostream>
 #include <string>
+
+#include "AudioUtils.hpp"
 
 class AudioBuffer {
    public:
@@ -29,6 +30,8 @@ class AudioBuffer {
     ALint getBits();
     ALint getChannels();
     ALint getSize();
+    std::variant<unsigned char*, short*> getData();
+    ALenum getFormat();
 
     void setBuffer(ALuint id);
 
@@ -36,5 +39,7 @@ class AudioBuffer {
 
    private:
     ALuint bufferID;
+    void* data;
+    ALenum format;
     ALint getBufferi(ALenum param);
 };

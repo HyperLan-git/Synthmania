@@ -40,7 +40,7 @@ bool Gui::update(int64_t time) { return false; }
 void Gui::updateGraphics(int64_t time) {
     this->graphicalPosition = {0, 0};
     for (GraphicalEffect* e : this->effects)
-        this->graphicalPosition += e->call(this, time);
+        this->graphicalPosition += (*e)(this, time);
 }
 
 bool Gui::isDestroyed() { return this->destroyed; }

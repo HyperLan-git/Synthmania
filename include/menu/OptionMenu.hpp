@@ -9,6 +9,7 @@ class OptionMenu;
 #include "Renderer.hpp"
 #include "Selector.hpp"
 #include "Slider.hpp"
+#include "Synthmania.hpp"
 #include "TextArea.hpp"
 
 class OptionMenu : public Menu {
