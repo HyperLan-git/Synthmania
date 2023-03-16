@@ -67,7 +67,7 @@ struct DebugFunc {
 
 /**
  * @brief Gets functions to debug using object names, returns a struct full of
- * NULL pointers if NDEBUG is set
+ * NULL pointers if DEBUG is not set
  *
  * @param device a valid device with the right extension
  * @return DebugFunc useful debug functions that may be used for naming vulkan
@@ -77,7 +77,7 @@ DebugFunc getDebugFunctions(Instance* instance);
 
 /**
  * @brief Set a vulkan object's name for debugging purposes, will do nothing if
- * NDEBUG is set
+ * DEBUG is not set
  *
  * @param debugFunctions debug functions as returned by getDebugFunctions
  * @param device the logical device
@@ -89,8 +89,8 @@ void setName(DebugFunc debugFunctions, Device* device, const std::string& name,
              VkObjectType type, void* obj);
 
 /**
- * @brief Begins a new section in a command buffer, will do nothing if NDEBUG is
- * set
+ * @brief Begins a new section in a command buffer, will do nothing if DEBUG is
+ * not set
  *
  * @param debugFunctions debug functions as returned by getDebugFunctions
  * @param name name of the section
@@ -101,7 +101,7 @@ void beginSection(DebugFunc debugFunctions, std::string name,
 
 /**
  * @brief Ends a debug section previously created by beginSection, will do
- * nothing if NDEBUG is set
+ * nothing if DEBUG is not set
  *
  *
  * @param debugFunctions debug functions as returned by getDebugFunctions

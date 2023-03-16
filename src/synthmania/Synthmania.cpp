@@ -112,7 +112,7 @@ void Synthmania::applyOptions() {
         *options->getValue<long>("gameplay.graphical latency");
     this->audioLeniency = *options->getValue<long>("gameplay.adjusting delay");
     this->fullscreen = *options->getValue<bool>("appearance.fullscreen");
-#ifndef NOVST
+#ifdef VST
     this->bufSize = *options->getValue<int>("plugin.buffer size");
     this->bufAmt = *options->getValue<int>("plugin.buffers");
     this->pluginFolders = std::vector<std::string>({"./plugins"});
@@ -243,7 +243,7 @@ MidiHandler *Synthmania::getMidiHandler() { return handler; }
 AudioHandler *Synthmania::getAudioHandler() { return audio; }
 Gamemode *Synthmania::getGamemode() { return gamemode; }
 
-#ifndef NOVST
+#ifdef VST
 std::string Synthmania::getPlugin(std::string name) {
     return this->availablePlugins[name];
 }

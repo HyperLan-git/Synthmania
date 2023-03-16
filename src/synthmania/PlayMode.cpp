@@ -206,7 +206,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
         music->setGain(game->getMusicVolume());
         music->setDestroyOnFinished(false);
     }
-#ifndef NOVST
+#ifdef VST
     std::string pdata = "None";
     if (chart.plugindata.compare("None") != 0) {
         pdata = songFolder;
@@ -253,7 +253,7 @@ bool PlayMode::update() {
             }
         }
 
-#ifndef NOVST
+#ifdef VST
     if (plugin) plugin->update(time_from_start);
 #endif
     if (mod) mod->update(time_from_start);
@@ -343,7 +343,7 @@ void PlayMode::noteHit(const std::shared_ptr<Note> &note) {
     delta = std::clamp<int64_t>(delta, 0, note->getTotalDuration() / 2);
     // TODO velocity
     if (!drum) {
-#ifndef NOVST
+#ifdef VST
         if (plugin != NULL)
             plugin->playNote(note->getPitch(), 90,
                              time + note->getTotalDuration() - delta);
@@ -459,7 +459,7 @@ PlayMode::~PlayMode() {
                                    "bin/pass.frag.spv",
                                    sizeof(UniformBufferObject));
     }
-#ifndef NOVST
+#ifdef VST
     if (this->plugin) delete this->plugin;
 #endif
     game->resetScene();

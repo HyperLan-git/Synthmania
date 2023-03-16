@@ -153,7 +153,7 @@ ImageView* getTextureByName(std::vector<ImageView*> textures,
 
 DebugFunc getDebugFunctions(Instance* instance) {
     DebugFunc result;
-#ifndef NDEBUG
+#ifdef DEBUG
     VkInstance i = *(instance->getInstance());
     result.begin = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(
         i, "vkCmdBeginDebugUtilsLabelEXT");
@@ -178,7 +178,7 @@ DebugFunc getDebugFunctions(Instance* instance) {
 
 void setName(DebugFunc debugFunctions, Device* device, const std::string& name,
              VkObjectType type, void* obj) {
-#ifndef NDEBUG
+#ifdef DEBUG
     VkDebugUtilsObjectNameInfoEXT info;
     info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
     info.objectHandle = (uint64_t)obj;
@@ -192,7 +192,7 @@ void setName(DebugFunc debugFunctions, Device* device, const std::string& name,
 
 void beginSection(DebugFunc debugFunctions, std::string name,
                   CommandBuffer* buffer) {
-#ifndef NDEBUG
+#ifdef DEBUG
     VkDebugUtilsLabelEXT info;
     info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
     info.pLabelName = name.c_str();

@@ -62,7 +62,7 @@ class PlayMode : public Gamemode {
     std::shared_ptr<Judgement> line = NULL;
     bool autoPlay = false, drum = false;
 
-#ifndef NOVST
+#ifdef VST
     AudioPluginHandler *plugin = NULL;
 #endif
 };

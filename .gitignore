@@ -1,5 +1,7 @@
 bin/
 plugins/
+vulkan/
+vkvia.html
 resources/songs/*
 !resources/songs/examplesong
 !resources/songs/exampledrums

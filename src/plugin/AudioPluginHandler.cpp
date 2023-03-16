@@ -1,5 +1,5 @@
 #include "AudioPluginHandler.hpp"
-#ifndef NOVST
+#ifdef VST
 
 AudioPluginHandler::AudioPluginHandler(std::string path, AudioHandler* handler,
                                        std::string synthdata) {

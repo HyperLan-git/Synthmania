@@ -19,7 +19,7 @@ class Synthmania;
 #include <stdexcept>
 
 #include "AudioHandler.hpp"
-#ifndef NOVST
+#ifdef VST
 #include "AudioPluginHandler.hpp"
 #endif
 #include "Entity.hpp"
@@ -73,7 +73,7 @@ class Synthmania : public Game {
 
     virtual void update();
 
-#ifndef NOVST
+#ifdef VST
     AudioPluginHandler *getPluginHandler();
 #endif
 
@@ -98,7 +98,7 @@ class Synthmania : public Game {
 
     virtual void addGui(std::shared_ptr<Gui> &gui);
 
-#ifndef NOVST
+#ifdef VST
     std::string getPlugin(std::string plugin);
 #endif
     Gamemode *getGamemode();
@@ -121,7 +121,7 @@ class Synthmania : public Game {
     int64_t audioLatency = 0, graphicalLatency = 0, audioLeniency = 20000;
     bool fullscreen = false, playing = false;
 
-#ifndef NOVST
+#ifdef VST
     int bufSize = 1024, bufAmt = 3;
     std::vector<std::string> pluginFolders = {"./plugins"};
     std::map<std::string, std::string> availablePlugins;

@@ -1,5 +1,5 @@
 #pragma once
-#ifndef NOVST
+#ifdef VST
 
 #ifdef _WIN32
 #include <mingw.thread.h>
@@ -58,4 +58,4 @@ class AudioPluginHandler {
 int synthThread(void*);
 int guiThread(void*);
 
-#endif  // NOVST
+#endif  // VST
