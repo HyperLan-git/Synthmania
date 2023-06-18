@@ -7,7 +7,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
     json.append("/sdata.json");
     chart = readChart(json.c_str());
     diff = chart.diffs[0];
-    game->resetClock();  //== game->startTime = chart.offset;
+    game->resetClock();  //<==> game->startTime = chart.offset;
     Renderer *renderer = game->getRenderer();
     // TODO could be in a function
     if (chart.animation.compare("None") != 0) {
@@ -238,7 +238,6 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
 bool PlayMode::update() {
     if ((music != NULL && music->getState() != AL_PLAYING) ||
         (music == NULL && this->notes.size() == 0)) {
-        game->loadMenu("main");
         return true;
     }
     int64_t time_from_start = game->getCurrentTimeMicros();
@@ -310,6 +309,10 @@ bool PlayMode::update() {
             m = game->getMidiHandler()->getMessage();
         }
     }
+    this->notes.erase(
+        std::remove_if(notes.begin(), notes.end(),
+                       [](std::weak_ptr<Note> &n) { return n.expired(); }),
+        this->notes.end());
     if (music != NULL) {  // audio latency study
         long long j = music->getSampleOffset() * 1000000L;
         int64_t a = game->getCurrentTimeMicros();
@@ -463,6 +466,7 @@ PlayMode::~PlayMode() {
     if (this->plugin) delete this->plugin;
 #endif
     game->resetScene();
+    game->loadMenu("main");
 }
 
 void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,

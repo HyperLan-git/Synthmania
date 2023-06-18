@@ -4,6 +4,7 @@
 
 #include "Gui.hpp"
 #include "Renderer.hpp"
+#include "Synthmania.hpp"
 
 class Test : public Game {
    public:
@@ -47,24 +48,29 @@ class Test : public Game {
     }
 
     void init() {
-        Gui* g = new Gui(getTextureByName(renderer->getTextures(), "missing"),
-                         "back");
+        auto g = std::make_shared<Gui>(
+            getTextureByName(renderer->getTextures(), "missing"), "back");
         g->setSize({5.f, 5.f});
         addGui(g);
         int i = 0;
-        for (Text t : renderer->getTextHandler()->createText(
-                 "Hello", "Stupid", 55, glm::vec2({-1, 0}))) {
-            std::string name = "hi";
-            name.append(std::to_string(i++));
-            Gui* gui = new Gui(t.character.texture, name.c_str());
-            gui->setColor(glm::vec4({1, 0, 0, 1}));
-            gui->setPosition(t.pos);
-            gui->setSize(t.size);
-            addGui(gui);
-        }
+        for (auto g2 : printString("Hello", this->getTextHandler(), "hi",
+                                   "Stupid", 55, glm::vec2({-1, 0})))
+            addGui(g2);
+
+        /*
+         for (Text t : renderer->getTextHandler()->createText(
+                  "Hello", "Stupid", 55, glm::vec2({-1, 0}))) {
+             std::string name = "hi";
+             name.append(std::to_string(i++));
+             Gui* gui = new Gui(t.character.texture, name.c_str());
+             gui->setColor(glm::vec4({1, 0, 0, 1}));
+             gui->setPosition(t.pos);
+             gui->setSize(t.size);
+             addGui(gui);
+         }*/
     }
 
-    void update() {}
+    virtual void update() override {}
 
     ~Test() {}
 
