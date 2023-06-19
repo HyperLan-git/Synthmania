@@ -1,6 +1,6 @@
 msys_version = 0
 ifeq ($(OS), Windows_NT)
-GPU = $(strip $(shell wmic win32_VideoController get name | sed -n 2p))
+GPU = $(strip $(shell wmic path win32_VideoController get name | sed -n 2p))
 msys_version = $(if $(findstring Msys, $(shell uname -o)),$(word 1, $(subst ., ,$(shell uname -r))),0)
 else
 GPU = $(strip $(shell lspci | grep ' VGA ' | cut -d" " -f 5- \

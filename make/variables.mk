@@ -14,13 +14,11 @@ endif
 
 IDIRS = $(shell pkg-config --cflags freetype2)\
 		$(addprefix -I ,$(shell find include -type d | sed -z 's/\n/ /g'))\
-			-I libs/stbi -I libs/obj\
+			-I libs/stbi -I libs/obj -I libs/libremidi/include/\
 			$(VSTINCLUDE)
 
 ifeq ($(OS),Windows_NT)
 IDIRS += -I ./mingw-std-threads
-else
-IDIRS += -I libs/libremidi/include/
 endif
 
 CFLAGS = -std=c++17 -O3

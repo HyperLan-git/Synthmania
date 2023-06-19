@@ -17,7 +17,7 @@ AudioBuffer::AudioBuffer(std::string file) : AudioBuffer() {
         memcpy(this->data, result->data, result->size);
         delete[] (unsigned char*)result->data;
         delete result;
-    } catch (char* err) {
+    } catch (const char* err) {
         if (bufferID == AL_NONE)
             throw std::runtime_error("Could not read " + file +
                                      "\nCause : " + err);

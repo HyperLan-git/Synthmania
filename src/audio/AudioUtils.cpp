@@ -117,7 +117,7 @@ AudioData* loadWavFile(std::string filename) {
                 result->format = AL_FORMAT_STEREO16;
         }
         fclose(soundFile);
-    } catch (char* error) {
+    } catch (const char* error) {
         if (soundFile) fclose(soundFile);
         delete result;
         throw error;

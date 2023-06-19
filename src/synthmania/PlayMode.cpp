@@ -199,7 +199,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
         std::string wav = songFolder;
         wav.append("/");
         wav.append(chart.audio);
-        AudioBuffer *buffer = new AudioBuffer(wav.c_str());
+        AudioBuffer *buffer = new AudioBuffer(wav);
 
         audio->addSound("song", buffer);
         music = audio->playSound("song");
