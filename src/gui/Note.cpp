@@ -79,10 +79,10 @@ unsigned char transposePitch(Key k, unsigned char pitch) {
 
 Note::Note(std::string name, int64_t time, unsigned char pitch,
            double totalDuration, double duration, uint64_t MPQ,
-           std::vector<ImageView*> textures, Key key)
+           std::vector<ImageView*> textures, Key key, KeySignature signature)
     : PartitionNotation(name, time, transposePitch(key, pitch),
-                        getTextureForNote(textures, pitch, duration, key),
-                        key) {
+                        getTextureForNote(textures, pitch, duration, key), key,
+                        signature) {
     this->totalDuration = totalDuration * MPQ * 4;
     this->duration = duration * MPQ * 4;
     this->kill_moment =

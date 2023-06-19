@@ -26,10 +26,16 @@ struct MidiNote {
     unsigned char velocity;
 };
 
+struct KeySignature {
+    short sharps;  // Below 0 means flats
+    bool minor;    // Natural minor
+};
+
 struct TrackPartition {
     bool drumming;
     uint64_t MPQ;
     std::vector<MidiNote> notes;
+    KeySignature signature = {0, false};
 };
 
 template <>

@@ -17,7 +17,7 @@ void Synthmania::resetAudio() {
     audio->clearSounds();
     // TODO json file again xd
     audio->addSound("click", new AudioBuffer("resources/sounds/click.wav"));
-    audio->addSound("piano", new AudioBuffer("resources/sounds/pianoC4.wav"));
+    audio->addSound("piano", new AudioBuffer("resources/sounds/painoC4.wav"));
     audio->addSound("kick", new AudioBuffer("resources/sounds/kick.wav"));
     audio->addSound("snare", new AudioBuffer("resources/sounds/snare.wav"));
     audio->addSound("hat", new AudioBuffer("resources/sounds/hat.wav"));

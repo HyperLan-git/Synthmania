@@ -89,6 +89,7 @@ TrackPartition MidiHandler::readMidi(const char *path) {
     // and 0x3FFF = +2 semitones
     std::vector<MidiNote> currentNotes;
     bool drum = false;
+    KeySignature signature = {0, false};
     // TODO track chosen
     for (auto &track : r.tracks) {
         unsigned long long t = 0;
@@ -155,6 +156,9 @@ TrackPartition MidiHandler::readMidi(const char *path) {
                     break;
                 case libremidi::message_type::SYSTEM_RESET:
                     switch (message.get_meta_event_type()) {
+                        case libremidi::meta_event_type::KEY_SIGNATURE:
+                            signature = {(char)message[3], message[4] != 0};
+                            break;
                         case libremidi::meta_event_type::TEMPO_CHANGE:
                             MPQ = message[3];
                             MPQ = MPQ << 8;
@@ -181,7 +185,7 @@ TrackPartition MidiHandler::readMidi(const char *path) {
 
     file.close();
 
-    return TrackPartition{drum, MPQ, notes};
+    return TrackPartition{drum, MPQ, notes, signature};
 }
 
 bool MidiHandler::hasMessage() { return !messages.empty(); }

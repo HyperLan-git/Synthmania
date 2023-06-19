@@ -114,7 +114,8 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
                 cutDown[0], partition.MPQ, textures, k);
             keepAlive.push_back(n);
             notes.push_back(n);
-            int diff = getDifferenceFromC4(transposePitch(k, note.note)) +
+            int diff = getDifferenceFromC4(transposePitch(k, note.note),
+                                           partition.signature) +
                        getOffset(k);
             if (diff <= 0 || diff >= 12) {
                 bool up = diff >= 12;
@@ -144,6 +145,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
                 p += .2;
             }
 
+            Accidental a = getAccidental(note.note, partition.signature);
             if (k != Key::DRUM && !isFromCMajor(note.note)) {
                 std::string sharpName = "Sharp_";
                 sharpName.append(hash);
@@ -466,7 +468,7 @@ PlayMode::~PlayMode() {
     if (this->plugin) delete this->plugin;
 #endif
     game->resetScene();
-    game->loadMenu("main");
+    game->loadMenu("song select");
 }
 
 void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,

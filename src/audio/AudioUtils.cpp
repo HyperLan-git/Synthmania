@@ -92,6 +92,13 @@ AudioData* loadWavFile(std::string filename) {
             fseek(soundFile, sizeof(short), SEEK_CUR);
 
         fread(&wave_data, sizeof(WAVE_Data), 1, soundFile);
+        // Skip the LIST headers if there is any
+        while (
+            wave_data.subChunkID[0] == 'L' && wave_data.subChunkID[1] == 'I' &&
+            wave_data.subChunkID[2] == 'S' && wave_data.subChunkID[3] == 'T') {
+            fseek(soundFile, wave_data.subChunk2Size, SEEK_CUR);
+            fread(&wave_data, sizeof(WAVE_Data), 1, soundFile);
+        }
 
         if (wave_data.subChunkID[0] != 'd' || wave_data.subChunkID[1] != 'a' ||
             wave_data.subChunkID[2] != 't' || wave_data.subChunkID[3] != 'a')

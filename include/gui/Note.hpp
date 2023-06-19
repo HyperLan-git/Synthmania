@@ -38,7 +38,7 @@ class Note : public PartitionNotation {
    public:
     Note(std::string name, int64_t time, unsigned char pitch,
          double totalDuration, double duration, uint64_t MPQ,
-         std::vector<ImageView*> textures, Key key);
+         std::vector<ImageView*> textures, Key key, KeySignature signature);
 
     void setStatus(NoteStatus status);
 

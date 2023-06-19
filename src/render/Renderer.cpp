@@ -18,8 +18,8 @@ void Renderer::initVulkan() {
     // TODO make a function called setAllNames
     DebugFunc functions = getDebugFunctions(instance);
     // Error for some reason
-    /*setName(functions, device, "GPU", VK_OBJECT_TYPE_PHYSICAL_DEVICE,
-            physicalDevice);*/
+    setName(functions, device, "GPU", VK_OBJECT_TYPE_PHYSICAL_DEVICE,
+            physicalDevice);
     setName(functions, device, "Instance", VK_OBJECT_TYPE_INSTANCE,
             *(instance->getInstance()));
     setName(functions, device, "mainSurface", VK_OBJECT_TYPE_SURFACE_KHR,
