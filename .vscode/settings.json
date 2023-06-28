@@ -105,7 +105,8 @@
         "*.inc": "cpp",
         "any": "cpp",
         "unordered_set": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "*.hpp11": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabledIfIncludesResolve",
     "editor.formatOnSave": true,

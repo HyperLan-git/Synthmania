@@ -2,7 +2,7 @@
 
 class Synthmania;
 
-// TODO remove all these defines
+// TODO remove all these defines to support more image types
 #define STBI_NO_BMP
 #define STBI_NO_PSD
 #define STBI_NO_TGA
@@ -10,13 +10,6 @@ class Synthmania;
 #define STBI_NO_HDR
 #define STBI_NO_PIC
 #define STBI_NO_PNM
-
-#include <algorithm>
-#include <cstdlib>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <stdexcept>
 
 #include "AudioHandler.hpp"
 #ifdef VST

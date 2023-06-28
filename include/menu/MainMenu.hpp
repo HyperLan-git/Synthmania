@@ -3,6 +3,7 @@
 class MainMenu;
 
 #include "Menu.hpp"
+#include "ParentedGui.hpp"
 
 class MainMenu : public Menu {
    public:

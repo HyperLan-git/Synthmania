@@ -111,7 +111,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
             }
             std::shared_ptr<Note> n = std::make_shared<Note>(
                 name.c_str(), note.timestamp, note.note, totalDuration,
-                cutDown[0], partition.MPQ, textures, k);
+                cutDown[0], partition.MPQ, textures, k, partition.signature);
             keepAlive.push_back(n);
             notes.push_back(n);
             int diff = getDifferenceFromC4(transposePitch(k, note.note),

@@ -1,15 +1,13 @@
 #pragma once
 
-class Device;
-
 #include <vulkan/vulkan.h>
 
 #include <functional>
 #include <map>
-#include <optional>
 #include <set>
-#include <stdexcept>
-#include <vector>
+#include <string>
+
+class Device;
 
 typedef std::function<bool(VkPhysicalDevice, VkQueueFamilyProperties, uint32_t)>
     FamilyPredicate;

@@ -4,6 +4,7 @@ class PlayMode;
 
 class ChartHandler;
 class Synthmania;
+
 #include "AudioPluginHandler.hpp"
 #include "AudioSource.hpp"
 #include "Chart.hpp"

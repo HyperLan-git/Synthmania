@@ -5,8 +5,6 @@ class OptionMenu;
 #include <fstream>
 
 #include "Checkbox.hpp"
-#include "Menu.hpp"
-#include "Renderer.hpp"
 #include "Selector.hpp"
 #include "Slider.hpp"
 #include "Synthmania.hpp"

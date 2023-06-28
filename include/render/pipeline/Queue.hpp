@@ -4,18 +4,13 @@
 class Queue;
 struct FamilyData;
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-#include <vector>
+#include "Device.hpp"
 
 struct FamilyData {
     uint32_t id;
     VkQueueFamilyProperties *properties;
     std::vector<Queue *> queues;
 };
-
-#include "Device.hpp"
 
 class Queue {
    public:

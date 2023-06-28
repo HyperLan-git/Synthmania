@@ -2,16 +2,18 @@
 
 Image::Image(VkPhysicalDevice* physicalDevice, Device* device, uint32_t width,
              uint32_t height, VkFormat format, VkImageTiling tiling,
-             VkImageUsageFlags usage, VkMemoryPropertyFlags properties) {
+             VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
+             uint32_t layers) {
     this->device = device;
     this->image = new VkImage();
     this->extent = {width, height, 1};
+    this->layers = layers;
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
     imageInfo.extent = this->extent;
     imageInfo.mipLevels = 1;
-    imageInfo.arrayLayers = 1;
+    imageInfo.arrayLayers = layers;
     imageInfo.format = format;
     imageInfo.tiling = tiling;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -62,6 +64,8 @@ VkImage* Image::getImage() { return image; }
 Memory* Image::getMemory() { return memory; }
 
 VkExtent3D Image::getExtent() { return extent; }
+
+uint32_t Image::getLayers() { return layers; }
 
 VkSubresourceLayout Image::getImageSubresourceLayout(uint32_t mipLevel,
                                                      uint32_t arrayLayer,

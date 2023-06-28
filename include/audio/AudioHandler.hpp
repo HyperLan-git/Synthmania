@@ -5,11 +5,8 @@ class AudioHandler;
 #include <AL/al.h>
 #include <AL/alc.h>
 
-#include <cstring>
 #include <iostream>
 #include <map>
-#include <stdexcept>
-#include <string>
 #include <vector>
 
 #include "AudioBuffer.hpp"

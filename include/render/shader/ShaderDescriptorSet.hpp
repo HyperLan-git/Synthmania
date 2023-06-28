@@ -4,18 +4,12 @@ class ShaderDescriptorSet;
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <vulkan/vulkan.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <stdexcept>
 
 #include "Buffer.hpp"
-#include "ImageView.hpp"
-#include "Model.hpp"
 #include "ShaderDescriptorPool.hpp"
 #include "ShaderDescriptorSetLayout.hpp"
-#include "TextureSampler.hpp"
 
 /**
  * @brief The descriptor set is the immutable list of descriptors associated

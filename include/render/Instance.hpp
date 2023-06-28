@@ -5,7 +5,7 @@ class Instance;
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <stdexcept>
+#include <string>
 #include <vector>
 
 #include "Window.hpp"

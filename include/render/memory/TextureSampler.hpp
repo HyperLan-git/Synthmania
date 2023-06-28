@@ -1,9 +1,5 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-
 #include "Device.hpp"
 #include "ImageView.hpp"
 

@@ -2,73 +2,17 @@
 
 class Renderer;
 
-#include <algorithm>
-#include <array>
-#include <chrono>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <fstream>
-#include <functional>
-#include <map>
-
-#include "Game.hpp"
-#include "stb_image.h"
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <ft2build.h>
-
-// ft2build comes before this
-#include <freetype/freetype.h>
-#include <freetype/ftbitmap.h>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
-#include <limits>
-#include <map>
-#include <optional>
-#include <set>
-#include <stdexcept>
-#include <vector>
-
-#include "Buffer.hpp"
-#include "ChartHandler.hpp"
-#include "CommandBuffer.hpp"
-#include "CommandPool.hpp"
 #include "ComputeModule.hpp"
-#include "Device.hpp"
-#include "Entity.hpp"
-#include "Fence.hpp"
-#include "Font.hpp"
-#include "Framebuffer.hpp"
-#include "Gui.hpp"
-#include "Image.hpp"
-#include "ImageView.hpp"
-#include "Instance.hpp"
-#include "Judgement.hpp"
-#include "Memory.hpp"
-#include "Model.hpp"
-#include "Note.hpp"
-#include "ParentedGui.hpp"
-#include "Pipeline.hpp"
-#include "PipelineLayout.hpp"
+#include "Game.hpp"
 #include "RenderModule.hpp"
-#include "RenderPass.hpp"
-#include "Semaphore.hpp"
 #include "Shader.hpp"
-#include "ShaderDescriptorPool.hpp"
-#include "ShaderDescriptorSet.hpp"
 #include "Swapchain.hpp"
-#include "TextHandler.hpp"
-#include "TextureSampler.hpp"
-#include "Utils.hpp"
-#include "Window.hpp"
+#include "stb_image.h"
 
 // Font texture sizes
 const unsigned long FONT_SIZE = 128;
 
+// Swapchain size
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<const char*> validationLayers = {
@@ -76,12 +20,14 @@ const std::vector<const char*> validationLayers = {
 const std::vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
+// XXX I kinda want to get rid of that vulkantutorial ass looking error handling
 #ifdef DEBUG
 const bool enableValidationLayers = true;
 #else
 const bool enableValidationLayers = false;
 #endif
 
+// XXX put that in the instance class?
 VkResult CreateDebugUtilsMessengerEXT(
     VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
     const VkAllocationCallbacks* pAllocator,
@@ -242,11 +188,9 @@ class Renderer {
     void transitionImageLayout(Image* image, VkImageLayout oldLayout,
                                VkImageLayout newLayout);
 
-   public:
     void convertImage(Image* src, VkImageLayout srcImageLayout, Image* dst,
                       VkImageLayout dstImageLayout, VkFilter filter);
 
-   private:
     void resizeFramebuffer();
     void copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
                            uint32_t height);

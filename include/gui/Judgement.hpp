@@ -2,16 +2,8 @@
 
 class Judgement;
 
-#include "Gui.hpp"
-#include "ImageView.hpp"
 #include "MidiNote.hpp"
-#include "Note.hpp"
-#include "Utils.hpp"
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <map>
-#include <string>
+#include "PartitionNotation.hpp"
 
 // The crimes thy kind have committed are not forgotten.
 // And thy punishment... is death!

@@ -242,17 +242,22 @@ void CommandBuffer::copyBufferRegion(Buffer *src, Buffer *dest,
 }
 
 void CommandBuffer::copyImage(Image *src, VkImageLayout srcImageLayout,
-                              Image *dst, VkImageLayout dstImageLayout) {
+                              Image *dst, VkImageLayout dstImageLayout,
+                              VkOffset3D srcOffset, VkOffset3D dstOffset,
+                              VkExtent3D extent, uint32_t layer) {
     VkImageCopy regions;
-    regions.srcOffset = regions.dstOffset = {0, 0, 0};
-    regions.extent = src->getExtent();
+    regions.srcOffset = srcOffset;
+    regions.dstOffset = dstOffset;
+    bool nullExtent =
+        extent.width == 0 && extent.height == 0 && extent.depth == 0;
+    regions.extent = nullExtent ? src->getExtent() : extent;
     regions.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     regions.srcSubresource.mipLevel = 0;
     regions.srcSubresource.baseArrayLayer = 0;
     regions.srcSubresource.layerCount = 1;
     regions.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     regions.dstSubresource.mipLevel = 0;
-    regions.dstSubresource.baseArrayLayer = 0;
+    regions.dstSubresource.baseArrayLayer = layer;
     regions.dstSubresource.layerCount = 1;
     vkCmdCopyImage(*buffer, *(src->getImage()), srcImageLayout,
                    *(dst->getImage()), dstImageLayout, 1, &regions);

@@ -1,5 +1,6 @@
 #pragma once
-#include <vulkan/vulkan.h>
+
+class ShaderDescriptorSetLayout;
 
 #include <stdexcept>
 

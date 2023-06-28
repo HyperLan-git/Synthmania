@@ -2,14 +2,9 @@
 
 class ComputeShader;
 
-#include <vulkan/vulkan.h>
-
 #include <stdexcept>
-#include <string>
-#include <vector>
 
 #include "Device.hpp"
-#include "Pipeline.hpp"
 
 class ComputeShader {
    public:

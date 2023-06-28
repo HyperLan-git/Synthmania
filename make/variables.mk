@@ -34,6 +34,7 @@ endif
 OBJDIR = bin/obj
 LIBSOBJ = bin/libs/stbi/stb_image.o bin/libs/obj/tiny_obj_loader.o
 
+INCLUDEFOLDER = include
 SRCFOLDER = src
 ifeq ($(VST), 1)
 SRC = $(shell find $(SRCFOLDER) -type f -name '*.cpp' | sed -z 's/\n/ /g')

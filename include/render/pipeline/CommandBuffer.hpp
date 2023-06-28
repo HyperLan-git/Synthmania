@@ -2,23 +2,12 @@
 
 class CommandBuffer;
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-
-#include "Buffer.hpp"
-#include "CommandBuffer.hpp"
-#include "CommandPool.hpp"
 #include "ComputeShader.hpp"
 #include "Fence.hpp"
 #include "Framebuffer.hpp"
-#include "Image.hpp"
 #include "Pipeline.hpp"
-#include "PipelineLayout.hpp"
-#include "RenderPass.hpp"
 #include "Semaphore.hpp"
 #include "ShaderDescriptorSet.hpp"
-#include "Swapchain.hpp"
 
 class CommandBuffer {
    public:
@@ -39,7 +28,10 @@ class CommandBuffer {
                         VkImageLayout newLayout);
 
     void copyImage(Image *src, VkImageLayout srcImageLayout, Image *dst,
-                   VkImageLayout dstImageLayout);
+                   VkImageLayout dstImageLayout,
+                   VkOffset3D srcOffset = {0, 0, 0},
+                   VkOffset3D dstOffset = {0, 0, 0},
+                   VkExtent3D extent = {0, 0, 0}, uint32_t layer = 0);
 
     void convertImage(Image *src, VkImageLayout srcImageLayout, Image *dst,
                       VkImageLayout dstImageLayout, VkFilter filter);

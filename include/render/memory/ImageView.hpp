@@ -2,11 +2,6 @@
 
 class ImageView;
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-#include <string>
-
 #include "Image.hpp"
 
 class ImageView {

@@ -48,13 +48,14 @@ class Test : public Game {
     }
 
     void init() {
+        Game::init();
         auto g = std::make_shared<Gui>(
             getTextureByName(renderer->getTextures(), "missing"), "back");
-        g->setSize({5.f, 5.f});
+        g->setSize({1.f, 1.f});
         addGui(g);
         int i = 0;
-        for (auto g2 : printString("Hello", this->getTextHandler(), "hi",
-                                   "Stupid", 55, glm::vec2({-1, 0})))
+        for (auto g2 : printString("Hell o", this->getTextHandler(), "hi",
+                                   "Stupid", 55, glm::vec2({-2, 0})))
             addGui(g2);
 
         /*
@@ -72,13 +73,14 @@ class Test : public Game {
 
     virtual void update() override {}
 
-    ~Test() {}
+    virtual ~Test() {}
 
    private:
 };
 
 int main() {
     Test* game = new Test(1920, 1080, "GraphicsTest");
+    game->init();
     game->run();
     delete game;
     return 0;

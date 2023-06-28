@@ -3,12 +3,6 @@
 class TextHandler;
 
 #include <ft2build.h>
-#include <vulkan/vulkan.h>
-
-#include <map>
-#include <stdexcept>
-#include <string>
-#include <vector>
 
 // Needs to be after the ft2build include
 #include <freetype/freetype.h>
@@ -17,6 +11,7 @@ class TextHandler;
 #include "Device.hpp"
 #include "Font.hpp"
 #include "Image.hpp"
+#include "ImageView.hpp"
 #include "Utils.hpp"
 
 class TextHandler {

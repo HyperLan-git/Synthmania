@@ -2,18 +2,14 @@
 
 class Image;
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-#include <vector>
-
 #include "Memory.hpp"
 
 class Image {
    public:
     Image(VkPhysicalDevice *physicalDevice, Device *device, uint32_t width,
           uint32_t height, VkFormat format, VkImageTiling tiling,
-          VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
+          VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
+          uint32_t layers = 1);
     Image(Device *device, VkImage *image, VkExtent2D extent);
 
     Image(const Image &img) = delete;
@@ -30,6 +26,7 @@ class Image {
      */
     Memory *getMemory();
     VkExtent3D getExtent();
+    uint32_t getLayers();
     VkSubresourceLayout getImageSubresourceLayout(
         uint32_t mipLevel = 0, uint32_t arrayLayer = 0,
         VkImageAspectFlags flags = VK_IMAGE_ASPECT_COLOR_BIT);
@@ -41,6 +38,7 @@ class Image {
     VkImage *image;
     Memory *memory;
     VkExtent3D extent;
+    uint32_t layers;
 };
 
 std::vector<Image *> createImagesForSwapchain(Device *device,

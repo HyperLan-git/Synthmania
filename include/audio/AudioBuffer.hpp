@@ -2,14 +2,9 @@
 
 class AudioBuffer;
 
-#include <AL/al.h>
-
 #include <array>
 #include <cstring>
-#include <fstream>
-#include <iosfwd>
 #include <iostream>
-#include <string>
 
 #include "AudioUtils.hpp"
 
@@ -19,6 +14,9 @@ class AudioBuffer {
     AudioBuffer(std::string file);
 
     void* operator new[](size_t buffers) noexcept = delete;
+    // I have to make something fucked up like that bcs new gives the number of
+    // bytes allowed to use which are not necessarily related to the number of
+    // elements
     void* operator new[](size_t buffers, size_t elems) noexcept;
     void operator delete[](void* ptr) noexcept;
 

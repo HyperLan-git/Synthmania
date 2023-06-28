@@ -72,7 +72,8 @@ AudioData* loadWavFile(std::string filename) {
         soundFile = fopen(filename.c_str(), "rb");
         if (!soundFile) throw(filename);
 
-        fread(&riff_header, sizeof(RIFF_Header), 1, soundFile);
+        if (!fread(&riff_header, sizeof(RIFF_Header), 1, soundFile))
+            throw "RIFF header read fail !";
 
         if ((riff_header.chunkID[0] != 'R' || riff_header.chunkID[1] != 'I' ||
              riff_header.chunkID[2] != 'F' || riff_header.chunkID[3] != 'F') &&
@@ -80,7 +81,8 @@ AudioData* loadWavFile(std::string filename) {
              riff_header.format[2] != 'V' || riff_header.format[3] != 'E'))
             throw("Invalid RIFF or WAVE Header");
 
-        fread(&wave_format, sizeof(WAVE_Format), 1, soundFile);
+        if (!fread(&wave_format, sizeof(WAVE_Format), 1, soundFile))
+            throw "WAVE format read fail !";
 
         if (wave_format.subChunkID[0] != 'f' ||
             wave_format.subChunkID[1] != 'm' ||
@@ -91,13 +93,16 @@ AudioData* loadWavFile(std::string filename) {
         if (wave_format.subChunkSize > 16)
             fseek(soundFile, sizeof(short), SEEK_CUR);
 
-        fread(&wave_data, sizeof(WAVE_Data), 1, soundFile);
+        if (!fread(&wave_data, sizeof(WAVE_Data), 1, soundFile))
+            throw "Wave data read fail !";
+
         // Skip the LIST headers if there is any
         while (
             wave_data.subChunkID[0] == 'L' && wave_data.subChunkID[1] == 'I' &&
             wave_data.subChunkID[2] == 'S' && wave_data.subChunkID[3] == 'T') {
             fseek(soundFile, wave_data.subChunk2Size, SEEK_CUR);
-            fread(&wave_data, sizeof(WAVE_Data), 1, soundFile);
+            if (!fread(&wave_data, sizeof(WAVE_Data), 1, soundFile))
+                throw "Wave data read fail !";
         }
 
         if (wave_data.subChunkID[0] != 'd' || wave_data.subChunkID[1] != 'a' ||
@@ -107,7 +112,7 @@ AudioData* loadWavFile(std::string filename) {
         result->data = new unsigned char[wave_data.subChunk2Size];
 
         if (!fread(result->data, wave_data.subChunk2Size, 1, soundFile))
-            throw("error loading WAVE data into struct!");
+            throw("WAVE data read fail !");
 
         result->size = wave_data.subChunk2Size;
         result->frequency = wave_format.sampleRate;

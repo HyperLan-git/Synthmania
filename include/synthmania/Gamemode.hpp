@@ -2,8 +2,6 @@
 
 class Gamemode;
 
-#include <memory>
-
 #include "Gui.hpp"
 
 class Gamemode {

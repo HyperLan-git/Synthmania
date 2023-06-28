@@ -10,7 +10,8 @@ Judgement::Judgement(std::string name, std::vector<ImageView*> textures,
     }
     if (this->partition.notes.empty()) return;
     auto n = this->partition.notes;
-    this->position.y = 0.25 - 0.083f * getDifferenceFromC4(n[0].note);
+    this->position.y =
+        0.25 - 0.083f * getDifferenceFromC4(n[0].note, notes.signature);
 }
 
 bool Judgement::update(int64_t time) {
@@ -18,7 +19,9 @@ bool Judgement::update(int64_t time) {
     auto notes = this->partition.notes;
     MidiNote prev = (notes[0]), next = (notes[notes.size() - 1]);
     if (time < 0) {
-        this->position.y = 0.25 - 0.083f * getDifferenceFromC4(prev.note);
+        this->position.y =
+            0.25 -
+            0.083f * getDifferenceFromC4(prev.note, this->partition.signature);
         return false;
     }
     for (MidiNote note : notes) {
@@ -30,8 +33,11 @@ bool Judgement::update(int64_t time) {
     double progress = (next.timestamp - prev.timestamp);
     if (progress > 0) progress = (time - prev.timestamp) / progress;
     this->position.y =
-        0.25 + progress * -0.083f * getDifferenceFromC4(next.note) +
-        (1 - progress) * -0.083f * getDifferenceFromC4(prev.note);
+        0.25 +
+        progress * -0.083f *
+            getDifferenceFromC4(next.note, this->partition.signature) +
+        (1 - progress) * -0.083f *
+            getDifferenceFromC4(prev.note, this->partition.signature);
 
     return false;
 }

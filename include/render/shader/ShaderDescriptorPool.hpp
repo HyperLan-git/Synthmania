@@ -1,8 +1,7 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+class ShaderDescriptorPool;
 
-#include <array>
 #include <stdexcept>
 
 #include "Device.hpp"

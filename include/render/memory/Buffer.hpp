@@ -2,10 +2,6 @@
 
 class Buffer;
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-
 #include "CommandBuffer.hpp"
 #include "CommandPool.hpp"
 #include "Memory.hpp"

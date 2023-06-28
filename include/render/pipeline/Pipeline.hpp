@@ -2,11 +2,7 @@
 
 class Pipeline;
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-
-#include "Model.hpp"
+#include "ImageView.hpp"
 #include "PipelineLayout.hpp"
 #include "RenderPass.hpp"
 

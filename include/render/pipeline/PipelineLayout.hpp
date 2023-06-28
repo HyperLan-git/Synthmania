@@ -2,11 +2,6 @@
 
 class PipelineLayout;
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-
-#include "Device.hpp"
 #include "ShaderDescriptorSetLayout.hpp"
 
 // TODO get device from other arguments when possible

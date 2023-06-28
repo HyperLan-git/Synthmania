@@ -1,8 +1,8 @@
 #pragma once
-#include <vulkan/vulkan.h>
+
+class Shader;
 
 #include <stdexcept>
-#include <vector>
 
 #include "Device.hpp"
 

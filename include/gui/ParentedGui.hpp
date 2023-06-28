@@ -2,8 +2,6 @@
 
 class ParentedGui;
 
-#include <memory>
-
 #include "Gui.hpp"
 
 /**

@@ -2,18 +2,7 @@
 
 class Swapchain;
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-#include <vector>
-
-#include "Framebuffer.hpp"
-#include "Image.hpp"
-#include "ImageView.hpp"
 #include "RenderPass.hpp"
-#include "Shader.hpp"
-#include "Utils.hpp"
-#include "Window.hpp"
 
 class Swapchain {
    public:

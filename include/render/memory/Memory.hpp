@@ -2,8 +2,6 @@
 
 class Memory;
 
-#include <vulkan/vulkan.h>
-
 #include "Utils.hpp"
 
 class Memory {

@@ -2,16 +2,8 @@
 
 class Note;
 
-#include "ImageView.hpp"
 #include "MidiNote.hpp"
 #include "PartitionNotation.hpp"
-#include "Utils.hpp"
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <map>
-#include <string>
 
 #define HIT_WINDOW 150000
 #define DRUM_HIT_WINDOW 150000

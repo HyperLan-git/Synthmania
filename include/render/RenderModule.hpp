@@ -6,6 +6,7 @@ class RenderModule;
 #include "Image.hpp"
 #include "ImageView.hpp"
 #include "RenderPass.hpp"
+#include "TextureSampler.hpp"
 
 /**
  * @brief A simplified class for creating a pipeline that can be used for

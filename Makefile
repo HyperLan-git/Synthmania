@@ -13,7 +13,7 @@ else
 	g++ $(CFLAGS) -rdynamic -o bin/Synthmania $(OBJ) $(VSTHOBJ) $(LIBSOBJ) $(VSTLIB) $(DEBUG) $(LDFLAGS) $(VSTFLAGS)
 endif
 
-.PHONY: test clean shader obj module
+binaries: $(LIBSOBJ) $(VSTLIB) $(OBJ)
 
 test: Synthmania
 	./bin/Synthmania
@@ -23,3 +23,5 @@ shader:
 
 clean:
 	rm -rf bin/*
+
+.PHONY: test clean shader obj module

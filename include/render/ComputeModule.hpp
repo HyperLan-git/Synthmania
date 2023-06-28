@@ -2,19 +2,7 @@
 
 class ComputeModule;
 
-#include <string>
-#include <vector>
-
-#include "Buffer.hpp"
-#include "CommandPool.hpp"
-#include "ComputeShader.hpp"
-#include "Device.hpp"
-#include "Instance.hpp"
-#include "Shader.hpp"
-#include "ShaderDescriptorPool.hpp"
 #include "ShaderDescriptorSet.hpp"
-#include "ShaderDescriptorSetLayout.hpp"
-#include "Utils.hpp"
 
 class ComputeModule {
    public:

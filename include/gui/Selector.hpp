@@ -3,8 +3,8 @@
 class Selector;
 
 #include "Font.hpp"
+#include "Game.hpp"
 #include "MenuElement.hpp"
-#include "Renderer.hpp"
 
 // XXX find a way to have gui with subparts without having to add them all one
 // by one

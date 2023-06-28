@@ -23,6 +23,15 @@ $(VSTLIB):
 endif
 
 # main compilation recipe
+$(OBJDIR)/%.o: $(SRCFOLDER)/%.cpp $(INCLUDEFOLDER)/%.hpp
+	@mkdir -p '$(@D)'
+ifeq ($(VST), 1)
+	g++ $(CFLAGS) -D VST -c $< $(LDFLAGS) $(DEBUG) -o $@
+else
+	g++ $(CFLAGS) -c $< $(LDFLAGS) $(DEBUG) -o $@
+endif
+
+# For files without header
 $(OBJDIR)/%.o: $(SRCFOLDER)/%.cpp
 	@mkdir -p '$(@D)'
 ifeq ($(VST), 1)

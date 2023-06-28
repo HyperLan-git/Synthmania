@@ -2,11 +2,6 @@
 
 class RenderPass;
 
-#include <vulkan/vulkan.h>
-
-#include <stdexcept>
-
-#include "Device.hpp"
 #include "Utils.hpp"
 
 class RenderPass {

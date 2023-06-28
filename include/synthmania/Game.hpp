@@ -2,12 +2,6 @@
 
 class Game;
 
-#include <stdlib.h>
-
-#include <algorithm>
-#include <iostream>
-#include <stdexcept>
-
 #include "AudioHandler.hpp"
 #include "Entity.hpp"
 #include "Gui.hpp"

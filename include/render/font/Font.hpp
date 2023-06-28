@@ -1,8 +1,5 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include "ImageView.hpp"
 
 // This represents relevant data to position a character
