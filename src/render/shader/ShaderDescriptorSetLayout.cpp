@@ -10,7 +10,7 @@ ShaderDescriptorSetLayout::ShaderDescriptorSetLayout(
     layoutInfo.bindingCount = nBindings;
     layoutInfo.pBindings = bindings;
 
-    if (vkCreateDescriptorSetLayout(*(device->getDevice()), &layoutInfo,
+    if (vkCreateDescriptorSetLayout(device->getDevice(), &layoutInfo,
                                     nullptr, layout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
@@ -20,6 +20,6 @@ ShaderDescriptorSetLayout::ShaderDescriptorSetLayout(
 VkDescriptorSetLayout* ShaderDescriptorSetLayout::getLayout() { return layout; }
 
 ShaderDescriptorSetLayout::~ShaderDescriptorSetLayout() {
-    vkDestroyDescriptorSetLayout(*(device->getDevice()), *layout, nullptr);
+    vkDestroyDescriptorSetLayout(device->getDevice(), *layout, nullptr);
     delete layout;
 }

@@ -10,7 +10,7 @@ ComputeShader::ComputeShader(Device* device, const std::vector<char>& code,
     createInfo.flags = 0;
 
     VkShaderModule* shaderModule = new VkShaderModule();
-    if (vkCreateShaderModule(*(device->getDevice()), &createInfo, nullptr,
+    if (vkCreateShaderModule(device->getDevice(), &createInfo, nullptr,
                              shaderModule) != VK_SUCCESS)
         throw std::runtime_error("failed to create compute shader module!");
 
@@ -34,6 +34,6 @@ VkPipelineShaderStageCreateInfo ComputeShader::toPipeline() { return info; }
 uint64_t ComputeShader::getWorkers() { return workers; }
 
 ComputeShader::~ComputeShader() {
-    vkDestroyShaderModule(*(this->device->getDevice()), *(this->module), NULL);
+    vkDestroyShaderModule(this->device->getDevice(), *(this->module), NULL);
     delete module;
 }

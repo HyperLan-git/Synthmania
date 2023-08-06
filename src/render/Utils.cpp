@@ -185,8 +185,7 @@ void setName(DebugFunc debugFunctions, Device* device, const std::string& name,
     info.objectType = type;
     info.pObjectName = name.c_str();
     info.pNext = NULL;
-    VkDevice d = *(device->getDevice());
-    debugFunctions.setName(*(device->getDevice()), &info);
+    debugFunctions.setName(device->getDevice(), &info);
 #endif
 }
 

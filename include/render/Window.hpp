@@ -24,6 +24,7 @@ class Window {
 
     GLFWwindow *getWindow();
 
+    // This function is FUCKED UP BRAH
     void getFramebufferSize(uint32_t *width, uint32_t *height);
 
     VkResult createSurface(Instance *instance,

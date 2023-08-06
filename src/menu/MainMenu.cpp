@@ -57,6 +57,18 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
                                                glm::vec2({.2, .6f})));
 
     for (Text t :
+         text->createText("The quick brown fox jumps over the lazy dog",
+                          "Stupid", 12, glm::vec2({0, -.5}))) {
+        std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
+            t.character.texture, "PLAY", buttons[0]);
+        t.pos.x -= t.size.x / 2;
+        g->setPosition(t.pos);
+        g->setSize(t.size);
+        g->setColor(glm::vec4(.2, .2, .7, 1));
+        g->setNegate(true);
+        guis.push_back(g);
+    }
+    for (Text t :
          text->createVerticalText("PLAY", "Stupid", 12, glm::vec2({0, -.4}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
             t.character.texture, "PLAY", buttons[0]);

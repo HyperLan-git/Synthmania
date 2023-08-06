@@ -35,7 +35,7 @@ RenderModule::RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     setName(functions, device, name + " image", VK_OBJECT_TYPE_IMAGE,
-            *(renderImage->getImage()));
+            renderImage->getImage());
     renderImageView =
         new ImageView(device, renderImage, VK_FORMAT_R8G8B8A8_SRGB,
                       VK_IMAGE_ASPECT_COLOR_BIT, name + " view");
@@ -46,15 +46,15 @@ RenderModule::RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
                            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     setName(functions, device, name + " depth image", VK_OBJECT_TYPE_IMAGE,
-            *(depthImage->getImage()));
+            depthImage->getImage());
     depthImageView = new ImageView(device, depthImage, depthFormat,
                                    VK_IMAGE_ASPECT_DEPTH_BIT, "depth image");
     setName(functions, device, name + " depth image view",
-            VK_OBJECT_TYPE_IMAGE_VIEW, *(depthImageView->getView()));
+            VK_OBJECT_TYPE_IMAGE_VIEW, depthImageView->getView());
 
     sampler = new TextureSampler(physicalDevice, device);
     setName(functions, device, name + " image sampler", VK_OBJECT_TYPE_SAMPLER,
-            *(sampler->getSampler()));
+            sampler->getSampler());
 
     commandPool = new CommandPool(device);
     commandBuffer = new CommandBuffer(device, commandPool, false);
@@ -132,7 +132,7 @@ void RenderModule::setExtent(uint32_t w, uint32_t h) {
         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     setName(functions, device, name + " image", VK_OBJECT_TYPE_IMAGE,
-            *(renderImage->getImage()));
+            renderImage->getImage());
     renderImageView =
         new ImageView(device, renderImage, VK_FORMAT_R8G8B8A8_SRGB,
                       VK_IMAGE_ASPECT_COLOR_BIT, name + " view");
@@ -142,15 +142,15 @@ void RenderModule::setExtent(uint32_t w, uint32_t h) {
                            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     setName(functions, device, name + " depth image", VK_OBJECT_TYPE_IMAGE,
-            *(depthImage->getImage()));
+            depthImage->getImage());
     depthImageView = new ImageView(device, depthImage, depthFormat,
                                    VK_IMAGE_ASPECT_DEPTH_BIT, "depth image");
     setName(functions, device, name + " depth image view",
-            VK_OBJECT_TYPE_IMAGE_VIEW, *(depthImageView->getView()));
+            VK_OBJECT_TYPE_IMAGE_VIEW, depthImageView->getView());
 
     sampler = new TextureSampler(&physicalDevice, device);
     setName(functions, device, name + " image sampler", VK_OBJECT_TYPE_SAMPLER,
-            *(sampler->getSampler()));
+            sampler->getSampler());
 
     renderPipeline = new Pipeline(device, renderPipelineLayout, renderPass,
                                   shaderStages, nShaders, VkExtent2D({w, h}));
@@ -219,16 +219,13 @@ RenderModule::~RenderModule() {
 
 void updateDescriptorSet(ShaderDescriptorSet* descriptor, ImageView* texture,
                          TextureSampler* sampler, Buffer* uniformBuffer) {
-    VkDescriptorImageInfo* imageInfo = sampler->createImageInfo(texture);
-    VkDescriptorBufferInfo* bufferInfo = uniformBuffer->createBufferInfo();
+    VkDescriptorImageInfo imageInfo = sampler->createImageInfo(texture);
+    VkDescriptorBufferInfo bufferInfo = uniformBuffer->createBufferInfo();
 
     descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 1,
                              VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, NULL,
-                             imageInfo);
+                             &imageInfo);
     descriptor->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, 0,
-                             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo,
+                             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &bufferInfo,
                              NULL);
-
-    delete bufferInfo;
-    delete imageInfo;
 }

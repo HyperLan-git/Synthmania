@@ -6,7 +6,7 @@ Framebuffer::Framebuffer(Device *device, RenderPass *pass, VkExtent2D extent,
     this->extent = extent;
     this->framebuffer = new VkFramebuffer();
     VkImageView v[views.size()];
-    for (int i = 0; i < views.size(); i++) v[i] = *(views[i]->getView());
+    for (int i = 0; i < views.size(); i++) v[i] = views[i]->getView();
     VkFramebufferCreateInfo framebufferInfo{};
     framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     framebufferInfo.renderPass = *(pass->getPass());
@@ -16,7 +16,7 @@ Framebuffer::Framebuffer(Device *device, RenderPass *pass, VkExtent2D extent,
     framebufferInfo.height = extent.height;
     framebufferInfo.layers = 1;
 
-    if (vkCreateFramebuffer(*(device->getDevice()), &framebufferInfo, nullptr,
+    if (vkCreateFramebuffer(device->getDevice(), &framebufferInfo, nullptr,
                             framebuffer) != VK_SUCCESS)
         throw std::runtime_error("failed to create framebuffer!");
 }
@@ -26,6 +26,6 @@ VkFramebuffer *Framebuffer::getFramebuffer() { return framebuffer; }
 VkExtent2D Framebuffer::getExtent() { return extent; }
 
 Framebuffer::~Framebuffer() {
-    vkDestroyFramebuffer(*(device->getDevice()), *framebuffer, nullptr);
+    vkDestroyFramebuffer(device->getDevice(), *framebuffer, nullptr);
     delete framebuffer;
 }

@@ -6,7 +6,9 @@
 
 static void framebufferResizeCallback(GLFWwindow *window, int width,
                                       int height) {
-    Game *game = reinterpret_cast<Game *>(glfwGetWindowUserPointer(window));
+    void *ptr = glfwGetWindowUserPointer(window);
+    if (ptr == NULL) return;
+    Game *game = reinterpret_cast<Game *>(ptr);
     game->getWindow()->onResize();
 }
 
@@ -23,6 +25,7 @@ Window::Window(const uint32_t width, const uint32_t height, const char *title,
     window =
         glfwCreateWindow(width, height, title,
                          fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
+    glfwSetWindowUserPointer(window, NULL);
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 

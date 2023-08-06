@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ImageView.hpp"
+#include "LayeredAtlas.hpp"
 
 // This represents relevant data to position a character
 struct Character {
@@ -12,6 +13,7 @@ struct Character {
 
 struct Font {
     std::string name;
+    LayeredAtlas* textures;
     std::map<unsigned long, Character> characters;
 };
 

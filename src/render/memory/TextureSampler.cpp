@@ -2,7 +2,6 @@
 
 TextureSampler::TextureSampler(VkPhysicalDevice* physicalDevice,
                                Device* device) {
-    sampler = new VkSampler();
     this->device = device;
     VkPhysicalDeviceProperties properties{};
     vkGetPhysicalDeviceProperties(*physicalDevice, &properties);
@@ -22,23 +21,22 @@ TextureSampler::TextureSampler(VkPhysicalDevice* physicalDevice,
     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-    if (vkCreateSampler(*(device->getDevice()), &samplerInfo, nullptr,
-                        sampler) != VK_SUCCESS) {
+    if (vkCreateSampler(device->getDevice(), &samplerInfo, nullptr, &sampler) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create texture sampler!");
     }
 }
 
-VkDescriptorImageInfo* TextureSampler::createImageInfo(ImageView* view) {
-    VkDescriptorImageInfo* imageInfo = new VkDescriptorImageInfo();
-    imageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo->imageView = *(view->getView());
-    imageInfo->sampler = *sampler;
+VkDescriptorImageInfo TextureSampler::createImageInfo(ImageView* view) {
+    VkDescriptorImageInfo imageInfo;
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = view->getView();
+    imageInfo.sampler = sampler;
     return imageInfo;
 }
 
-VkSampler* TextureSampler::getSampler() { return sampler; }
+VkSampler TextureSampler::getSampler() { return sampler; }
 
 TextureSampler::~TextureSampler() {
-    vkDestroySampler(*(device->getDevice()), *sampler, nullptr);
-    delete sampler;
+    vkDestroySampler(device->getDevice(), sampler, nullptr);
 }

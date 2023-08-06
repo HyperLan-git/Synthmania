@@ -5,8 +5,7 @@ TextHandler::TextHandler(VkPhysicalDevice* physicalDevice, Device* device,
     this->physicalDevice = physicalDevice;
     this->device = device;
     this->textureSize = textureSize;
-    lib = new FT_Library();
-    if (FT_Init_FreeType(lib))
+    if (FT_Init_FreeType(&lib))
         throw std::runtime_error("Could not init freetype !");
 }
 
@@ -16,15 +15,15 @@ Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
     FT_UInt i = FT_Get_Char_Index(face, character);
     FT_Load_Glyph(face, i, FT_LOAD_DEFAULT);
     FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL);
-    unsigned int w = glyphSlot->bitmap.width + 2,
-                 h = glyphSlot->bitmap.rows + 2;
+    const unsigned int w = glyphSlot->bitmap.width + 2,
+                       h = glyphSlot->bitmap.rows + 2;
 
     uint8_t* bitmap = glyphSlot->bitmap.buffer;
 
     Image* image =
         new Image(physicalDevice, device, w, h, VK_FORMAT_R8G8B8A8_SRGB,
                   VK_IMAGE_TILING_LINEAR,  // Fricking tiling
-                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -41,21 +40,17 @@ Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
             buffer[(x + y * layout.rowPitch / 4) * 4 + 3] = value;
         }
 
-    CommandBuffer* commandBuffer = new CommandBuffer(device, commandPool, true);
-    commandBuffer->begin();
+    {
+        CommandBuffer commandBuffer(device, commandPool, true);
+        commandBuffer.begin();
 
-    commandBuffer->setImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
-                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        commandBuffer.setImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-    commandBuffer->end();
-    commandBuffer->submit(device->getQueue("secondary"));
-    delete commandBuffer;
-    void* d;
-    // TODO utilitary function to copy data to memory
-    vkMapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()), 0,
-                layout.rowPitch * h, 0, &d);
-    memcpy(d, buffer, layout.rowPitch * h);
-    vkUnmapMemory(*(device->getDevice()), *(image->getMemory()->getMemory()));
+        commandBuffer.end();
+        commandBuffer.submit(device->getQueue("secondary"));
+    }
+    image->write(buffer, layout.rowPitch * h, 0);
     // TODO copy image to other image with tiling optimal and less memory usage
     return image;
 }
@@ -63,21 +58,57 @@ Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
 void TextHandler::loadFonts(
     std::map<std::string, std::vector<unsigned long>> fontsToLoad,
     CommandPool* commandPool) {
-    for (auto entry : fontsToLoad) {
+    Queue* queue = device->getQueue("secondary");
+    for (const auto& entry : fontsToLoad) {
         FT_Face f;
-        if (FT_New_Face(*lib, entry.first.c_str(), 0, &f)) continue;
+        if (FT_New_Face(lib, entry.first.c_str(), 0, &f)) continue;
         if (FT_Set_Pixel_Sizes(f, 0, textureSize)) continue;
 
-        Font font;
-        font.name = f->family_name;
+        LayeredAtlas* atlas = new LayeredAtlas(
+            this->device,
+            new Image(
+                this->physicalDevice, this->device, textureSize, textureSize,
+                VK_FORMAT_R8G8B8A8_SRGB,
+                VK_IMAGE_TILING_LINEAR,  // XXX Fricking tiling
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                entry.second.size()),
+            VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT,
+            std::string("font_") + f->family_name);
 
-        for (unsigned long c : entry.second) {
+        {
+            CommandBuffer buf(device, commandPool, true);
+            buf.begin();
+            buf.setImageLayout(atlas->getImage(), VK_IMAGE_LAYOUT_UNDEFINED,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0,
+                               entry.second.size());
+            buf.end();
+            buf.submit(queue);
+        }
+
+        Font font;
+        font.textures = atlas;
+        font.name = f->family_name;
+        uint32_t i = 0;
+        for (const unsigned long c : entry.second) {
             std::string charName = f->family_name;
             charName.append("_");
             charName.append(std::to_string(c));
-            addTexture(loadCharacter(f, c, commandPool), charName.c_str());
+            Image* ch = loadCharacter(f, c, commandPool);
+            {
+                CommandBuffer buf(device, commandPool, true);
+                buf.begin();
+                buf.setImageLayout(ch, VK_IMAGE_LAYOUT_UNDEFINED,
+                                   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+                buf.end();
+                buf.submit(queue);
+            }
+
             Character chr;
-            chr.texture = getTextureByName(textures, charName.c_str());
+            chr.texture = atlas->getTexture(atlas->append(ch, commandPool));
+            this->textures.push_back(chr.texture);
             chr.character = c;
             chr.width = f->glyph->bitmap.width + 2;
             chr.height = f->glyph->bitmap.rows + 2;
@@ -86,7 +117,20 @@ void TextHandler::loadFonts(
             chr.offsetTop = f->glyph->bitmap_top;
             chr.offsetLeft = f->glyph->bitmap_left;
             font.characters.emplace(c, chr);
+            delete ch;
+            i++;
         }
+        {
+            CommandBuffer buf(device, commandPool, true);
+            buf.begin();
+            buf.setImageLayout(atlas->getImage(),
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0,
+                               entry.second.size());
+            buf.end();
+            buf.submit(queue);
+        }
+
         fonts.push_back(font);
     }
 }
@@ -104,13 +148,7 @@ Character TextHandler::getCharacter(std::string fontName, unsigned long code) {
     return Character({0, 0, 0, 0, 0, 0, 0, NULL});
 }
 
-// TODO make an atlas :/
-void TextHandler::addTexture(Image* texture, const char* name) {
-    ImageView* view = new ImageView(device, texture, VK_FORMAT_R8G8B8A8_SRGB,
-                                    VK_IMAGE_ASPECT_COLOR_BIT, name);
-    this->textures.push_back(view);
-}
-
+// TODO redo character drawing cause these coefficients fucked up man...
 std::vector<Text> TextHandler::createText(std::string text,
                                           std::string fontName, double size,
                                           glm::vec2 start) {
@@ -120,10 +158,10 @@ std::vector<Text> TextHandler::createText(std::string text,
         Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t;
         t.character = c;
-        t.pos = {
-            start.x + (double)c.width / conv / 2 - c.offsetLeft / conv * 0.7,
-            start.y + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7};
-        t.size = {(double)c.width / conv, (double)c.height / conv};
+        t.pos = {start.x + (double)textureSize / conv / 2 - c.offsetLeft / conv,
+                 start.y + (double)textureSize / conv / 2 - c.offsetTop / conv};
+
+        t.size = {(double)textureSize / conv, (double)textureSize / conv};
         result.push_back(t);
         start.x += (c.advance) / conv;
     }
@@ -139,10 +177,10 @@ std::vector<Text> TextHandler::createText_w(std::wstring text,
         Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t;
         t.character = c;
-        t.pos = {
-            start.x + (double)c.width / conv / 2 - c.offsetLeft / conv * 0.7,
-            start.y + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7};
-        t.size = {(double)c.width / conv, (double)c.height / conv};
+        t.pos = {start.x + (double)textureSize / conv / 2 - c.offsetLeft / conv,
+                 start.y + (double)textureSize / conv / 2 - c.offsetTop / conv};
+
+        t.size = {(double)textureSize / conv, (double)textureSize / conv};
         result.push_back(t);
         start.x += (c.advance) / conv;
     }
@@ -159,10 +197,13 @@ std::vector<Text> TextHandler::createVerticalText(std::string text,
         Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t;
         t.character = c;
-        t.pos = {
-            start.x + (double)c.width / conv / 2 - c.offsetLeft / conv * 0.7,
-            start.y + (double)c.height / conv / 2 - c.offsetTop / conv * 0.7};
-        t.size = {(double)c.width / conv, (double)c.height / conv};
+        t.pos = {start.x +
+                     (double)(this->textureSize * 2 - c.width) / conv / 2 -
+                     c.offsetLeft / conv * .75,
+                 start.y + (double)this->textureSize / conv / 2 -
+                     c.offsetTop / conv * .75};
+        t.size = {(double)this->textureSize / conv,
+                  (double)this->textureSize / conv};
         result.push_back(t);
         start.y += (c.vAdvance) / conv * .7;
     }
@@ -170,6 +211,6 @@ std::vector<Text> TextHandler::createVerticalText(std::string text,
 }
 
 TextHandler::~TextHandler() {
-    FT_Done_FreeType(*lib);
-    delete lib;
+    // TODO for (Font& f : fonts) delete f.textures;
+    FT_Done_FreeType(lib);
 }

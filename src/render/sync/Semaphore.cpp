@@ -9,7 +9,7 @@ Semaphore::Semaphore(Device *device) {
     type = VK_SEMAPHORE_TYPE_BINARY;
     semaphore = new VkSemaphore();
 
-    if (vkCreateSemaphore(*(device->getDevice()), &semaphoreInfo, nullptr,
+    if (vkCreateSemaphore(device->getDevice(), &semaphoreInfo, nullptr,
                           semaphore) != VK_SUCCESS) {
         throw std::runtime_error("failed to create semaphore!");
     }
@@ -30,7 +30,7 @@ Semaphore::Semaphore(Device *device, uint64_t initialValue) {
     info.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
     semaphore = new VkSemaphore();
 
-    if (vkCreateSemaphore(*(device->getDevice()), &semaphoreInfo, nullptr,
+    if (vkCreateSemaphore(device->getDevice(), &semaphoreInfo, nullptr,
                           semaphore) != VK_SUCCESS) {
         throw std::runtime_error("failed to create semaphore!");
     }
@@ -42,6 +42,6 @@ VkSemaphoreType Semaphore::getType() { return type; }
 VkSemaphore *Semaphore::getSemaphore() { return semaphore; }
 
 Semaphore::~Semaphore() {
-    vkDestroySemaphore(*(device->getDevice()), *semaphore, nullptr);
+    vkDestroySemaphore(device->getDevice(), *semaphore, nullptr);
     delete semaphore;
 }

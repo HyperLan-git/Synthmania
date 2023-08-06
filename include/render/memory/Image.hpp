@@ -10,12 +10,15 @@ class Image {
           uint32_t height, VkFormat format, VkImageTiling tiling,
           VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
           uint32_t layers = 1);
-    Image(Device *device, VkImage *image, VkExtent2D extent);
+    Image(Device *device, VkImage image, VkExtent2D extent);
+
+    Image(Image &&img);
+    Image &operator=(Image &&img);
 
     Image(const Image &img) = delete;
     Image &operator=(const Image &img) = delete;
 
-    VkImage *getImage();
+    VkImage getImage();
     /**
      * @brief Get the Memory associated with this image.
      *
@@ -35,7 +38,7 @@ class Image {
 
    private:
     Device *device;
-    VkImage *image;
+    VkImage image;
     Memory *memory;
     VkExtent3D extent;
     uint32_t layers;

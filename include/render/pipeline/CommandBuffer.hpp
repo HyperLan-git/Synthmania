@@ -25,7 +25,8 @@ class CommandBuffer {
     void setScissor(VkExtent2D extent);
 
     void setImageLayout(Image *image, VkImageLayout oldLayout,
-                        VkImageLayout newLayout);
+                        VkImageLayout newLayout, uint32_t layer = 0,
+                        uint32_t numLayers = 1);
 
     void copyImage(Image *src, VkImageLayout srcImageLayout, Image *dst,
                    VkImageLayout dstImageLayout,

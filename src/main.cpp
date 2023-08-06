@@ -1,11 +1,14 @@
 #include "Synthmania.hpp"
 
 // FIXME replace pointers with unique or shared_ptrs I have just had enough
+// FIXME bruh pointers to handles are unnecessary AF you're such a bad
+// programmer for not checking types
 // TODO clean includes because it might or might not currently be complete chaos
 // TODO put consts everywhere relevant
 // TODO put inlines everywhere relevant
 // XXX namespace shenanigans
 // XXX explicit constructors :crying:
+// XXX checking every return value of vulkan functions...
 int main(int argc, char **argv) {
     std::string skin = "resources/textures", config = "bin/config.json";
     if (argc > 1 && argv[1][0] != '\0') skin = std::string(argv[1]);

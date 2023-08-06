@@ -63,7 +63,7 @@ RenderPass::RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(*(device->getDevice()), &renderPassInfo, nullptr,
+    if (vkCreateRenderPass(device->getDevice(), &renderPassInfo, nullptr,
                            pass) != VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");
     }
@@ -72,6 +72,6 @@ RenderPass::RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
 VkRenderPass *RenderPass::getPass() { return pass; }
 
 RenderPass ::~RenderPass() {
-    vkDestroyRenderPass(*(device->getDevice()), *pass, nullptr);
+    vkDestroyRenderPass(device->getDevice(), *pass, nullptr);
     delete pass;
 }

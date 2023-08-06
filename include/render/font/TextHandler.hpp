@@ -36,8 +36,6 @@ class TextHandler {
         std::map<std::string, std::vector<unsigned long>> fontsToLoad,
         CommandPool* commandPool);
 
-    void addTexture(Image* texture, const char* name);
-
     std::vector<Font> getFonts();
     std::vector<ImageView*> getTextures();
 
@@ -57,7 +55,7 @@ class TextHandler {
     ~TextHandler();
 
    private:
-    FT_Library* lib;
+    FT_Library lib = NULL;
 
     std::vector<Font> fonts;
     std::vector<ImageView*> textures;

@@ -14,7 +14,7 @@ PipelineLayout::PipelineLayout(Device* device,
     pipelineLayoutInfo.pushConstantRangeCount = constantRangeCount;
     pipelineLayoutInfo.pPushConstantRanges = constantRanges;
 
-    if (vkCreatePipelineLayout(*(device->getDevice()), &pipelineLayoutInfo,
+    if (vkCreatePipelineLayout(device->getDevice(), &pipelineLayoutInfo,
                                nullptr, layout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -23,6 +23,6 @@ PipelineLayout::PipelineLayout(Device* device,
 VkPipelineLayout* PipelineLayout::getLayout() { return layout; }
 
 PipelineLayout::~PipelineLayout() {
-    vkDestroyPipelineLayout(*(device->getDevice()), *layout, nullptr);
+    vkDestroyPipelineLayout(device->getDevice(), *layout, nullptr);
     delete layout;
 }

@@ -12,10 +12,11 @@ class Memory {
 
     Memory(const Memory& other) = delete;
     Memory& operator=(const Memory& other) = delete;
+
     Memory(Memory&& other);
     Memory& operator=(Memory&& other);
 
-    VkDeviceMemory* getMemory();
+    VkDeviceMemory getMemory();
     void write(const void* data, VkDeviceSize sz, VkDeviceSize offset);
     void read(void* data, VkDeviceSize sz, VkDeviceSize offset);
 
@@ -23,5 +24,5 @@ class Memory {
 
    private:
     Device* device;
-    VkDeviceMemory* memory;
+    VkDeviceMemory memory;
 };

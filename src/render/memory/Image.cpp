@@ -5,7 +5,6 @@ Image::Image(VkPhysicalDevice* physicalDevice, Device* device, uint32_t width,
              VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
              uint32_t layers) {
     this->device = device;
-    this->image = new VkImage();
     this->extent = {width, height, 1};
     this->layers = layers;
     VkImageCreateInfo imageInfo{};
@@ -22,19 +21,36 @@ Image::Image(VkPhysicalDevice* physicalDevice, Device* device, uint32_t width,
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageInfo.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
 
-    if (vkCreateImage(*(device->getDevice()), &imageInfo, nullptr, image) !=
+    if (vkCreateImage(device->getDevice(), &imageInfo, nullptr, &image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
 
     VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(*(device->getDevice()), *image,
-                                 &memRequirements);
+    vkGetImageMemoryRequirements(device->getDevice(), image, &memRequirements);
 
     memory = new Memory(physicalDevice, device, memRequirements, properties);
 
-    vkBindImageMemory(*(device->getDevice()), *image, *(memory->getMemory()),
-                      0);
+    vkBindImageMemory(device->getDevice(), image, memory->getMemory(), 0);
+}
+
+Image::Image(Image&& img) {
+    this->device = img.device;
+    this->extent = img.extent;
+    this->image = img.image;
+    this->layers = img.layers;
+    this->memory = img.memory;
+    img.memory = NULL;
+}
+
+Image& Image::operator=(Image&& img) {
+    this->device = img.device;
+    this->extent = img.extent;
+    this->image = img.image;
+    this->layers = img.layers;
+    this->memory = img.memory;
+    img.memory = NULL;
+    return *this;
 }
 
 std::vector<Image*> createImagesForSwapchain(Device* device,
@@ -42,24 +58,23 @@ std::vector<Image*> createImagesForSwapchain(Device* device,
                                              uint32_t* imageCount,
                                              VkExtent2D extent) {
     std::vector<Image*> swapChainImages;
-    vkGetSwapchainImagesKHR(*(device->getDevice()), swapchain, imageCount,
-                            NULL);
-    VkImage* images = new VkImage[*imageCount];
-    vkGetSwapchainImagesKHR(*(device->getDevice()), swapchain, imageCount,
-                            images);
+    vkGetSwapchainImagesKHR(device->getDevice(), swapchain, imageCount, NULL);
+    std::vector<VkImage> images(*imageCount);
+    vkGetSwapchainImagesKHR(device->getDevice(), swapchain, imageCount,
+                            images.data());
     for (int i = 0; i < *imageCount; i++)
-        swapChainImages.push_back(new Image(device, images + i, extent));
+        swapChainImages.push_back(new Image(device, images[i], extent));
     return swapChainImages;
 }
 
-Image::Image(Device* device, VkImage* image, VkExtent2D extent) {
+Image::Image(Device* device, VkImage image, VkExtent2D extent) {
     this->device = device;
     this->image = image;
     this->memory = NULL;
     this->extent = {extent.width, extent.height, 1};
 }
 
-VkImage* Image::getImage() { return image; }
+VkImage Image::getImage() { return image; }
 
 Memory* Image::getMemory() { return memory; }
 
@@ -73,7 +88,7 @@ VkSubresourceLayout Image::getImageSubresourceLayout(uint32_t mipLevel,
     VkSubresourceLayout result;
     VkImageSubresource sub{
         .aspectMask = flags, .mipLevel = mipLevel, .arrayLayer = arrayLayer};
-    vkGetImageSubresourceLayout(*(device->getDevice()), *image, &sub, &result);
+    vkGetImageSubresourceLayout(device->getDevice(), image, &sub, &result);
     return result;
 }
 
@@ -82,9 +97,8 @@ void Image::write(const void* data, VkDeviceSize sz, VkDeviceSize offset) {
 }
 
 Image::~Image() {
-    if (memory != NULL) {
-        vkDestroyImage(*(device->getDevice()), *image, NULL);
-        delete image;
+    if (memory) {
+        vkDestroyImage(device->getDevice(), image, NULL);
         delete memory;  // Again I wish I could do that
     }
 }

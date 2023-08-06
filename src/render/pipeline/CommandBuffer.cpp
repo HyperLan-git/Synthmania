@@ -15,7 +15,7 @@ CommandBuffer::CommandBuffer(Device *device, CommandPool *commandPool,
                                 : VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = 1;
 
-    if (vkAllocateCommandBuffers(*(device->getDevice()), &allocInfo, buffer) !=
+    if (vkAllocateCommandBuffers(device->getDevice(), &allocInfo, buffer) !=
         VK_SUCCESS)
         throw std::runtime_error("failed to allocate command buffers!");
 }
@@ -118,12 +118,12 @@ void CommandBuffer::bindVertexBuffers(Buffer *vertexBuffers, uint32_t count) {
     VkDeviceSize offsets[count] = {0};
     VkBuffer vertex[count];
     for (uint32_t i = 0; i < count; i++)
-        vertex[i] = *(vertexBuffers[i].getBuffer());
+        vertex[i] = vertexBuffers[i].getBuffer();
     vkCmdBindVertexBuffers(*buffer, 0, count, vertex, offsets);
 }
 
 void CommandBuffer::bindIndexBuffer(Buffer *indexBuffer) {
-    vkCmdBindIndexBuffer(*buffer, *(indexBuffer->getBuffer()), 0,
+    vkCmdBindIndexBuffer(*buffer, indexBuffer->getBuffer(), 0,
                          VK_INDEX_TYPE_UINT16);
 }
 
@@ -150,19 +150,20 @@ void CommandBuffer::pushConstants(Pipeline *pipeline,
 void CommandBuffer::endRenderPass() { vkCmdEndRenderPass(*buffer); }
 
 void CommandBuffer::setImageLayout(Image *image, VkImageLayout oldLayout,
-                                   VkImageLayout newLayout) {
+                                   VkImageLayout newLayout, uint32_t layer,
+                                   uint32_t numLayers) {
     VkImageMemoryBarrier barrier;
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.oldLayout = oldLayout;
     barrier.newLayout = newLayout;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = *(image->getImage());
+    barrier.image = image->getImage();
     barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     barrier.subresourceRange.baseMipLevel = 0;
     barrier.subresourceRange.levelCount = 1;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
+    barrier.subresourceRange.baseArrayLayer = layer;
+    barrier.subresourceRange.layerCount = numLayers;
     barrier.pNext = NULL;
 
     VkPipelineStageFlags sourceStage;
@@ -227,8 +228,7 @@ void CommandBuffer::copyBufferToImage(Buffer *srcBuffer, Image *image,
     region.imageOffset = {0, 0, 0};
     region.imageExtent = imageExtent;
 
-    vkCmdCopyBufferToImage(*buffer, *(srcBuffer->getBuffer()),
-                           *(image->getImage()),
+    vkCmdCopyBufferToImage(*buffer, srcBuffer->getBuffer(), image->getImage(),
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
@@ -237,7 +237,7 @@ void CommandBuffer::copyBufferRegion(Buffer *src, Buffer *dest,
     VkBufferCopy copyRegion{};
     copyRegion.srcOffset = copyRegion.dstOffset = 0;
     copyRegion.size = size;
-    vkCmdCopyBuffer(*buffer, *(src->getBuffer()), *(dest->getBuffer()), 1,
+    vkCmdCopyBuffer(*buffer, src->getBuffer(), dest->getBuffer(), 1,
                     &copyRegion);
 }
 
@@ -259,8 +259,8 @@ void CommandBuffer::copyImage(Image *src, VkImageLayout srcImageLayout,
     regions.dstSubresource.mipLevel = 0;
     regions.dstSubresource.baseArrayLayer = layer;
     regions.dstSubresource.layerCount = 1;
-    vkCmdCopyImage(*buffer, *(src->getImage()), srcImageLayout,
-                   *(dst->getImage()), dstImageLayout, 1, &regions);
+    vkCmdCopyImage(*buffer, src->getImage(), srcImageLayout, dst->getImage(),
+                   dstImageLayout, 1, &regions);
 }
 
 void CommandBuffer::convertImage(Image *src, VkImageLayout srcImageLayout,
@@ -277,8 +277,8 @@ void CommandBuffer::convertImage(Image *src, VkImageLayout srcImageLayout,
     blit.dstSubresource.mipLevel = 0;
     blit.dstSubresource.baseArrayLayer = 0;
     blit.dstSubresource.layerCount = 1;
-    vkCmdBlitImage(*buffer, *(src->getImage()), srcImageLayout,
-                   *(dst->getImage()), dstImageLayout, 1, &blit, filter);
+    vkCmdBlitImage(*buffer, src->getImage(), srcImageLayout, dst->getImage(),
+                   dstImageLayout, 1, &blit, filter);
 }
 
 void CommandBuffer::executeComputeShader(ComputeShader *shader,
@@ -294,6 +294,6 @@ void CommandBuffer::executeCommandBuffer(CommandBuffer *secondary) {
 }
 
 CommandBuffer::~CommandBuffer() {
-    vkFreeCommandBuffers(*(device->getDevice()), *(pool->getPool()), 1, buffer);
+    vkFreeCommandBuffers(device->getDevice(), *(pool->getPool()), 1, buffer);
     delete buffer;
 }

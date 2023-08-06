@@ -6,7 +6,7 @@ Queue::Queue(Device *device, uint32_t family, uint32_t id, std::string name) {
     this->family_id = family;
     this->queue_id = id;
     this->queue = new VkQueue();
-    vkGetDeviceQueue(*(device->getDevice()), family, id, queue);
+    vkGetDeviceQueue(device->getDevice(), family, id, queue);
 }
 
 VkQueue *Queue::getQueue() { return queue; }

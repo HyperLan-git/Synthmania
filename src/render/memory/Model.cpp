@@ -124,13 +124,7 @@ void Model::createVertexBuffer(VkPhysicalDevice* physicalDevice,
                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    void* data;
-    vkMapMemory(*(device->getDevice()),
-                *(vertexBuffer->getMemory()->getMemory()), 0, bufferSize, 0,
-                &data);
-    memcpy(data, vdata.data(), (size_t)bufferSize);
-    vkUnmapMemory(*(device->getDevice()),
-                  *(vertexBuffer->getMemory()->getMemory()));
+    vertexBuffer->fill(vdata.data());
 }
 
 void Model::createIndexBuffer(VkPhysicalDevice* physicalDevice,
@@ -142,13 +136,7 @@ void Model::createIndexBuffer(VkPhysicalDevice* physicalDevice,
                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    void* data;
-    vkMapMemory(*(device->getDevice()),
-                *(indexBuffer->getMemory()->getMemory()), 0, bufferSize, 0,
-                &data);
-    memcpy(data, idata.data(), (size_t)bufferSize);
-    vkUnmapMemory(*(device->getDevice()),
-                  *(indexBuffer->getMemory()->getMemory()));
+    indexBuffer->fill(idata.data());
 }
 
 std::vector<Vertex> Model::getVertexes() { return vdata; }

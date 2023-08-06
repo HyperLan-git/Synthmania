@@ -10,7 +10,7 @@ CommandPool::CommandPool(Device* device) {
     poolInfo.queueFamilyIndex = device->getQueue("main")->getFamily();
     poolInfo.pNext = NULL;
 
-    if (vkCreateCommandPool(*(device->getDevice()), &poolInfo, nullptr, pool) !=
+    if (vkCreateCommandPool(device->getDevice(), &poolInfo, nullptr, pool) !=
         VK_SUCCESS)
         throw std::runtime_error("failed to create command pool!");
 }
@@ -18,6 +18,6 @@ CommandPool::CommandPool(Device* device) {
 VkCommandPool* CommandPool::getPool() { return pool; }
 
 CommandPool::~CommandPool() {
-    vkDestroyCommandPool(*(device->getDevice()), *pool, nullptr);
+    vkDestroyCommandPool(device->getDevice(), *pool, nullptr);
     delete pool;
 }

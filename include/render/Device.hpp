@@ -28,12 +28,12 @@ class Device {
            std::map<std::string, FamilyPredicate> familyPredicates,
            const std::vector<const char *> validationLayers =
                std::vector<const char *>());
-    VkDevice *getDevice();
+    VkDevice getDevice();
     Queue *getQueue(std::string name);
     void wait();
     ~Device();
 
    private:
-    VkDevice *device;
+    VkDevice device;
     std::map<std::string, FamilyData> queues;
 };

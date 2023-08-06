@@ -126,7 +126,7 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.flags = 0;
 
-    if (vkCreateGraphicsPipelines(*(device->getDevice()), VK_NULL_HANDLE, 1,
+    if (vkCreateGraphicsPipelines(device->getDevice(), VK_NULL_HANDLE, 1,
                                   &pipelineInfo, NULL, pipeline) != VK_SUCCESS)
         throw std::runtime_error("failed to create graphics pipeline!");
 }
@@ -147,7 +147,7 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
     pipelineInfo.stage = shader->toPipeline();
     pipelineInfo.pNext = NULL;
 
-    if (vkCreateComputePipelines(*(device->getDevice()), VK_NULL_HANDLE, 1,
+    if (vkCreateComputePipelines(device->getDevice(), VK_NULL_HANDLE, 1,
                                  &pipelineInfo, NULL, pipeline))
         throw std::runtime_error("failed to create compute pipeline!");
 }
@@ -159,6 +159,6 @@ PipelineLayout *Pipeline::getLayout() { return layout; }
 bool Pipeline::isGraphics() { return graphics; }
 
 Pipeline ::~Pipeline() {
-    vkDestroyPipeline(*(device->getDevice()), *pipeline, nullptr);
+    vkDestroyPipeline(device->getDevice(), *pipeline, nullptr);
     delete pipeline;
 }

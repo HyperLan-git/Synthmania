@@ -41,7 +41,6 @@ Device::Device(VkPhysicalDevice *physicalDevice,
                std::map<std::string, FamilyPredicate> familyPredicates,
                const std::vector<const char *> validationLayers) {
     this->queues = {};
-    this->device = new VkDevice();
     std::vector<VkQueueFamilyProperties> families;
     getQueueFamilies(*physicalDevice, families);
     std::map<std::string, FamilyData> queueFamilies =
@@ -99,7 +98,7 @@ Device::Device(VkPhysicalDevice *physicalDevice,
         static_cast<uint32_t>(validationLayers.size());
     createInfo.ppEnabledLayerNames = validationLayers.data();
 
-    if (vkCreateDevice(*physicalDevice, &createInfo, NULL, device) !=
+    if (vkCreateDevice(*physicalDevice, &createInfo, NULL, &device) !=
         VK_SUCCESS)
         throw std::runtime_error("failed to create logical device!");
 
@@ -111,7 +110,7 @@ Device::Device(VkPhysicalDevice *physicalDevice,
                 new Queue(this, entry.second.id, i, entry.first));
 }
 
-VkDevice *Device::getDevice() { return device; }
+VkDevice Device::getDevice() { return device; }
 
 Queue *Device::getQueue(std::string name) {
     for (auto entry : queues) {
@@ -121,10 +120,10 @@ Queue *Device::getQueue(std::string name) {
     return NULL;
 }
 
-void Device::wait() { vkDeviceWaitIdle(*device); }
+void Device::wait() { vkDeviceWaitIdle(device); }
 
 Device::~Device() {
-    vkDestroyDevice(*device, nullptr);
+    vkDestroyDevice(device, nullptr);
     std::set<VkQueueFamilyProperties *> got;
     for (auto entry : queues) {
         if (got.find(entry.second.properties) == got.end()) {
@@ -133,5 +132,4 @@ Device::~Device() {
         }
         for (Queue *queue : entry.second.queues) delete queue;
     }
-    delete device;
 }

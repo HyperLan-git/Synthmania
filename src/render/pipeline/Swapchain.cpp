@@ -8,6 +8,8 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
 
     SwapchainSupportDetails swapchainSupport =
         querySwapchainSupport(*physicalDevice, *surface);
+    if (swapchainSupport.formats.size() == 0)
+        throw std::runtime_error("No swapchain format supported !");
     VkSurfaceFormatKHR surfaceFormat =
         chooseSwapSurfaceFormat(swapchainSupport.formats);
     VkPresentModeKHR presentMode =
@@ -57,7 +59,7 @@ Swapchain::Swapchain(Device *device, VkPhysicalDevice *physicalDevice,
         chooseSwapExtent(swapchainSupport.capabilities, window);
     this->extent = createInfo.imageExtent;
 
-    if (vkCreateSwapchainKHR(*(device->getDevice()), &createInfo, nullptr,
+    if (vkCreateSwapchainKHR(device->getDevice(), &createInfo, nullptr,
                              swapchain) != VK_SUCCESS) {
         throw std::runtime_error("failed to create swap chain!");
     }
@@ -107,10 +109,9 @@ Swapchain::~Swapchain() {
 
     delete renderPass;
 
-    delete[] images[0]->getImage();
     for (auto img : images) delete img;
     for (auto imageView : imageViews) delete imageView;
 
-    vkDestroySwapchainKHR(*(device->getDevice()), *swapchain, nullptr);
+    vkDestroySwapchainKHR(device->getDevice(), *swapchain, nullptr);
     delete swapchain;
 }

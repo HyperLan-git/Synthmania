@@ -2,6 +2,8 @@
 
 class LayeredAtlas;
 
+#include <vector>
+
 #include "CommandBuffer.hpp"
 
 class LayeredAtlas {
@@ -17,20 +19,22 @@ class LayeredAtlas {
 
     /**
      * Adds to the atlas another image and creates a new view
-     * @arg{ImageView *imageToCopy} an image view
+     * @arg{Image *imageToCopy} an image
      * @throw std::runtime_error if there is not enough space inside the atlas,
      * make a new one instead and check with LayeredAtlas::fits !
      * @return The index of the texture in the atlas
      */
-    uint32_t append(ImageView *imageToCopy, CommandPool *pool);
+    uint32_t append(Image *imageToCopy, CommandPool *pool);
 
-    ImageView *getTexture();
+    ImageView *getTexture(uint32_t layer);
+    Image *getImage();
 
     virtual ~LayeredAtlas();
 
    private:
     Device *device;
-    ImageView *img;
+    Image *img;
+    std::vector<ImageView *> views;
     // Write pointer
     uint32_t layer;
     std::map<std::string, uint32_t> contents;

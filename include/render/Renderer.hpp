@@ -66,6 +66,8 @@ class Renderer {
 
     glm::vec2 getVirtPos(glm::vec2 realPos);
 
+    VkExtent2D getFramebufferSize();
+
     ~Renderer();
 
    private:

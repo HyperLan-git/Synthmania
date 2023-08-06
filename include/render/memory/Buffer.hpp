@@ -19,9 +19,12 @@ class Buffer {
     Buffer(Buffer&& buf);
     Buffer& operator=(Buffer&& buf);
 
-    VkDescriptorBufferInfo* createBufferInfo();
+    VkDescriptorBufferInfo createBufferInfo();
 
-    VkBuffer* getBuffer();
+    void fill(const void* data);
+    void empty(void* data);
+
+    VkBuffer getBuffer();
     void copyTo(Buffer* other, Queue* graphicsQueue, CommandPool* commandPool);
     Memory* getMemory();
     VkDeviceSize getSize();
@@ -29,7 +32,7 @@ class Buffer {
 
    private:
     Device* device;
-    VkBuffer* buffer;
+    VkBuffer buffer;
     VkDeviceSize size;
     Memory* memory;
 };

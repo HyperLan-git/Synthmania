@@ -12,7 +12,7 @@ ShaderDescriptorSet::ShaderDescriptorSet(Device *device,
     allocInfo.descriptorSetCount = 1;
     allocInfo.pSetLayouts = layout->getLayout();
 
-    if (vkAllocateDescriptorSets(*(device->getDevice()), &allocInfo, set) !=
+    if (vkAllocateDescriptorSets(device->getDevice(), &allocInfo, set) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
@@ -52,8 +52,7 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
 
         cur->pNext = descriptorWrites;
     }
-    vkUpdateDescriptorSets(*(device->getDevice()), 1, descriptorWrites, 0,
-                           NULL);
+    vkUpdateDescriptorSets(device->getDevice(), 1, descriptorWrites, 0, NULL);
 }
 
 void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
@@ -76,6 +75,6 @@ ShaderDescriptorSet::~ShaderDescriptorSet() {
             delete (VkWriteDescriptorSet *)writeDescriptor->pNext;
         delete writeDescriptor;
     }
-    vkFreeDescriptorSets(*(device->getDevice()), *(pool->getPool()), 1, set);
+    vkFreeDescriptorSets(device->getDevice(), *(pool->getPool()), 1, set);
     delete set;
 }

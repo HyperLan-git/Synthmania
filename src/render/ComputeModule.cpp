@@ -20,7 +20,7 @@ ComputeModule::ComputeModule(VkPhysicalDevice* physicalDevice, Device* device,
                                      VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
-        VkDescriptorBufferInfo info = {.buffer = *(buffers[i]->getBuffer()),
+        VkDescriptorBufferInfo info = {.buffer = buffers[i]->getBuffer(),
                                        .offset = 0,
                                        .range = bufferSizes[i]};
         shaderSet->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, i,
@@ -52,21 +52,11 @@ void ComputeModule::run(Queue* queue, void* constants, VkDeviceSize sz,
 }
 
 void ComputeModule::fillBuffer(uint32_t buffer, void* data) {
-    VkDeviceMemory* mem = buffers[buffer]->getMemory()->getMemory();
-    VkDeviceSize sz = buffers[buffer]->getSize();
-    void* p;
-    vkMapMemory(*(device->getDevice()), *mem, 0, sz, 0, &p);
-    memcpy(p, data, sz);
-    vkUnmapMemory(*(device->getDevice()), *mem);
+    buffers[buffer]->fill(data);
 }
 
 void ComputeModule::emptyBuffer(uint32_t buffer, void* data) {
-    VkDeviceMemory* mem = buffers[buffer]->getMemory()->getMemory();
-    VkDeviceSize sz = buffers[buffer]->getSize();
-    void* p;
-    vkMapMemory(*(device->getDevice()), *mem, 0, sz, 0, &p);
-    memcpy(data, p, sz);
-    vkUnmapMemory(*(device->getDevice()), *mem);
+    buffers[buffer]->empty(data);
 }
 
 ComputeModule::~ComputeModule() {

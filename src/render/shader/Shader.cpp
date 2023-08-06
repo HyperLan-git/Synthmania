@@ -8,7 +8,7 @@ Shader::Shader(const char* mainFunction, Device* device,
     createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
     VkShaderModule* shaderModule = new VkShaderModule();
-    if (vkCreateShaderModule(*(device->getDevice()), &createInfo, nullptr,
+    if (vkCreateShaderModule(device->getDevice(), &createInfo, nullptr,
                              shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("failed to create shader module!");
     }
@@ -29,6 +29,6 @@ VkPipelineShaderStageCreateInfo Shader::toPipeline() { return info; }
 VkShaderModule* Shader::getModule() { return module; }
 
 Shader::~Shader() {
-    vkDestroyShaderModule(*(this->device->getDevice()), *(this->module), NULL);
+    vkDestroyShaderModule(this->device->getDevice(), *(this->module), NULL);
     delete module;
 }
