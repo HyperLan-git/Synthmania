@@ -6,11 +6,10 @@ class Image;
 
 class Image {
    public:
-    Image(VkPhysicalDevice *physicalDevice, Device *device, uint32_t width,
-          uint32_t height, VkFormat format, VkImageTiling tiling,
-          VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
-          uint32_t layers = 1);
-    Image(Device *device, VkImage image, VkExtent2D extent);
+    Image(Device &device, uint32_t width, uint32_t height, VkFormat format,
+          VkImageTiling tiling, VkImageUsageFlags usage,
+          VkMemoryPropertyFlags properties, uint32_t layers = 1);
+    Image(Device &device, VkImage image, VkExtent2D extent);
 
     Image(Image &&img);
     Image &operator=(Image &&img);
@@ -19,15 +18,18 @@ class Image {
     Image &operator=(const Image &img) = delete;
 
     VkImage getImage();
+    Device &getDevice();
+
     /**
      * @brief Get the Memory associated with this image.
      *
-     * A memory pointer that is NULL indicates an image from a swapchain with no
-     * memory associated.
+     * A memory pointer that is unassigned indicates an image from a swapchain
+     * with no memory associated.
      *
-     * @return Memory*
+     * @return std::unique_ptr<Memory>& a smart pointer to a memory object or
+     * empty if this image is a swapchain image
      */
-    Memory *getMemory();
+    std::unique_ptr<Memory> &getMemory();
     VkExtent3D getExtent();
     uint32_t getLayers();
     VkSubresourceLayout getImageSubresourceLayout(
@@ -37,14 +39,12 @@ class Image {
     ~Image();
 
    private:
-    Device *device;
+    Device &device;
     VkImage image;
-    Memory *memory;
+    std::unique_ptr<Memory> memory;
     VkExtent3D extent;
     uint32_t layers;
 };
 
-std::vector<Image *> createImagesForSwapchain(Device *device,
-                                              VkSwapchainKHR swapChain,
-                                              uint32_t *imageCount,
-                                              VkExtent2D extent);
+std::vector<std::shared_ptr<Image>> createImagesForSwapchain(
+    Device &device, VkSwapchainKHR swapChain, VkExtent2D extent);

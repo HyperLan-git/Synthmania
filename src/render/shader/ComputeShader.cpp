@@ -1,7 +1,8 @@
 #include "ComputeShader.hpp"
 
-ComputeShader::ComputeShader(Device* device, const std::vector<char>& code,
-                             const char* mainFunction, uint64_t workers) {
+ComputeShader::ComputeShader(Device& device, const std::vector<char>& code,
+                             const char* mainFunction, uint64_t workers)
+    : device(device) {
     VkShaderModuleCreateInfo createInfo;
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
@@ -9,31 +10,31 @@ ComputeShader::ComputeShader(Device* device, const std::vector<char>& code,
     createInfo.pNext = NULL;
     createInfo.flags = 0;
 
-    VkShaderModule* shaderModule = new VkShaderModule();
-    if (vkCreateShaderModule(device->getDevice(), &createInfo, nullptr,
-                             shaderModule) != VK_SUCCESS)
+    if (vkCreateShaderModule(device.getDevice(), &createInfo, nullptr,
+                             &module) != VK_SUCCESS)
         throw std::runtime_error("failed to create compute shader module!");
 
-    VkPipelineShaderStageCreateInfo shaderStageInfo =
-        VkPipelineShaderStageCreateInfo();
+    VkPipelineShaderStageCreateInfo shaderStageInfo;
     shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    shaderStageInfo.module = *shaderModule;
+    shaderStageInfo.module = module;
     shaderStageInfo.pName = mainFunction;
+    shaderStageInfo.flags = 0;
+    shaderStageInfo.pSpecializationInfo = NULL;
+    shaderStageInfo.pNext = NULL;
 
     this->info = shaderStageInfo;
-    this->module = shaderModule;
-    this->device = device;
     this->workers = workers;
 }
 
-VkShaderModule* ComputeShader::getModule() { return module; }
+VkShaderModule ComputeShader::getModule() { return module; }
 
 VkPipelineShaderStageCreateInfo ComputeShader::toPipeline() { return info; }
 
 uint64_t ComputeShader::getWorkers() { return workers; }
 
+Device& ComputeShader::getDevice() { return device; }
+
 ComputeShader::~ComputeShader() {
-    vkDestroyShaderModule(this->device->getDevice(), *(this->module), NULL);
-    delete module;
+    vkDestroyShaderModule(this->device.getDevice(), this->module, NULL);
 }

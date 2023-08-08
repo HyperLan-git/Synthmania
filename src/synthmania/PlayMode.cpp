@@ -43,13 +43,12 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
     path.append(diff.midi);
     partition = game->getMidiHandler()->readMidi(path.c_str());
     this->drum = partition.drumming;
-    Model *model =
-        new Model("resources/models/room.obj", renderer->getPhysicalDevice(),
-                  renderer->getDevice());
+    Model model =
+        loadFromFile(renderer->getDevice(), "resources/models/room.obj");
     std::vector<ImageView *> textures = renderer->getTextures();
-    std::shared_ptr<Entity> la_creatura76 = std::make_shared<Entity>(
-        model, getTextureByName(textures, "room"), "Bob");
-    renderer->addModel(model);
+    std::shared_ptr<Entity> la_creatura76 =
+        std::make_shared<Entity>(&renderer->addModel(std::move(model)),
+                                 getTextureByName(textures, "room"), "Bob");
     game->addEntity(la_creatura76);
     Key k = drum ? Key::DRUM : Key::SOL;
     std::string keyName = (drum) ? "drum_key" : "sol_key";
@@ -397,7 +396,7 @@ void PlayMode::noteMiss(const std::shared_ptr<Note> &note) {
         name.append("_");
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =
-            std::make_shared<Gui>(t.character.texture, name.c_str());
+            std::make_shared<Gui>(&t.character.texture, name.c_str());
         gui->addEffect(new GraphicalEffect(applyTemp));
         gui->setColor({1, 0, 0, 1});
         gui->setNegate(true);

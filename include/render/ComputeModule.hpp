@@ -4,12 +4,11 @@ class ComputeModule;
 
 #include "ShaderDescriptorSet.hpp"
 
-class ComputeModule {
+class ComputeModule : public boost::noncopyable {
    public:
-    ComputeModule(VkPhysicalDevice* physicalDevice, Device* device,
-                  CommandPool* pool, ComputeShader* shader,
-                  VkPushConstantRange* pushConstants, uint32_t nConstants,
-                  VkDescriptorSetLayoutBinding* bindings, uint32_t nBindings,
+    ComputeModule(CommandPool& pool, ComputeShader& shader,
+                  std::initializer_list<VkPushConstantRange> pushConstants,
+                  std::initializer_list<VkDescriptorSetLayoutBinding> bindings,
                   VkDeviceSize* bufferSizes, uint32_t nBuffers);
 
     void run(Queue* queue, void* constants, VkDeviceSize sz, uint64_t workers);
@@ -20,14 +19,14 @@ class ComputeModule {
     ~ComputeModule();
 
    private:
-    Device* device;
+    Device& device;
     ShaderDescriptorPool* shaderPool;
     ShaderDescriptorSetLayout* shaderLayout;
     ShaderDescriptorSet* shaderSet;
     PipelineLayout* layout;
     Pipeline* pipeline;
-    CommandPool* pool;
+    CommandPool& pool;
     CommandBuffer* commandBuffer;
     std::vector<Buffer*> buffers;
-    ComputeShader* shader;
+    ComputeShader& shader;
 };

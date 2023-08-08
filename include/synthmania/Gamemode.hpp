@@ -8,6 +8,11 @@ class Gamemode {
    public:
     Gamemode();
 
+    Gamemode(const Gamemode &) = delete;
+    Gamemode &operator=(const Gamemode &) = delete;
+    Gamemode(Gamemode &&) = delete;
+    Gamemode &operator=(Gamemode &&) = delete;
+
     // returns true if should end
     virtual bool update() = 0;
 
@@ -29,6 +34,4 @@ class Gamemode {
     virtual void freeFinalUBO(void *&ubo);
 
     virtual ~Gamemode();
-
-   private:
 };

@@ -6,7 +6,7 @@ class ImageView;
 
 class ImageView {
    public:
-    ImageView(Device *device, Image *image, VkFormat format,
+    ImageView(std::shared_ptr<Image> image, VkFormat format,
               VkImageAspectFlags aspectFlags, std::string name,
               uint32_t layer = 0);
 
@@ -17,13 +17,14 @@ class ImageView {
     ImageView &operator=(const ImageView &img) = delete;
 
     VkImageView getView();
-    Image *getImage();
+    std::shared_ptr<Image> &getImage();
     std::string getName();
+    Device &getDevice();
     ~ImageView();
 
    private:
-    Device *device;
+    Device &device;
     VkImageView view;
-    Image *image;
+    std::shared_ptr<Image> image;
     std::string name;
 };

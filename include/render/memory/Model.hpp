@@ -25,19 +25,21 @@ struct std::hash<Vertex> {
     size_t operator()(Vertex const& vertex) const;
 };
 
+Model loadFromFile(Device& device, const char* obj);
+
 class Model {
    public:
-    Model(const std::vector<Vertex> vdata, const std::vector<uint16_t> idata,
-          VkPhysicalDevice* physicalDevice, Device* device);
-    Model(const char* obj, VkPhysicalDevice* physicalDevice, Device* device);
+    Model(Device& device, const std::vector<Vertex>& vdata,
+          const std::vector<uint16_t>& idata);
 
-    Model(const Model&) = delete;
-    Model& operator=(const Model&) = delete;
     Model(Model&&);
     Model& operator=(Model&&);
 
-    Buffer* toVertexBuffer();
-    Buffer* toIndicesBuffer();
+    Model(const Model&) = delete;
+    Model& operator=(const Model&) = delete;
+
+    Buffer& toVertexBuffer();
+    Buffer& toIndicesBuffer();
 
     std::vector<Vertex> getVertexes();
     std::vector<uint16_t> getIndexes();
@@ -45,9 +47,10 @@ class Model {
     ~Model();
 
    private:
+    Device& device;
     std::vector<Vertex> vdata;
     std::vector<uint16_t> idata;
-    Buffer *vertexBuffer, *indexBuffer;
-    void createVertexBuffer(VkPhysicalDevice* physicalDevice, Device* device);
-    void createIndexBuffer(VkPhysicalDevice* physicalDevice, Device* device);
+    std::unique_ptr<Buffer> vertexBuffer, indexBuffer;
+    void createVertexBuffer(Device& device);
+    void createIndexBuffer(Device& device);
 };

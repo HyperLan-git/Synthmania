@@ -45,7 +45,7 @@ void Window::getFramebufferSize(uint32_t *width, uint32_t *height) {
 VkResult Window::createSurface(Instance *instance,
                                const VkAllocationCallbacks *allocator,
                                VkSurfaceKHR *surface) {
-    return glfwCreateWindowSurface(*(instance->getInstance()), this->window,
+    return glfwCreateWindowSurface(instance->getInstance(), this->window,
                                    allocator, surface);
 }
 
@@ -108,4 +108,6 @@ void Window::fullscreen(bool fullscreen) {
                          GLFW_DONT_CARE);
 }
 
-Window::~Window() { glfwDestroyWindow(window); }
+Window::~Window() {
+    if (window) glfwDestroyWindow(window);
+}

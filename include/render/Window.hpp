@@ -16,6 +16,11 @@ class Window {
     Window(const uint32_t width, const uint32_t height, const char *title,
            bool fullscreen = false);
 
+    Window(const Window &) = delete;
+    Window &operator=(const Window &) = delete;
+    Window(Window &&) = delete;
+    Window &operator=(Window &&) = delete;
+
     bool hasResized();
     void onResize();
     void setResized(bool resized);

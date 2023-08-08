@@ -32,23 +32,6 @@ class Synthmania;
 #include "Window.hpp"
 
 #define HIT_TIME 1500000
-// TODO move this elsewhere
-std::vector<std::shared_ptr<Gui>> printString(std::string text,
-                                              TextHandler *textHandler,
-                                              std::string entityNames,
-                                              std::string font, double size,
-                                              glm::vec2 pos,
-                                              glm::vec4 color = {0, 0, 0, 1});
-
-std::vector<std::shared_ptr<Gui>> printShadowedString(
-    std::string text, TextHandler *textHandler, std::string entityNames,
-    std::string font, double size, glm::vec2 pos,
-    glm::vec4 color = {0, 0, 0, 1});
-
-std::vector<std::shared_ptr<Gui>> printShakingString(
-    std::string text, TextHandler *textHandler, std::string entityNames,
-    std::string font, double size, glm::vec2 pos, float shake,
-    glm::vec4 color = {0, 0, 0, 1});
 
 // TODO check for note length
 // TODO merge note flags together

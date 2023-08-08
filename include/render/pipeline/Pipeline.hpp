@@ -8,21 +8,29 @@ class Pipeline;
 
 class Pipeline {
    public:
-    Pipeline(Device *device, PipelineLayout *layout, RenderPass *renderPass,
-             VkPipelineShaderStageCreateInfo *shaderStages,
-             uint32_t shaderCount, VkExtent2D swapChainExtent);
-    Pipeline(Device *device, PipelineLayout *layout, ComputeShader *shader);
+    Pipeline(
+        PipelineLayout &layout, RenderPass &renderPass,
+        VkExtent2D swapChainExtent,
+        std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages);
+    Pipeline(PipelineLayout &layout, ComputeShader &shader);
 
-    VkPipeline *getPipeline();
-    PipelineLayout *getLayout();
+    Pipeline(Pipeline &&) = delete;
+    Pipeline &operator=(Pipeline &&) = delete;
+    Pipeline(const Pipeline &) = delete;
+    Pipeline &operator=(const Pipeline &) = delete;
+
+    VkPipeline getPipeline();
+    PipelineLayout &getLayout();
+
+    Device &getDevice();
 
     bool isGraphics();
 
     ~Pipeline();
 
    private:
-    Device *device;
-    VkPipeline *pipeline;
-    PipelineLayout *layout;
+    Device &device;
+    VkPipeline pipeline;
+    PipelineLayout &layout;
     bool graphics;
 };

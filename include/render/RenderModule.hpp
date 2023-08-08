@@ -13,15 +13,15 @@ class RenderModule;
  * parallel/multi-pass rendering. All setters will wait for the device to be
  * available and recreate the inner pipeline !
  */
-class RenderModule {
+class RenderModule : public boost::noncopyable {
    public:
-    RenderModule(Instance* instance, VkPhysicalDevice* physicalDevice,
-                 Device* device, std::string name, uint32_t w, uint32_t h,
-                 RenderPass* renderPass, VkDescriptorSetLayoutBinding* bindings,
-                 uint32_t* nDescriptorSets, uint32_t nBindings,
-                 VkPipelineShaderStageCreateInfo* shaderStages,
-                 uint32_t nShaders, VkPushConstantRange* constantRanges,
-                 uint32_t nConstantRange);
+    RenderModule(
+        Instance& instance, Device& device, std::string name, uint32_t w,
+        uint32_t h, RenderPass& renderPass,
+        std::initializer_list<VkDescriptorSetLayoutBinding> descriptorBindings,
+        std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages,
+        std::initializer_list<VkPushConstantRange> constantRanges,
+        uint32_t* nDescriptorSets);
 
     Pipeline* getPipeline();
 
@@ -30,8 +30,8 @@ class RenderModule {
     ShaderDescriptorSet* addDescriptorSet(ImageView* img, Buffer* buffer);
 
     void setExtent(uint32_t w, uint32_t h);
-    void setShaders(VkPipelineShaderStageCreateInfo* shaderStages,
-                    uint32_t nShaders);
+    void setShaders(
+        std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages);
     void setDescriptorLayouts(VkDescriptorSetLayoutBinding* bindings,
                               uint32_t* nDescriptorSets, uint32_t nBindings);
 
@@ -43,14 +43,11 @@ class RenderModule {
     ~RenderModule();
 
    private:
-    Instance* instance = NULL;
-    VkPhysicalDevice physicalDevice = NULL;
-    Device* device = NULL;
+    Instance& instance;
+    Device& device;
 
-    Image* renderImage = NULL;
     ImageView* renderImageView = NULL;
     // TODO make depth optional
-    Image* depthImage = NULL;
     ImageView* depthImageView = NULL;
     Framebuffer* framebuffer = NULL;
     Pipeline* renderPipeline = NULL;
@@ -63,20 +60,17 @@ class RenderModule {
     TextureSampler* sampler = NULL;
     CommandPool* commandPool = NULL;
     CommandBuffer* commandBuffer = NULL;
-    RenderPass* renderPass = NULL;
+    RenderPass& renderPass;
 
     // For debugging xdd
     std::string name;
 
-    VkDescriptorSetLayoutBinding* descriptorBindings;
-    uint32_t nDescriptorBindings;
-    VkPipelineShaderStageCreateInfo* shaderStages;
-    uint32_t nShaders;
-    VkPushConstantRange* constantRanges;
-    uint32_t nConstantRange;
+    std::initializer_list<VkDescriptorSetLayoutBinding> descriptorBindings;
+    std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages;
+    std::initializer_list<VkPushConstantRange> constantRanges;
 
     VkExtent2D extent;
 };
 
-void updateDescriptorSet(ShaderDescriptorSet* descriptor, ImageView* texture,
-                         TextureSampler* sampler, Buffer* uniformBuffer);
+void updateDescriptorSet(ShaderDescriptorSet& descriptor, ImageView& texture,
+                         TextureSampler& sampler, Buffer& uniformBuffer);

@@ -1,9 +1,8 @@
 #include "Buffer.hpp"
 
-Buffer::Buffer(VkPhysicalDevice* physicalDevice, Device* device,
-               VkDeviceSize size, VkBufferUsageFlags usage,
-               VkMemoryPropertyFlags properties) {
-    this->device = device;
+Buffer::Buffer(Device& device, VkDeviceSize size, VkBufferUsageFlags usage,
+               VkMemoryPropertyFlags properties)
+    : device(device) {
     this->size = size;
 
     VkBufferCreateInfo bufferInfo;
@@ -16,40 +15,28 @@ Buffer::Buffer(VkPhysicalDevice* physicalDevice, Device* device,
     bufferInfo.queueFamilyIndexCount = 0;
     bufferInfo.pNext = NULL;
 
-    if (vkCreateBuffer(device->getDevice(), &bufferInfo, nullptr, &buffer) !=
+    if (vkCreateBuffer(device.getDevice(), &bufferInfo, nullptr, &buffer) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer!");
     }
 
     VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device->getDevice(), buffer,
-                                  &memRequirements);
+    vkGetBufferMemoryRequirements(device.getDevice(), buffer, &memRequirements);
 
-    memory = new Memory(physicalDevice, device, memRequirements, properties);
+    memory = std::make_unique<Memory>(device, memRequirements, properties);
 
-    vkBindBufferMemory(device->getDevice(), buffer, memory->getMemory(), 0);
+    vkBindBufferMemory(device.getDevice(), buffer, memory->getMemory(), 0);
 }
 
-Buffer::Buffer(Buffer&& buf) {
-    this->buffer = buf.buffer;
-    this->memory = buf.memory;
-    this->device = device;
-    this->size = size;
-    // To avoid deleting the current memory
-    buf.buffer = NULL;
-    buf.memory = NULL;
+Buffer::Buffer(Buffer&& buf)
+    : device(buf.device), buffer(NULL), memory(), size(buf.size) {
+    *this = std::move(buf);
 }
 
 Buffer& Buffer::operator=(Buffer&& buf) {
-    if (buffer) vkDestroyBuffer(device->getDevice(), buffer, NULL);
-    if (memory) delete memory;
-
-    this->buffer = buf.buffer;
-    this->memory = buf.memory;
-    this->device = device;
-    this->size = size;
-    buf.buffer = NULL;
-    buf.memory = NULL;
+    assert(buf.device == this->device);
+    std::swap(this->buffer, buf.buffer);
+    std::swap(this->memory, buf.memory);
     return *this;
 }
 
@@ -66,26 +53,27 @@ void Buffer::fill(const void* data) {
     this->memory->write(data, this->size, 0);
 }
 
+Device& Buffer::getDevice() { return device; }
+
 void Buffer::empty(void* data) { this->memory->read(data, this->size, 0); }
 
-void Buffer::copyTo(Buffer* other, Queue* graphicsQueue,
-                    CommandPool* commandPool) {
-    CommandBuffer commandBuffer(device, commandPool, true);
-    commandBuffer.begin();
+VkResult Buffer::copyTo(Buffer& other, Queue& graphicsQueue,
+                        CommandPool& commandPool) {
+    CommandBuffer commandBuffer(commandPool, true);
+    return_if(beg, commandBuffer.begin());
 
-    commandBuffer.copyBufferRegion(this, other, size);
+    commandBuffer.copyBufferRegion(*this, other, size);
 
-    commandBuffer.end();
-    commandBuffer.submit(graphicsQueue);
+    return_if(end, commandBuffer.end());
+    return commandBuffer.submit(graphicsQueue);
 }
 
-Memory* Buffer::getMemory() { return memory; }
+Memory& Buffer::getMemory() { return *memory; }
 
 VkBuffer Buffer::getBuffer() { return buffer; }
 
 VkDeviceSize Buffer::getSize() { return size; }
 
 Buffer::~Buffer() {
-    if (buffer) vkDestroyBuffer(device->getDevice(), buffer, NULL);
-    if (memory) delete memory;  // :(
+    if (buffer) vkDestroyBuffer(device.getDevice(), buffer, NULL);
 }

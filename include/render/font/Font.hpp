@@ -8,7 +8,7 @@ struct Character {
     int offsetLeft, offsetTop;
     unsigned int width, height, advance, vAdvance;
     unsigned long character;
-    ImageView* texture;
+    ImageView& texture;
 };
 
 struct Font {

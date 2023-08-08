@@ -7,16 +7,24 @@ class Framebuffer;
 
 class Framebuffer {
    public:
-    Framebuffer(Device *device, RenderPass *pass, VkExtent2D extent,
+    Framebuffer(RenderPass &pass, VkExtent2D extent,
                 std::vector<ImageView *> views);
-    VkFramebuffer *getFramebuffer();
+
+    Framebuffer(Framebuffer &&) = delete;
+    Framebuffer &operator=(Framebuffer &&) = delete;
+
+    VkFramebuffer getFramebuffer();
 
     VkExtent2D getExtent();
+
+    Device &getDevice();
+    RenderPass &getRenderPass();
 
     ~Framebuffer();
 
    private:
-    Device *device;
-    VkFramebuffer *framebuffer;
+    Device &device;
+    RenderPass &pass;
+    VkFramebuffer framebuffer;
     VkExtent2D extent;
 };

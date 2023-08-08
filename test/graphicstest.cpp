@@ -13,7 +13,7 @@ class Test : public Game {
         this->window = new Window(width, height, title);
         window->setWindowUserPointer(this);
         this->renderer = new Renderer(this, window);
-        Device* device = renderer->getDevice();
+        Device& device = renderer->getDevice();
         VkPushConstantRange range{.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
                                   .offset = 0,
                                   .size = sizeof(unsigned int) * 2};
@@ -39,7 +39,7 @@ class Test : public Game {
         for (int i = 0; i < 128; i++) arr[i] = i * i;
         module.fillBuffer(0, arr);
         unsigned int constants[] = {126, 1};
-        module.run(device->getQueue("compute"), constants,
+        module.run(device.getQueue("compute"), constants,
                    2 * sizeof(unsigned int), 128);
         module.emptyBuffer(1, arr);
         for (int i = 0; i < 128; i++) {
@@ -54,9 +54,14 @@ class Test : public Game {
         g->setSize({1.f, 1.f});
         addGui(g);
         int i = 0;
-        for (auto g2 : printString("Hell o", this->getTextHandler(), "hi",
-                                   "Stupid", 55, glm::vec2({-2, 0})))
-            addGui(g2);
+        for (auto t : this->getTextHandler()->createText("Hell o", "Stupid", 55,
+                                                         glm::vec2({-2, 0}))) {
+            std::shared_ptr<Gui> gui =
+                std::make_shared<Gui>(&t.character.texture, "hi");
+            gui->setPosition(t.pos);
+            gui->setSize(t.size);
+            addGui(gui);
+        }
 
         /*
          for (Text t : renderer->getTextHandler()->createText(

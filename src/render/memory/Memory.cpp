@@ -1,50 +1,46 @@
 #include "Memory.hpp"
 
-Memory::Memory(VkPhysicalDevice* physicalDevice, Device* device,
-               VkMemoryRequirements memRequirements,
-               VkMemoryPropertyFlags properties) {
-    this->device = device;
+Memory::Memory(Device& device, VkMemoryRequirements memRequirements,
+               VkMemoryPropertyFlags properties)
+    : device(device) {
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(
-        physicalDevice, memRequirements.memoryTypeBits, properties);
+        device.getPhysicalDevice(), memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(device->getDevice(), &allocInfo, nullptr, &memory) !=
+    if (vkAllocateMemory(device.getDevice(), &allocInfo, nullptr, &memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate buffer memory!");
     }
 }
 
-Memory::Memory(Memory&& other) {
-    this->memory = other.memory;
-    this->device = other.device;
-    other.memory = NULL;
+Memory::Memory(Memory&& other) : device(other.device), memory(NULL) {
+    *this = std::move(other);
 }
 
 Memory& Memory::operator=(Memory&& other) {
-    this->memory = other.memory;
-    this->device = other.device;
-    other.memory = NULL;
+    assert(other.device == this->device);
+    std::swap(this->memory, other.memory);
     return *this;
 }
 
 void Memory::write(const void* data, VkDeviceSize sz, VkDeviceSize offset) {
     void* d;
-    vkMapMemory(device->getDevice(), memory, offset, sz, 0, &d);
+    vkMapMemory(device.getDevice(), memory, offset, sz, 0, &d);
     memcpy(d, data, sz);
-    vkUnmapMemory(device->getDevice(), memory);
+    vkUnmapMemory(device.getDevice(), memory);
 }
 
 void Memory::read(void* data, VkDeviceSize sz, VkDeviceSize offset) {
     void* d;
-    vkMapMemory(device->getDevice(), memory, offset, sz, 0, &d);
+    vkMapMemory(device.getDevice(), memory, offset, sz, 0, &d);
     memcpy(data, d, sz);
-    vkUnmapMemory(device->getDevice(), memory);
+    vkUnmapMemory(device.getDevice(), memory);
 }
 
 VkDeviceMemory Memory::getMemory() { return memory; }
 
 Memory::~Memory() {
-    if (memory) vkFreeMemory(device->getDevice(), memory, NULL);
+    if (memory) vkFreeMemory(device.getDevice(), memory, NULL);
 }

@@ -10,7 +10,7 @@ SongSelectMenu::SongSelectMenu(Game *g, std::string folder) : Menu(g) {
     for (Text t : g->getTextHandler()->createText("Back", "Stupid", 12,
                                                   glm::vec2({-.1, 0}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            t.character.texture, "Back_arrow", back);
+            &t.character.texture, "Back_arrow", back);
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -35,7 +35,7 @@ SongSelectMenu::SongSelectMenu(Game *g, std::string folder) : Menu(g) {
             for (Text t : g->getTextHandler()->createText(
                      name, "Stupid", 10, glm::vec2({-.45, 0}))) {
                 std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-                    t.character.texture, "Song name " + name, but);
+                    &t.character.texture, "Song name " + name, but);
                 g->setPosition(t.pos);
                 g->setSize(t.size);
                 guis.push_back(g);

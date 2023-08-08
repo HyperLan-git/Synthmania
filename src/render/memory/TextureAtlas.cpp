@@ -1,9 +1,9 @@
 #include "TextureAtlas.hpp"
 
-TextureAtlas::TextureAtlas(Device *device, Image *image, VkFormat format,
+TextureAtlas::TextureAtlas(std::shared_ptr<Image> image, VkFormat format,
                            VkImageAspectFlags aspectFlags, std::string name)
-    : img(new ImageView(device, image, format, aspectFlags, name)),
-      device(device),
+    : img(new ImageView(image, format, aspectFlags, name)),
+      device(image->getDevice()),
       ptr(0, 0),
       height(0),
       contents() {}
@@ -33,13 +33,14 @@ glm::vec<4, uint32_t> TextureAtlas::append(ImageView *imageToCopy,
     }
     glm::vec<4, uint32_t> ext{this->ptr.x, this->ptr.y, imgExt.width,
                               imgExt.height};
-    CommandBuffer buf(device, pool, true);
+    CommandBuffer buf(*pool, true);
     buf.begin();
-    buf.copyImage(imageToCopy->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                  this->img->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                  {0, 0, 0}, {(int32_t)ext.x, (int32_t)ext.y, 1}, imgExt);
+    buf.copyImage(*imageToCopy->getImage(),
+                  VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, *this->img->getImage(),
+                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, {0, 0, 0},
+                  {(int32_t)ext.x, (int32_t)ext.y, 1}, imgExt);
     buf.end();
-    buf.submit(device->getQueue("secondary"));
+    buf.submit(*device.getQueue("secondary"));
     this->ptr.x = this->ptr.x + imgExt.width;
     this->contents.emplace(imageToCopy->getName(), ext);
     return ext;
@@ -54,5 +55,7 @@ glm::vec<4, uint32_t> TextureAtlas::operator[](std::string name) const {
 }
 
 ImageView *TextureAtlas::getTexture() { return this->img; }
+
+Device &TextureAtlas::getDevice() { return this->device; }
 
 TextureAtlas::~TextureAtlas() { delete this->img; }

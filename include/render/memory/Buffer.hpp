@@ -10,14 +10,14 @@ class Buffer;
 
 class Buffer {
    public:
-    Buffer(VkPhysicalDevice* physicalDevice, Device* device, VkDeviceSize size,
-           VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
-
-    Buffer(const Buffer& buf) = delete;
-    Buffer& operator=(const Buffer& buf) = delete;
+    Buffer(Device& device, VkDeviceSize size, VkBufferUsageFlags usage,
+           VkMemoryPropertyFlags properties);
 
     Buffer(Buffer&& buf);
     Buffer& operator=(Buffer&& buf);
+
+    Buffer(const Buffer& buf) = delete;
+    Buffer& operator=(const Buffer& buf) = delete;
 
     VkDescriptorBufferInfo createBufferInfo();
 
@@ -25,14 +25,15 @@ class Buffer {
     void empty(void* data);
 
     VkBuffer getBuffer();
-    void copyTo(Buffer* other, Queue* graphicsQueue, CommandPool* commandPool);
-    Memory* getMemory();
+    VkResult copyTo(Buffer& other, Queue& graphicsQueue, CommandPool& commandPool);
+    Memory& getMemory();
+    Device& getDevice();
     VkDeviceSize getSize();
     ~Buffer();
 
    private:
-    Device* device;
+    Device& device;
     VkBuffer buffer;
     VkDeviceSize size;
-    Memory* memory;
+    std::unique_ptr<Memory> memory;
 };

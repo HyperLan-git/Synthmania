@@ -10,7 +10,7 @@ class Semaphore {
      * @brief Creates a binary semaphore that can be waited on during command
      * buffer execution
      */
-    Semaphore(Device *device);
+    Semaphore(Device &device);
 
     /**
      * @brief Constructs a timeline semaphore that may be used to synchronize
@@ -19,15 +19,21 @@ class Semaphore {
      * @param device
      * @param initialValue
      */
-    Semaphore(Device *device, uint64_t initialValue);
+    Semaphore(Device &device, uint64_t initialValue);
 
-    VkSemaphore *getSemaphore();
+    Semaphore(Semaphore &&) = delete;
+    Semaphore &operator=(Semaphore &&) = delete;
+
+    Semaphore(const Semaphore &) = delete;
+    Semaphore &operator=(const Semaphore &) = delete;
+
+    VkSemaphore getSemaphore();
     VkSemaphoreType getType();
 
     ~Semaphore();
 
    private:
-    VkSemaphore *semaphore;
+    VkSemaphore semaphore;
     VkSemaphoreType type;
-    Device *device;
+    Device &device;
 };

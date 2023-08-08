@@ -6,7 +6,6 @@ Instance::Instance(std::string name, uint32_t version, const char* engineName,
                    const std::vector<const char*> validationLayers,
                    std::string logFile) {
     bool debug = !validationLayers.empty();
-    instance = new VkInstance();
 
     VkApplicationInfo appInfo;
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -31,7 +30,6 @@ Instance::Instance(std::string name, uint32_t version, const char* engineName,
         createInfo.enabledLayerCount = 0;
         createInfo.pNext = NULL;
     } else {
-        debugMessenger = new VkDebugUtilsMessengerEXT();
         log = std::ofstream(logFile, std::ios::out);
 
         if (!checkValidationLayerSupport(validationLayers))
@@ -45,7 +43,7 @@ Instance::Instance(std::string name, uint32_t version, const char* engineName,
         createInfo.pNext = NULL;
     }
 
-    if (vkCreateInstance(&createInfo, NULL, instance) != VK_SUCCESS)
+    if (vkCreateInstance(&createInfo, NULL, &instance) != VK_SUCCESS)
         throw std::runtime_error("failed to create instance!");
 
     if (debug) {
@@ -67,9 +65,9 @@ Instance::Instance(std::string name, uint32_t version, const char* engineName,
         createInfo.pNext = NULL;
 
         auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-            *instance, "vkCreateDebugUtilsMessengerEXT");
+            instance, "vkCreateDebugUtilsMessengerEXT");
         if (func != nullptr) {
-            if (func(*instance, &createInfo, nullptr, debugMessenger))
+            if (func(instance, &createInfo, nullptr, &debugMessenger))
                 throw std::runtime_error("failed to set up debug messenger!");
         } else {
             throw std::runtime_error(
@@ -110,31 +108,28 @@ debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     return VK_FALSE;
 }
 
-VkInstance* Instance::getInstance() { return instance; }
+VkInstance Instance::getInstance() { return instance; }
 
 Instance::~Instance() {
     if (debugMessenger != NULL) {
         PFN_vkDestroyDebugUtilsMessengerEXT func =
             (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-                *instance, "vkDestroyDebugUtilsMessengerEXT");
-        if (func != NULL) func(*instance, *debugMessenger, NULL);
-        delete debugMessenger;
+                instance, "vkDestroyDebugUtilsMessengerEXT");
+        if (func != NULL) func(instance, debugMessenger, NULL);
     }
-    vkDestroyInstance(*instance, NULL);
-    delete instance;
+    vkDestroyInstance(instance, NULL);
 }
 
-VkSurfaceKHR* Instance::createSurface(Window* window) {
-    VkSurfaceKHR* surface = new VkSurfaceKHR();
-    if (window->createSurface(this, NULL, surface) != VK_SUCCESS)
+VkSurfaceKHR Instance::createSurface(Window* window) {
+    VkSurfaceKHR surface;
+    if (window->createSurface(this, NULL, &surface) != VK_SUCCESS)
         throw std::runtime_error("failed to create window surface!");
 
     return surface;
 }
 
-void Instance::destroySurface(VkSurfaceKHR* surface) {
-    vkDestroySurfaceKHR(*instance, *surface, nullptr);
-    delete surface;
+void Instance::destroySurface(VkSurfaceKHR surface) {
+    vkDestroySurfaceKHR(instance, surface, nullptr);
 }
 
 bool Instance::checkValidationLayerSupport(

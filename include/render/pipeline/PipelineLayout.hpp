@@ -4,16 +4,21 @@ class PipelineLayout;
 
 #include "ShaderDescriptorSetLayout.hpp"
 
-// TODO get device from other arguments when possible
 class PipelineLayout {
    public:
-    PipelineLayout(Device* device, ShaderDescriptorSetLayout* shaderLayout,
-                   uint32_t constantRangeCount,
-                   VkPushConstantRange* constantRanges);
-    VkPipelineLayout* getLayout();
+    PipelineLayout(ShaderDescriptorSetLayout& shaderLayout,
+                   std::initializer_list<VkPushConstantRange> constantRanges);
+
+    PipelineLayout(PipelineLayout&&) = delete;
+    PipelineLayout& operator=(PipelineLayout&&) = delete;
+
+    VkPipelineLayout getLayout();
+
+    Device& getDevice();
+
     ~PipelineLayout();
 
    private:
-    Device* device;
-    VkPipelineLayout* layout;
+    Device& device;
+    VkPipelineLayout layout;
 };

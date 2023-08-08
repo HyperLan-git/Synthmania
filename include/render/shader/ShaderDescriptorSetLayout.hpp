@@ -2,8 +2,6 @@
 
 class ShaderDescriptorSetLayout;
 
-#include <stdexcept>
-
 #include "Device.hpp"
 
 /**
@@ -14,13 +12,23 @@ class ShaderDescriptorSetLayout;
  */
 class ShaderDescriptorSetLayout {
    public:
-    ShaderDescriptorSetLayout(Device* device,
-                              VkDescriptorSetLayoutBinding* bindings,
-                              uint32_t nBindings);
-    VkDescriptorSetLayout* getLayout();
+    ShaderDescriptorSetLayout(
+        Device& device,
+        std::initializer_list<VkDescriptorSetLayoutBinding> bindings);
+
+    ShaderDescriptorSetLayout(ShaderDescriptorSetLayout&&) = delete;
+    ShaderDescriptorSetLayout& operator=(ShaderDescriptorSetLayout&&) = delete;
+
+    ShaderDescriptorSetLayout(const ShaderDescriptorSetLayout&) = delete;
+    ShaderDescriptorSetLayout& operator=(const ShaderDescriptorSetLayout&) =
+        delete;
+
+    VkDescriptorSetLayout getLayout();
+    Device& getDevice();
+
     ~ShaderDescriptorSetLayout();
 
    private:
-    Device* device;
-    VkDescriptorSetLayout* layout;
+    Device& device;
+    VkDescriptorSetLayout layout;
 };

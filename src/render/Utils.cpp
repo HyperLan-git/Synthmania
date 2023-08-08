@@ -1,9 +1,9 @@
 #include "Utils.hpp"
 
-uint32_t findMemoryType(VkPhysicalDevice* physicalDevice, uint32_t typeFilter,
+uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter,
                         VkMemoryPropertyFlags properties) {
     VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(*physicalDevice, &memProperties);
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
         if ((typeFilter & (1 << i)) &&
@@ -120,7 +120,7 @@ VkPresentModeKHR chooseSwapPresentMode(
 }
 
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
-                            Window* window) {
+                            Window& window) {
     if (capabilities.currentExtent.width !=
             std::numeric_limits<uint32_t>::max() &&
         capabilities.currentExtent.height !=
@@ -129,7 +129,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
     } else {
         VkExtent2D actualExtent;
         // FIXME FUCKING STOP CALLING GLFW CODE IN VULKAN AAAAAAAAAAAAAAA
-        window->getFramebufferSize(&actualExtent.width, &actualExtent.height);
+        window.getFramebufferSize(&actualExtent.width, &actualExtent.height);
 
         actualExtent.width =
             std::clamp(actualExtent.width, capabilities.minImageExtent.width,
@@ -151,10 +151,10 @@ ImageView* getTextureByName(std::vector<ImageView*> textures,
     return getTextureByName(textures, "missing");
 }
 
-DebugFunc getDebugFunctions(Instance* instance) {
+DebugFunc getDebugFunctions(Instance& instance) {
     DebugFunc result;
 #ifdef DEBUG
-    VkInstance i = *(instance->getInstance());
+    VkInstance i = instance.getInstance();
     result.begin = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(
         i, "vkCmdBeginDebugUtilsLabelEXT");
     result.end = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(
@@ -176,7 +176,7 @@ DebugFunc getDebugFunctions(Instance* instance) {
     return result;
 }
 
-void setName(DebugFunc debugFunctions, Device* device, const std::string& name,
+void setName(DebugFunc debugFunctions, Device& device, const std::string& name,
              VkObjectType type, void* obj) {
 #ifdef DEBUG
     VkDebugUtilsObjectNameInfoEXT info;
@@ -185,7 +185,7 @@ void setName(DebugFunc debugFunctions, Device* device, const std::string& name,
     info.objectType = type;
     info.pObjectName = name.c_str();
     info.pNext = NULL;
-    debugFunctions.setName(device->getDevice(), &info);
+    debugFunctions.setName(device.getDevice(), &info);
 #endif
 }
 
@@ -197,7 +197,7 @@ void beginSection(DebugFunc debugFunctions, std::string name,
     info.pLabelName = name.c_str();
     info.color[0] = info.color[3] = 1.f;
     info.pNext = NULL;
-    debugFunctions.begin(*(buffer->getBuffer()), &info);
+    debugFunctions.begin(buffer->getBuffer(), &info);
 #endif
 }
 

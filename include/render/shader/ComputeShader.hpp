@@ -8,20 +8,25 @@ class ComputeShader;
 
 class ComputeShader {
    public:
-    ComputeShader(Device* device, const std::vector<char>& code,
+    ComputeShader(Device& device, const std::vector<char>& code,
                   const char* mainFunction, uint64_t workers);
 
-    VkShaderModule* getModule();
+    ComputeShader(ComputeShader&&);
+    ComputeShader& operator=(ComputeShader&&);
+
+    VkShaderModule getModule();
 
     VkPipelineShaderStageCreateInfo toPipeline();
 
     uint64_t getWorkers();
 
+    Device& getDevice();
+
     ~ComputeShader();
 
    private:
-    Device* device;
+    Device& device;
     VkPipelineShaderStageCreateInfo info;
-    VkShaderModule* module;
+    VkShaderModule module;
     uint64_t workers;
 };

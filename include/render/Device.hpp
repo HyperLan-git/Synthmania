@@ -5,6 +5,7 @@
 #include <functional>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 
 class Device;
@@ -21,19 +22,31 @@ std::map<std::string, FamilyData> findQueueFamilies(
     VkPhysicalDevice device, std::vector<VkQueueFamilyProperties> queueFamilies,
     std::map<std::string, FamilyPredicate> familyPredicates);
 
+// TODO put as many vulkan calls as possible in this class
 class Device {
    public:
-    Device(VkPhysicalDevice *physicalDevice,
+    Device(VkPhysicalDevice &physicalDevice,
            const std::vector<const char *> deviceExtensions,
            std::map<std::string, FamilyPredicate> familyPredicates,
            const std::vector<const char *> validationLayers =
                std::vector<const char *>());
+
+    Device(Device &&);
+    Device &operator=(Device &&);
+
+    Device(const Device &) = delete;
+    Device &operator=(const Device &) = delete;
+
+    bool operator==(const Device &);
+
     VkDevice getDevice();
-    Queue *getQueue(std::string name);
+    VkPhysicalDevice getPhysicalDevice();
+    std::optional<Queue> getQueue(std::string name);
     void wait();
     ~Device();
 
    private:
+    VkPhysicalDevice &physicalDevice;
     VkDevice device;
     std::map<std::string, FamilyData> queues;
 };

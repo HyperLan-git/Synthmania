@@ -21,6 +21,11 @@ class Game {
    public:
     Game();
 
+    Game(Game &&) = delete;
+    Game &operator=(Game &&) = delete;
+    Game(const Game &) = delete;
+    Game &operator=(const Game &) = delete;
+
     virtual void init();
 
     void run();

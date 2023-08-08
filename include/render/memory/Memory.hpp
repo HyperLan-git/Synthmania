@@ -6,15 +6,14 @@ class Memory;
 
 class Memory {
    public:
-    Memory(VkPhysicalDevice* physicalDevice, Device* device,
-           VkMemoryRequirements memRequirements,
+    Memory(Device& device, VkMemoryRequirements memRequirements,
            VkMemoryPropertyFlags properties);
-
-    Memory(const Memory& other) = delete;
-    Memory& operator=(const Memory& other) = delete;
 
     Memory(Memory&& other);
     Memory& operator=(Memory&& other);
+
+    Memory(const Memory& other) = delete;
+    Memory& operator=(const Memory& other) = delete;
 
     VkDeviceMemory getMemory();
     void write(const void* data, VkDeviceSize sz, VkDeviceSize offset);
@@ -23,6 +22,6 @@ class Memory {
     ~Memory();
 
    private:
-    Device* device;
+    Device& device;
     VkDeviceMemory memory;
 };

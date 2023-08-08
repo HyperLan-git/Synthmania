@@ -1,10 +1,9 @@
 #include "ShaderDescriptorPool.hpp"
 
-ShaderDescriptorPool::ShaderDescriptorPool(Device *device,
+ShaderDescriptorPool::ShaderDescriptorPool(Device &device,
                                            VkDescriptorType *types,
-                                           uint32_t *typeCounts,
-                                           uint32_t count) {
-    this->device = device;
+                                           uint32_t *typeCounts, uint32_t count)
+    : device(device) {
     VkDescriptorPoolSize poolSizes[count];
     uint32_t maxSets = 0;
     for (uint32_t i = 0; i < count; i++) {
@@ -20,19 +19,17 @@ ShaderDescriptorPool::ShaderDescriptorPool(Device *device,
     // TODO remove flag for more efficiency
     poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
-    pool = new VkDescriptorPool();
-
-    if (vkCreateDescriptorPool(device->getDevice(), &poolInfo, NULL, pool) !=
+    if (vkCreateDescriptorPool(device.getDevice(), &poolInfo, NULL, &pool) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool!");
     }
 }
 
 // TODO remove bad constructor
-ShaderDescriptorPool::ShaderDescriptorPool(Device *device,
+ShaderDescriptorPool::ShaderDescriptorPool(Device &device,
                                            VkDescriptorType *types,
-                                           uint32_t count) {
-    this->device = device;
+                                           uint32_t count)
+    : device(device) {
     VkDescriptorPoolSize poolSizes[count];
     uint32_t maxSets = 0;
     for (uint32_t i = 0; i < count; i++) {
@@ -47,17 +44,16 @@ ShaderDescriptorPool::ShaderDescriptorPool(Device *device,
     poolInfo.maxSets = maxSets;
     poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
-    pool = new VkDescriptorPool();
-
-    if (vkCreateDescriptorPool(device->getDevice(), &poolInfo, NULL, pool) !=
+    if (vkCreateDescriptorPool(device.getDevice(), &poolInfo, NULL, &pool) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool!");
     }
 }
 
-VkDescriptorPool *ShaderDescriptorPool::getPool() { return pool; }
+VkDescriptorPool ShaderDescriptorPool::getPool() { return pool; }
+
+Device &ShaderDescriptorPool::getDevice() { return device; }
 
 ShaderDescriptorPool::~ShaderDescriptorPool() {
-    vkDestroyDescriptorPool(device->getDevice(), *pool, nullptr);
-    delete pool;
+    vkDestroyDescriptorPool(device.getDevice(), pool, nullptr);
 }

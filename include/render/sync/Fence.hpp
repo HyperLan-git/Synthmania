@@ -6,9 +6,15 @@
 
 class Fence {
    public:
-    Fence(Device *device);
+    Fence(Device &device);
 
-    VkFence *getFence();
+    Fence(Fence &&) = delete;
+    Fence &operator=(Fence &&) = delete;
+
+    Fence(const Fence &) = delete;
+    Fence &operator=(const Fence &) = delete;
+
+    VkFence getFence();
 
     VkResult getStatus();
 
@@ -18,6 +24,6 @@ class Fence {
     ~Fence();
 
    private:
-    Device *device;
-    VkFence *fence;
+    Device &device;
+    VkFence fence;
 };

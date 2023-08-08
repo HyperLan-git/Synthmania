@@ -22,6 +22,10 @@
 #include "ImageView.hpp"
 #include "Window.hpp"
 
+#define return_if(var, value) \
+    auto var = value;         \
+    if (var) return var;
+
 struct UniformBufferObject {
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
@@ -33,7 +37,7 @@ struct SwapchainSupportDetails {
     std::vector<VkPresentModeKHR> presentModes;
 };
 
-uint32_t findMemoryType(VkPhysicalDevice* physicalDevice, uint32_t typeFilter,
+uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter,
                         VkMemoryPropertyFlags properties);
 std::vector<char> readFile(const std::string& filename);
 
@@ -52,7 +56,7 @@ VkPresentModeKHR chooseSwapPresentMode(
     const std::vector<VkPresentModeKHR>& availablePresentModes);
 
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
-                            Window* window);
+                            Window& window);
 
 // TODO replace with map for quick access
 ImageView* getTextureByName(std::vector<ImageView*> textures, std::string name);
@@ -73,7 +77,7 @@ struct DebugFunc {
  * @return DebugFunc useful debug functions that may be used for naming vulkan
  * objects, for instance
  */
-DebugFunc getDebugFunctions(Instance* instance);
+DebugFunc getDebugFunctions(Instance& instance);
 
 /**
  * @brief Set a vulkan object's name for debugging purposes, will do nothing if
@@ -85,7 +89,7 @@ DebugFunc getDebugFunctions(Instance* instance);
  * @param type the object's type
  * @param obj the pointer to the vulkan object
  */
-void setName(DebugFunc debugFunctions, Device* device, const std::string& name,
+void setName(DebugFunc debugFunctions, Device& device, const std::string& name,
              VkObjectType type, void* obj);
 
 /**

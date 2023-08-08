@@ -6,6 +6,10 @@
 // TODO clean includes because it might or might not currently be complete chaos
 // TODO put consts everywhere relevant
 // TODO put inlines everywhere relevant
+// TODO get device from other arguments when possible
+// TODO this-> ...
+// TODO have any object destroy everything that needs it to exist automatically
+// XXX do the same for moving and maybe even copying?
 // XXX namespace shenanigans
 // XXX explicit constructors :crying:
 // XXX checking every return value of vulkan functions...

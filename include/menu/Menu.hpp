@@ -9,7 +9,6 @@ class Menu;
 
 // TODO config file menus
 // TODO navigate with keyboard or piano keys (how???)
-// FIXME whoops I broke graphics test
 
 class Menu {
    public:

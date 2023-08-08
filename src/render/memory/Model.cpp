@@ -41,21 +41,28 @@ size_t std::hash<Vertex>::operator()(Vertex const& vertex) const {
             << 1);
 }
 
-Model::Model(const std::vector<Vertex> vdata, const std::vector<uint16_t> idata,
-             VkPhysicalDevice* physicalDevice, Device* device) {
-    this->vdata = std::vector<Vertex>(vdata.size());
-    this->idata = std::vector<uint16_t>(idata.size());
-    for (int i = 0; i < vdata.size(); i++) this->vdata[i] = vdata[i];
-
-    for (int i = 0; i < idata.size(); i++) this->idata[i] = idata[i];
-    createVertexBuffer(physicalDevice, device);
-    createIndexBuffer(physicalDevice, device);
+Model::Model(Device& device, const std::vector<Vertex>& vdata,
+             const std::vector<uint16_t>& idata)
+    : device(device),
+      vdata(vdata.cbegin(), vdata.cend()),
+      idata(idata.cbegin(), idata.cend()),
+      vertexBuffer(
+          std::make_unique<Buffer>(device, vdata.size() * sizeof(Vertex),
+                                   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)),
+      indexBuffer(
+          std::make_unique<Buffer>(device, idata.size() * sizeof(uint16_t),
+                                   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+    vertexBuffer->fill(vdata.data());
+    indexBuffer->fill(idata.data());
 }
 
-Model::Model(const char* obj, VkPhysicalDevice* physicalDevice,
-             Device* device) {
-    this->vdata = std::vector<Vertex>();
-    this->idata = std::vector<uint16_t>();
+Model loadFromFile(Device& device, const char* obj) {
+    std::vector<Vertex> vdata;
+    std::vector<uint16_t> idata;
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -86,64 +93,26 @@ Model::Model(const char* obj, VkPhysicalDevice* physicalDevice,
             idata.push_back(uniqueVertices[vertex]);
         }
     }
-    createVertexBuffer(physicalDevice, device);
-    createIndexBuffer(physicalDevice, device);
+    return std::move(Model(device, vdata, idata));
 }
 
-Model::Model(Model&& other) {
-    this->idata = std::vector<uint16_t>(other.idata.begin(), other.idata.end());
-    this->vdata = std::vector<Vertex>(other.vdata.begin(), other.vdata.end());
-    this->indexBuffer = other.indexBuffer;
-    this->vertexBuffer = other.vertexBuffer;
-    other.indexBuffer = NULL;
-    other.vertexBuffer = NULL;
-}
+Model::Model(Model&& other) : device(other.device) { *this = std::move(other); }
 
 Model& Model::operator=(Model&& other) {
-    if (indexBuffer) delete indexBuffer;
-    if (vertexBuffer) delete vertexBuffer;
-    this->idata = std::vector<uint16_t>(other.idata.begin(), other.idata.end());
-    this->vdata = std::vector<Vertex>(other.vdata.begin(), other.vdata.end());
-    this->indexBuffer = other.indexBuffer;
-    this->vertexBuffer = other.vertexBuffer;
-    other.indexBuffer = NULL;
-    other.vertexBuffer = NULL;
+    assert(this->device == other.device);
+    std::swap(this->vdata, other.vdata);
+    std::swap(this->idata, other.idata);
+    std::swap(this->vertexBuffer, other.vertexBuffer);
+    std::swap(this->indexBuffer, other.indexBuffer);
     return *this;
 }
 
-Buffer* Model::toVertexBuffer() { return vertexBuffer; }
+Buffer& Model::toVertexBuffer() { return *vertexBuffer; }
 
-Buffer* Model::toIndicesBuffer() { return indexBuffer; }
-
-void Model::createVertexBuffer(VkPhysicalDevice* physicalDevice,
-                               Device* device) {
-    VkDeviceSize bufferSize = sizeof(vdata[0]) * vdata.size();
-
-    vertexBuffer = new Buffer(physicalDevice, device, bufferSize,
-                              VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-    vertexBuffer->fill(vdata.data());
-}
-
-void Model::createIndexBuffer(VkPhysicalDevice* physicalDevice,
-                              Device* device) {
-    VkDeviceSize bufferSize = sizeof(idata[0]) * idata.size();
-
-    indexBuffer = new Buffer(physicalDevice, device, bufferSize,
-                             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-    indexBuffer->fill(idata.data());
-}
+Buffer& Model::toIndicesBuffer() { return *indexBuffer; }
 
 std::vector<Vertex> Model::getVertexes() { return vdata; }
 
 std::vector<uint16_t> Model::getIndexes() { return idata; }
 
-Model::~Model() {
-    if (vertexBuffer) delete vertexBuffer;
-    if (indexBuffer) delete indexBuffer;
-}
+Model::~Model() {}

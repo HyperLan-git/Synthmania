@@ -12,7 +12,9 @@ TextArea::TextArea(ImageView* texture, std::string name, TextHandler* handler,
                    std::string fontName, int chars, int maxChars,
                    unsigned long cursor, float textSize,
                    TextPredicate textPredicate)
-    : MenuElement(texture, name) {
+    : MenuElement(texture, name),
+      cursorChar(handler->createText_w(std::wstring({(wchar_t)cursor, 0}),
+                                       fontName, textSize * .9, {0, 0})[0]) {
     this->handler = handler;
     this->pos = 0;
     this->cursorPos = 0;
@@ -28,11 +30,8 @@ TextArea::TextArea(ImageView* texture, std::string name, TextHandler* handler,
         g->setSize({0, 0});
         this->textContents.push_back(g);
     }
-    wchar_t str[2] = {(wchar_t)cursor, 0};
-    this->cursorChar = handler->createText_w(std::wstring(str), fontName,
-                                             textSize * .9, {0, 0})[0];
     this->cursor =
-        std::make_shared<Gui>(cursorChar.character.texture, name + "_cursor");
+        std::make_shared<Gui>(&cursorChar.character.texture, name + "_cursor");
     this->cursor->setSize(cursorChar.size);
 }
 
@@ -155,7 +154,7 @@ void TextArea::recalculateText() {
                                {position.x - size.x * .5 + cursor->getSize().x,
                                 position.y + size.y * .25})) {
         std::shared_ptr<Gui> g = this->textContents[i++];
-        g->setTexture(t.character.texture);
+        g->setTexture(&t.character.texture);
         g->setPosition(t.pos);
         g->setSize(t.size);
         if (i >= textContents.size()) return;

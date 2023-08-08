@@ -13,7 +13,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     buttons.push_back(back);
     for (Text t : text->createText("Save", "Stupid", 12, glm::vec2({-.1, 0}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            t.character.texture, "Back_arrow", back);
+            &t.character.texture, "Back_arrow", back);
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -21,7 +21,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("OPTIONS", "Stupid", 20, glm::vec2({-.5, -.85}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Title");
+            std::make_shared<Gui>(&t.character.texture, "Title");
         g->setPosition(t.pos);
         g->setSize(t.size);
         g->setColor(glm::vec4(.7, .7, .2, 1));
@@ -32,7 +32,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Audio", "Stupid", 12, glm::vec2({-1.4, -.7}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Audio");
+            std::make_shared<Gui>(&t.character.texture, "Audio");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -41,7 +41,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Midi", "Stupid", 12, glm::vec2({-1.4, -.3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Midi");
+            std::make_shared<Gui>(&t.character.texture, "Midi");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -50,7 +50,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Gameplay", "Stupid", 12, glm::vec2({-1.4, -.1}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Gameplay");
+            std::make_shared<Gui>(&t.character.texture, "Gameplay");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -59,7 +59,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Appearance", "Stupid", 12, glm::vec2({-1.4, .3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Appearance");
+            std::make_shared<Gui>(&t.character.texture, "Appearance");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -68,7 +68,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Plugin", "Stupid", 12, glm::vec2({-1.4, .6}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Plugin");
+            std::make_shared<Gui>(&t.character.texture, "Plugin");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -77,7 +77,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Volume", "Stupid", 8, glm::vec2({-.2, -.7}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Volume");
+            std::make_shared<Gui>(&t.character.texture, "Volume");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -95,7 +95,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
 
     for (Text t : text->createText("Music", "Stupid", 8, glm::vec2({0, -.5}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Volume");
+            std::make_shared<Gui>(&t.character.texture, "Volume");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -114,7 +114,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Synth", "Stupid", 8, glm::vec2({-1.3, -.5}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "synth");
+            std::make_shared<Gui>(&t.character.texture, "synth");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -173,7 +173,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t : text->createText("Audio latency", "Stupid", 6,
                                    glm::vec2({.17, -.1}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Audio latency");
+            std::make_shared<Gui>(&t.character.texture, "Audio latency");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -195,7 +195,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t : text->createText("Video latency", "Stupid", 6,
                                    glm::vec2({.17, -.3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Video latency");
+            std::make_shared<Gui>(&t.character.texture, "Video latency");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -216,7 +216,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t : text->createText("Audio leniency", "Stupid", 6,
                                    glm::vec2({-1.4, .1}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Audio leniency");
+            std::make_shared<Gui>(&t.character.texture, "Audio leniency");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -236,7 +236,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Fullscreen", "Stupid", 6, glm::vec2({-.6, .3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "Fullscreen");
+            std::make_shared<Gui>(&t.character.texture, "Fullscreen");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -251,7 +251,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
 
     for (Text t : text->createText("Skin", "Stupid", 6, glm::vec2({0, .3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "skin");
+            std::make_shared<Gui>(&t.character.texture, "skin");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -270,7 +270,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Buffer size", "Stupid", 6, glm::vec2({-.9, .6}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "buf size");
+            std::make_shared<Gui>(&t.character.texture, "buf size");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -278,7 +278,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Audio buffers", "Stupid", 6, glm::vec2({0, .6}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "audio buffers");
+            std::make_shared<Gui>(&t.character.texture, "audio buffers");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -308,7 +308,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Plugin folders", "Stupid", 6, glm::vec2({-1, .8}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(t.character.texture, "plugin folders");
+            std::make_shared<Gui>(&t.character.texture, "plugin folders");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);

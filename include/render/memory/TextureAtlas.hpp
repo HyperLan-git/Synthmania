@@ -6,8 +6,14 @@ class TextureAtlas;
 
 class TextureAtlas {
    public:
-    TextureAtlas(Device *device, Image *image, VkFormat format,
+    TextureAtlas(std::shared_ptr<Image> image, VkFormat format,
                  VkImageAspectFlags aspectFlags, std::string name);
+
+    TextureAtlas(TextureAtlas &&) = delete;
+    TextureAtlas &operator=(TextureAtlas &&) = delete;
+
+    TextureAtlas(const TextureAtlas &) = delete;
+    TextureAtlas &operator=(const TextureAtlas &) = delete;
 
     /**
      * Checks whether a new image can fit in this atlas
@@ -30,10 +36,12 @@ class TextureAtlas {
 
     ImageView *getTexture();
 
+    Device &getDevice();
+
     virtual ~TextureAtlas();
 
    private:
-    Device *device;
+    Device &device;
     ImageView *img;
     // Write pointer to the upper-left corner of where we can add a new image
     glm::vec2 ptr;

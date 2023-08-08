@@ -37,7 +37,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    VkDebugUtilsMessengerEXT debugMessenger,
                                    const VkAllocationCallbacks* pAllocator);
 
-class Renderer {
+class Renderer : public boost::noncopyable {
    public:
     Renderer(Game* theGame, Window* window);
 
@@ -50,13 +50,13 @@ class Renderer {
     void setStartTime(double start);
 
     VkPhysicalDevice* getPhysicalDevice();
-    Device* getDevice();
+    Device& getDevice();
 
-    Instance* getInstance();
+    Instance& getInstance();
 
     TextHandler* getTextHandler();
 
-    void addModel(Model* m);
+    Model& addModel(Model&& m);
 
     void loadGuiShaders(std::string vShader, std::string gShader,
                         std::string fShader, VkDeviceSize guiUBOSize);
@@ -75,20 +75,18 @@ class Renderer {
 
     Window* window = NULL;
 
-    Instance* instance = NULL;
-    VkSurfaceKHR* surface = NULL;
+    std::unique_ptr<Instance> instance;
+    VkSurfaceKHR surface = NULL;
 
     VkPhysicalDevice physicalDevice = NULL;
-    Device* device = NULL;
+    std::unique_ptr<Device> device;
 
     Swapchain* swapchain = NULL;
 
     // TODO simplify this shit I should not have to create all of this just to
     // do a second pass
     // What if I want to do 5 passes?
-    Image* renderImage = NULL;
     ImageView* renderImageView = NULL;
-    Image* depthImage = NULL;
     ImageView* depthImageView = NULL;
     Framebuffer* framebuffer = NULL;
     CommandBuffer* renderCommandBuffer = NULL;
@@ -106,8 +104,6 @@ class Renderer {
 
     Semaphore* imageAvailableSemaphore = NULL;
 
-    ShaderDescriptorSetLayout* shaderLayout = NULL;
-
     CommandPool* commandPool = NULL;
 
     TextureSampler* textureSampler = NULL;
@@ -122,14 +118,14 @@ class Renderer {
 
     ShaderDescriptorPool* pool = NULL;
 
-    std::vector<CommandBuffer*> commandBuffers;
+    std::vector<CommandBuffer> commandBuffers;
 
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;
     std::vector<Fence*> inFlightFences;
     uint32_t currentFrame = 0;
 
-    std::vector<Model*> models;
+    std::vector<Model> models;
     std::vector<ImageView*> textures;
 
     TextHandler* textHandler = NULL;
@@ -175,28 +171,28 @@ class Renderer {
 
     bool hasStencilComponent(VkFormat format);
 
-    Image* createTextureImage(const char* path);
+    std::shared_ptr<Image> createTextureImage(const char* path);
 
     ImageView* readTexture(const char* path, const char* name);
 
-    void addTexture(Image* texture, const char* name);
+    void addTexture(std::shared_ptr<Image> texture, const char* name);
 
     void loadFonts(std::map<std::string, std::vector<unsigned long>> fonts);
 
-    void updateDescriptorSet(ShaderDescriptorSet* descriptor,
-                             ImageView* texture, TextureSampler* sampler,
-                             Buffer* uniformBuffer);
+    void updateDescriptorSet(ShaderDescriptorSet& descriptor,
+                             ImageView& texture, TextureSampler& sampler,
+                             Buffer& uniformBuffer);
 
-    void transitionImageLayout(Image* image, VkImageLayout oldLayout,
+    void transitionImageLayout(Image& image, VkImageLayout oldLayout,
                                VkImageLayout newLayout);
 
-    void convertImage(Image* src, VkImageLayout srcImageLayout, Image* dst,
+    void convertImage(Image& src, VkImageLayout srcImageLayout, Image& dst,
                       VkImageLayout dstImageLayout, VkFilter filter);
 
     void resizeFramebuffer();
-    void copyBufferToImage(Buffer* buffer, Image* image, uint32_t width,
+    void copyBufferToImage(Buffer& buffer, Image& image, uint32_t width,
                            uint32_t height);
-    void copyImage(Image* src, VkImageLayout srcLayout, Image* dst,
+    void copyImage(Image& src, VkImageLayout srcLayout, Image& dst,
                    VkImageLayout dstLayout);
     void createVertexBuffer(VkDeviceSize size);
     void createIndexBuffer(VkDeviceSize size);
@@ -205,16 +201,16 @@ class Renderer {
 
     void createCommandBuffers();
 
-    void recordCommandBuffer(CommandBuffer* commandBuffer,
-                             RenderPass* renderPass, Framebuffer* framebuffer);
-    void drawScreenCommandBuffer(CommandBuffer* commandBuffer,
-                                 RenderPass* renderPass,
-                                 Framebuffer* framebuffer);
+    void recordCommandBuffer(CommandBuffer& commandBuffer,
+                             RenderPass& renderPass, Framebuffer& framebuffer);
+    void drawScreenCommandBuffer(CommandBuffer& commandBuffer,
+                                 RenderPass& renderPass,
+                                 Framebuffer& framebuffer);
     void updateUniformBuffer(uint32_t currentImage);
     void drawFrame();
     void drawEntity(std::shared_ptr<Entity>& entity,
-                    CommandBuffer* commandBuffer);
-    void drawGui(std::shared_ptr<Gui>& gui, CommandBuffer* commandBuffer);
+                    CommandBuffer& commandBuffer);
+    void drawGui(std::shared_ptr<Gui>& gui, CommandBuffer& commandBuffer);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
         const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(

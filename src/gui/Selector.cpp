@@ -13,7 +13,7 @@ Selector::Selector(ImageView* texture, ImageView* selectTexture, Game* game,
         for (Text t :
              game->getTextHandler()->createText(e, font, textSize, {0, 0})) {
             std::shared_ptr<Gui> g =
-                std::make_shared<Gui>(t.character.texture, name + "_text");
+                std::make_shared<Gui>(&t.character.texture, name + "_text");
             g->setColor({1, 1, 1, 0});
             g->setSize(t.size);
             vec.push_back(std::make_pair(t, g));

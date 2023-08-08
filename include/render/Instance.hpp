@@ -2,6 +2,7 @@
 
 class Instance;
 
+#include <boost/noncopyable.hpp>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -15,8 +16,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 
-class Instance {
+class Instance : public boost::noncopyable {
    public:
+    // XXX remove this shitty logging system vulkan already has its own
     Instance(std::string name, uint32_t version, const char* engineName,
              uint32_t engineVersion, uint32_t apiVersion,
              const std::vector<const char*> extensions,
@@ -24,10 +26,10 @@ class Instance {
                  std::vector<const char*>(),
              std::string logFile = "a.log");
 
-    VkSurfaceKHR* createSurface(Window* window);
-    void destroySurface(VkSurfaceKHR* surface);
+    VkSurfaceKHR createSurface(Window* window);
+    void destroySurface(VkSurfaceKHR surface);
 
-    VkInstance* getInstance();
+    VkInstance getInstance();
 
     ~Instance();
 
@@ -35,7 +37,7 @@ class Instance {
         const std::vector<const char*> validationLayers);
 
    private:
-    VkInstance* instance;
-    VkDebugUtilsMessengerEXT* debugMessenger;
+    VkInstance instance;
+    VkDebugUtilsMessengerEXT debugMessenger;
     std::ofstream log;
 };

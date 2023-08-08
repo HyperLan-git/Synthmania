@@ -6,28 +6,32 @@ class Swapchain;
 
 class Swapchain {
    public:
-    Swapchain(Device *device, VkPhysicalDevice *physicalDevice, Window *window,
-              VkSurfaceKHR *surface);
+    Swapchain(Device &device, Window &window, VkSurfaceKHR surface);
+
+    Swapchain(Swapchain &&) = delete;
+    Swapchain &operator=(Swapchain &&) = delete;
+
+    Swapchain(const Swapchain &) = delete;
+    Swapchain &operator=(const Swapchain &) = delete;
 
     RenderPass *getRenderPass();
     std::vector<Framebuffer *> getFramebuffers();
     VkExtent2D getExtent();
-    VkSwapchainKHR *getSwapchain();
+    VkSwapchainKHR getSwapchain();
 
     ~Swapchain();
 
    private:
-    Device *device;
-    VkPhysicalDevice *physicalDevice;
-    VkSwapchainKHR *swapchain;
+    Device &device;
+    VkSwapchainKHR swapchain;
     VkFormat imageFormat;
     VkExtent2D extent;
 
-    std::vector<Image *> images;
+    std::vector<std::shared_ptr<Image>> images;
     std::vector<ImageView *> imageViews;
     std::vector<Framebuffer *> framebuffers;
 
-    Image *depthImage;
+    std::shared_ptr<Image> depthImage;
     ImageView *depthImageView;
 
     RenderPass *renderPass;

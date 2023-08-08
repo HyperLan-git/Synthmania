@@ -1,21 +1,20 @@
 #include "ShaderDescriptorSet.hpp"
 
-ShaderDescriptorSet::ShaderDescriptorSet(Device *device,
-                                         ShaderDescriptorPool *pool,
-                                         ShaderDescriptorSetLayout *layout) {
-    this->pool = pool;
-    this->device = device;
-    this->set = new VkDescriptorSet();
+ShaderDescriptorSet::ShaderDescriptorSet(ShaderDescriptorPool &pool,
+                                         ShaderDescriptorSetLayout &layout)
+    : device(pool.getDevice()), pool(pool) {
+    VkDescriptorSetLayout l = layout.getLayout();
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = *(pool->getPool());
+    allocInfo.descriptorPool = pool.getPool();
     allocInfo.descriptorSetCount = 1;
-    allocInfo.pSetLayouts = layout->getLayout();
+    allocInfo.pSetLayouts = &l;
 
-    if (vkAllocateDescriptorSets(device->getDevice(), &allocInfo, set) !=
-        VK_SUCCESS) {
+    if (vkAllocateDescriptorSets(device.getDevice(), &allocInfo, &set) !=
+        VK_SUCCESS)
         throw std::runtime_error("failed to allocate descriptor sets!");
-    }
+
+    this->writeDescriptor = NULL;
 }
 
 void ShaderDescriptorSet::resetAccess() {
@@ -34,7 +33,7 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
     VkWriteDescriptorSet *descriptorWrites = new VkWriteDescriptorSet();
 
     descriptorWrites->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrites->dstSet = *set;
+    descriptorWrites->dstSet = set;
     descriptorWrites->dstBinding = binding;
     descriptorWrites->dstArrayElement = 0;
     descriptorWrites->descriptorType = type;
@@ -52,7 +51,7 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
 
         cur->pNext = descriptorWrites;
     }
-    vkUpdateDescriptorSets(device->getDevice(), 1, descriptorWrites, 0, NULL);
+    vkUpdateDescriptorSets(device.getDevice(), 1, descriptorWrites, 0, NULL);
 }
 
 void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
@@ -67,7 +66,9 @@ void ShaderDescriptorSet::updateAccess(VkStructureType allowed,
     updateAccess(allowed, binding, type, NULL, iInfo);
 }
 
-VkDescriptorSet *ShaderDescriptorSet::getSet() { return set; }
+VkDescriptorSet ShaderDescriptorSet::getSet() { return set; }
+
+Device &ShaderDescriptorSet::getDevice() { return device; }
 
 ShaderDescriptorSet::~ShaderDescriptorSet() {
     if (writeDescriptor != NULL) {
@@ -75,6 +76,5 @@ ShaderDescriptorSet::~ShaderDescriptorSet() {
             delete (VkWriteDescriptorSet *)writeDescriptor->pNext;
         delete writeDescriptor;
     }
-    vkFreeDescriptorSets(device->getDevice(), *(pool->getPool()), 1, set);
-    delete set;
+    vkFreeDescriptorSets(device.getDevice(), pool.getPool(), 1, &set);
 }

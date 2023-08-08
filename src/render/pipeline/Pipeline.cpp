@@ -1,13 +1,10 @@
 #include "Pipeline.hpp"
 
 // TODO VkPipelineCache
-Pipeline::Pipeline(Device *device, PipelineLayout *layout,
-                   RenderPass *renderPass,
-                   VkPipelineShaderStageCreateInfo *shaderStages,
-                   uint32_t shaderCount, VkExtent2D swapChainExtent) {
-    this->pipeline = new VkPipeline();
-    this->device = device;
-    this->layout = layout;
+Pipeline::Pipeline(
+    PipelineLayout &layout, RenderPass &renderPass, VkExtent2D swapChainExtent,
+    std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages)
+    : device(layout.getDevice()), layout(layout) {
     this->graphics = true;
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
@@ -110,8 +107,8 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
 
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.stageCount = shaderCount;
-    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.stageCount = shaderStages.size();
+    pipelineInfo.pStages = shaderStages.begin();
     pipelineInfo.pVertexInputState = &vertexInputInfo;
     pipelineInfo.pInputAssemblyState = &inputAssembly;
     pipelineInfo.pViewportState = &viewportState;
@@ -120,45 +117,41 @@ Pipeline::Pipeline(Device *device, PipelineLayout *layout,
     pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
-    pipelineInfo.layout = *(layout->getLayout());
-    pipelineInfo.renderPass = *(renderPass->getPass());
+    pipelineInfo.layout = layout.getLayout();
+    pipelineInfo.renderPass = renderPass.getPass();
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.flags = 0;
 
-    if (vkCreateGraphicsPipelines(device->getDevice(), VK_NULL_HANDLE, 1,
-                                  &pipelineInfo, NULL, pipeline) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(device.getDevice(), VK_NULL_HANDLE, 1,
+                                  &pipelineInfo, NULL, &pipeline) != VK_SUCCESS)
         throw std::runtime_error("failed to create graphics pipeline!");
 }
 
-Pipeline::Pipeline(Device *device, PipelineLayout *layout,
-                   ComputeShader *shader) {
-    this->pipeline = new VkPipeline();
-    this->device = device;
-    this->layout = layout;
+Pipeline::Pipeline(PipelineLayout &layout, ComputeShader &shader)
+    : device(layout.getDevice()), layout(layout) {
     this->graphics = false;
 
     VkComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-    pipelineInfo.layout = *(layout->getLayout());
+    pipelineInfo.layout = layout.getLayout();
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.basePipelineIndex = 0;
     pipelineInfo.flags = 0;
-    pipelineInfo.stage = shader->toPipeline();
+    pipelineInfo.stage = shader.toPipeline();
     pipelineInfo.pNext = NULL;
 
-    if (vkCreateComputePipelines(device->getDevice(), VK_NULL_HANDLE, 1,
-                                 &pipelineInfo, NULL, pipeline))
+    if (vkCreateComputePipelines(device.getDevice(), VK_NULL_HANDLE, 1,
+                                 &pipelineInfo, NULL, &pipeline))
         throw std::runtime_error("failed to create compute pipeline!");
 }
 
-VkPipeline *Pipeline::getPipeline() { return pipeline; }
+VkPipeline Pipeline::getPipeline() { return pipeline; }
 
-PipelineLayout *Pipeline::getLayout() { return layout; }
+PipelineLayout &Pipeline::getLayout() { return layout; }
 
 bool Pipeline::isGraphics() { return graphics; }
 
-Pipeline ::~Pipeline() {
-    vkDestroyPipeline(device->getDevice(), *pipeline, nullptr);
-    delete pipeline;
-}
+Device &Pipeline::getDevice() { return device; }
+
+Pipeline::~Pipeline() { vkDestroyPipeline(device.getDevice(), pipeline, NULL); }

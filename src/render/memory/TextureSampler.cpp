@@ -1,10 +1,8 @@
 #include "TextureSampler.hpp"
 
-TextureSampler::TextureSampler(VkPhysicalDevice* physicalDevice,
-                               Device* device) {
-    this->device = device;
+TextureSampler::TextureSampler(Device& device) : device(device) {
     VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(*physicalDevice, &properties);
+    vkGetPhysicalDeviceProperties(device.getPhysicalDevice(), &properties);
 
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -21,16 +19,27 @@ TextureSampler::TextureSampler(VkPhysicalDevice* physicalDevice,
     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-    if (vkCreateSampler(device->getDevice(), &samplerInfo, nullptr, &sampler) !=
+    if (vkCreateSampler(device.getDevice(), &samplerInfo, nullptr, &sampler) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create texture sampler!");
     }
 }
 
-VkDescriptorImageInfo TextureSampler::createImageInfo(ImageView* view) {
+TextureSampler::TextureSampler(TextureSampler&& sampler)
+    : device(sampler.device) {
+    *this = std::move(sampler);
+}
+
+TextureSampler& TextureSampler::operator=(TextureSampler&& sampler) {
+    assert(this->device == sampler.device);
+    std::swap(this->sampler, sampler.sampler);
+    return *this;
+}
+
+VkDescriptorImageInfo TextureSampler::createImageInfo(ImageView& view) {
     VkDescriptorImageInfo imageInfo;
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo.imageView = view->getView();
+    imageInfo.imageView = view.getView();
     imageInfo.sampler = sampler;
     return imageInfo;
 }
@@ -38,5 +47,5 @@ VkDescriptorImageInfo TextureSampler::createImageInfo(ImageView* view) {
 VkSampler TextureSampler::getSampler() { return sampler; }
 
 TextureSampler::~TextureSampler() {
-    vkDestroySampler(device->getDevice(), sampler, nullptr);
+    if (sampler) vkDestroySampler(device.getDevice(), sampler, nullptr);
 }

@@ -6,18 +6,26 @@ class ShaderDescriptorPool;
 
 #include "Device.hpp"
 
+// TODO count what's left to allocate
 class ShaderDescriptorPool {
    public:
-    ShaderDescriptorPool(Device *device, VkDescriptorType *types,
+    ShaderDescriptorPool(Device &device, VkDescriptorType *types,
                          uint32_t count);
-    ShaderDescriptorPool(Device *device, VkDescriptorType *types,
+    ShaderDescriptorPool(Device &device, VkDescriptorType *types,
                          uint32_t *typeCounts, uint32_t count);
 
-    VkDescriptorPool *getPool();
+    ShaderDescriptorPool(ShaderDescriptorPool &&) = delete;
+    ShaderDescriptorPool &operator=(ShaderDescriptorPool &&) = delete;
+
+    ShaderDescriptorPool(const ShaderDescriptorPool &) = delete;
+    ShaderDescriptorPool &operator=(const ShaderDescriptorPool &) = delete;
+
+    VkDescriptorPool getPool();
+    Device &getDevice();
 
     ~ShaderDescriptorPool();
 
    private:
-    Device *device;
-    VkDescriptorPool *pool;
+    Device &device;
+    VkDescriptorPool pool;
 };

@@ -1,9 +1,8 @@
 #include "RenderPass.hpp"
 
-RenderPass::RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
-                       VkFormat imageFormat, VkImageLayout finalLayout) {
-    this->device = device;
-    this->pass = new VkRenderPass();
+RenderPass::RenderPass(Device &device, VkFormat imageFormat,
+                       VkImageLayout finalLayout)
+    : device(device) {
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = imageFormat;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -16,7 +15,7 @@ RenderPass::RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
     colorAttachment.finalLayout = finalLayout;
 
     VkAttachmentDescription depthAttachment{};
-    depthAttachment.format = findDepthFormat(*physicalDevice);
+    depthAttachment.format = findDepthFormat(device.getPhysicalDevice());
     depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -63,15 +62,16 @@ RenderPass::RenderPass(VkPhysicalDevice *physicalDevice, Device *device,
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(device->getDevice(), &renderPassInfo, nullptr,
-                           pass) != VK_SUCCESS) {
+    if (vkCreateRenderPass(device.getDevice(), &renderPassInfo, nullptr,
+                           &pass) != VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");
     }
 }
 
-VkRenderPass *RenderPass::getPass() { return pass; }
+VkRenderPass RenderPass::getPass() { return pass; }
 
-RenderPass ::~RenderPass() {
-    vkDestroyRenderPass(device->getDevice(), *pass, nullptr);
-    delete pass;
+Device &RenderPass::getDevice() { return device; }
+
+RenderPass::~RenderPass() {
+    vkDestroyRenderPass(device.getDevice(), pass, nullptr);
 }

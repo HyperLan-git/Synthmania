@@ -18,8 +18,15 @@ class ShaderDescriptorSet;
  */
 class ShaderDescriptorSet {
    public:
-    ShaderDescriptorSet(Device* device, ShaderDescriptorPool* pool,
-                        ShaderDescriptorSetLayout* layout);
+    ShaderDescriptorSet(ShaderDescriptorPool& pool,
+                        ShaderDescriptorSetLayout& layout);
+
+    ShaderDescriptorSet(ShaderDescriptorSet&&) = delete;
+    ShaderDescriptorSet& operator=(ShaderDescriptorSet&&) = delete;
+
+    ShaderDescriptorSet(const ShaderDescriptorSet&) = delete;
+    ShaderDescriptorSet& operator=(const ShaderDescriptorSet&) = delete;
+
     void updateAccess(VkStructureType allowed, uint32_t binding,
                       VkDescriptorType type, VkDescriptorBufferInfo* bInfo,
                       VkDescriptorImageInfo* iInfo);
@@ -32,13 +39,15 @@ class ShaderDescriptorSet {
 
     void resetAccess();
 
-    VkDescriptorSet* getSet();
+    VkDescriptorSet getSet();
+    Device& getDevice();
 
     ~ShaderDescriptorSet();
 
    private:
-    Device* device;
-    VkDescriptorSet* set;
-    ShaderDescriptorPool* pool;
-    VkWriteDescriptorSet* writeDescriptor = NULL;
+    Device& device;
+    VkDescriptorSet set;
+    ShaderDescriptorPool& pool;
+    // XXX a bit of shitty pointer magic to fix
+    VkWriteDescriptorSet* writeDescriptor;
 };

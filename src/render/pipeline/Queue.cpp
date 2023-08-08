@@ -1,27 +1,46 @@
 #include "Queue.hpp"
 
-Queue::Queue(Device *device, uint32_t family, uint32_t id, std::string name) {
-    this->device = device;
+Queue::Queue(Device &device, uint32_t family, uint32_t id, std::string name)
+    : device(device) {
     this->name = name;
     this->family_id = family;
     this->queue_id = id;
-    this->queue = new VkQueue();
-    vkGetDeviceQueue(device->getDevice(), family, id, queue);
+    vkGetDeviceQueue(device.getDevice(), family, id, &queue);
 }
 
-VkQueue *Queue::getQueue() { return queue; }
+Queue::Queue(Queue &&other) : device(other.device) { *this = other; }
 
-uint32_t Queue::getFamily() { return family_id; }
+Queue &Queue::operator=(Queue &&other) { return *this = other; }
 
-uint32_t Queue::getID() { return queue_id; }
+Queue::Queue(const Queue &other)
+    : device(other.device),
+      queue(other.queue),
+      family_id(other.family_id),
+      queue_id(other.queue_id),
+      name(other.name) {}
 
-std::string Queue::getName() { return name; }
-
-Queue *Queue::getAvailableQueue(std::vector<Queue *> queues) {
-    if (queues.empty()) return NULL;
-    return queues[0];
+Queue &Queue::operator=(const Queue &other) {
+    assert(this->device == other.device);
+    this->queue = other.queue;
+    this->family_id = other.family_id;
+    this->queue_id = other.queue_id;
+    this->name = other.name;
+    return *this;
 }
 
-void Queue::wait() { vkQueueWaitIdle(*queue); }
+VkQueue Queue::getQueue() const { return queue; }
 
-Queue::~Queue() { delete queue; }
+uint32_t Queue::getFamily() const { return family_id; }
+
+uint32_t Queue::getID() const { return queue_id; }
+
+std::string Queue::getName() const { return name; }
+
+std::optional<Queue> Queue::getAvailableQueue(std::vector<Queue> &queues) {
+    if (queues.empty()) return std::optional<Queue>();
+    return std::make_optional(queues[0]);
+}
+
+VkResult Queue::wait() const { return vkQueueWaitIdle(queue); }
+
+Queue::~Queue() {}
