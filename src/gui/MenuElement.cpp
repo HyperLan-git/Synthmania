@@ -1,6 +1,6 @@
 #include "MenuElement.hpp"
 
-MenuElement::MenuElement(ImageView* texture, std::string name)
+MenuElement::MenuElement(Texture texture, std::string name)
     : Gui(texture, name) {}
 
 void MenuElement::focus(bool focus) { this->selected = focus; }

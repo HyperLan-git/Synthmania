@@ -7,8 +7,7 @@ class Framebuffer;
 
 class Framebuffer {
    public:
-    Framebuffer(RenderPass &pass, VkExtent2D extent,
-                std::vector<ImageView *> views);
+    Framebuffer(RenderPass &pass, VkExtent2D extent, std::vector<TexPtr> views);
 
     Framebuffer(Framebuffer &&) = delete;
     Framebuffer &operator=(Framebuffer &&) = delete;

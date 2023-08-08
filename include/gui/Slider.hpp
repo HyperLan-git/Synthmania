@@ -6,8 +6,8 @@ class Slider;
 
 class Slider : public MenuElement {
    public:
-    Slider(ImageView* texture, std::string name, float width = .5f,
-           float min = 0, float max = 1, bool vertical = false);
+    Slider(Texture texture, std::string name, float width = .5f, float min = 0,
+           float max = 1, bool vertical = false);
 
     float getValue();
     void setValue(float value);

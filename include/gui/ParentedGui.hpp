@@ -10,8 +10,7 @@ class ParentedGui;
  */
 class ParentedGui : public Gui {
    public:
-    ParentedGui(ImageView* texture, std::string name,
-                std::weak_ptr<Gui> parent);
+    ParentedGui(Texture texture, std::string name, std::weak_ptr<Gui> parent);
 
     virtual glm::vec2 getRealPosition() const;
 

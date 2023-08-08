@@ -4,12 +4,12 @@
 #define M_PI 3.14159265359
 #endif
 
-Gui::Gui(ImageView* texture, std::string name) {
+Gui::Gui(Texture texture, std::string name) {
     this->texture = texture;
     this->name = name;
 }
 
-ImageView* Gui::getTexture() const { return texture; }
+Texture Gui::getTexture() const { return texture; }
 std::string Gui::getName() const { return name; }
 glm::vec3 Gui::getPosition() const { return position; }
 glm::vec2 Gui::getRealPosition() const { return position; }
@@ -33,7 +33,7 @@ void Gui::setColor(glm::vec4 color) { this->color = color; }
 
 void Gui::setNegate(int negate) { this->negate = negate; }
 
-void Gui::setTexture(ImageView* texture) { this->texture = texture; }
+void Gui::setTexture(Texture texture) { this->texture = texture; }
 
 bool Gui::update(int64_t time) { return false; }
 

@@ -16,7 +16,7 @@ RenderModule::RenderModule(
 
     DebugFunc functions = getDebugFunctions(instance);
 
-    renderImageView = new ImageView(
+    renderImageView = std::make_shared<ImageView>(
         std::make_shared<Image>(
             device, w, h, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
@@ -24,12 +24,12 @@ RenderModule::RenderModule(
         VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, name + " view");
 
     VkFormat depthFormat = findDepthFormat(device.getPhysicalDevice());
-    depthImageView =
-        new ImageView(std::make_shared<Image>(
-                          device, w, h, depthFormat, VK_IMAGE_TILING_OPTIMAL,
-                          VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
-                      depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, "depth image");
+    depthImageView = std::make_shared<ImageView>(
+        std::make_shared<Image>(device, w, h, depthFormat,
+                                VK_IMAGE_TILING_OPTIMAL,
+                                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+        depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, "depth image");
     setName(functions, device, name + " depth image view",
             VK_OBJECT_TYPE_IMAGE_VIEW, depthImageView->getView());
 
@@ -67,21 +67,21 @@ RenderModule::RenderModule(
 
 Pipeline* RenderModule::getPipeline() { return this->renderPipeline; }
 
-ShaderDescriptorSet* RenderModule::getDescriptorSet(ImageView* texture,
+ShaderDescriptorSet* RenderModule::getDescriptorSet(TexPtr texture,
                                                     size_t current) {
-    return descriptorSets[texture][current];
+    return descriptorSets[texture->getName()][current];
 }
 
-ShaderDescriptorSet* RenderModule::addDescriptorSet(ImageView* img,
+ShaderDescriptorSet* RenderModule::addDescriptorSet(TexPtr img,
                                                     Buffer* buffer) {
     DebugFunc functions = getDebugFunctions(instance);
     ShaderDescriptorSet* descriptor =
         new ShaderDescriptorSet(*this->descriptorPool, *this->renderLayout);
     updateDescriptorSet(*descriptor, *img, *sampler, *buffer);
-    auto iter = this->descriptorSets.find(img);
+    auto iter = this->descriptorSets.find(img->getName());
     if (iter == this->descriptorSets.end()) {
         std::vector<ShaderDescriptorSet*> set = {descriptor};
-        this->descriptorSets.emplace(img, set);
+        this->descriptorSets.emplace(img->getName(), set);
         setName(functions, device, name + img->getName(),
                 VK_OBJECT_TYPE_DESCRIPTOR_SET, descriptor->getSet());
     } else {
@@ -95,8 +95,8 @@ ShaderDescriptorSet* RenderModule::addDescriptorSet(ImageView* img,
 
 void RenderModule::setExtent(uint32_t w, uint32_t h) {
     this->extent = {w, h};
-    delete renderImageView;
-    delete depthImageView;
+    renderImageView.reset();
+    depthImageView.reset();
 
     delete sampler;
 
@@ -104,19 +104,19 @@ void RenderModule::setExtent(uint32_t w, uint32_t h) {
 
     DebugFunc functions = getDebugFunctions(instance);
 
-    renderImageView = new ImageView(
+    renderImageView = std::make_shared<ImageView>(
         std::make_shared<Image>(
             device, w, h, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
         VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, name + " view");
     VkFormat depthFormat = findDepthFormat(device.getPhysicalDevice());
-    depthImageView =
-        new ImageView(std::make_shared<Image>(
-                          device, w, h, depthFormat, VK_IMAGE_TILING_OPTIMAL,
-                          VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
-                      depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, "depth image");
+    depthImageView = std::make_shared<ImageView>(
+        std::make_shared<Image>(device, w, h, depthFormat,
+                                VK_IMAGE_TILING_OPTIMAL,
+                                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+        depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, "depth image");
     setName(functions, device, name + " depth image view",
             VK_OBJECT_TYPE_IMAGE_VIEW, depthImageView->getView());
 
@@ -167,8 +167,8 @@ void RenderModule::recreateDescriptorPool(VkDescriptorType* types,
 }
 
 RenderModule::~RenderModule() {
-    delete renderImageView;
-    delete depthImageView;
+    renderImageView.reset();
+    depthImageView.reset();
     delete sampler;
     delete framebuffer;
     delete renderPipeline;

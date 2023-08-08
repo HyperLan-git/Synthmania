@@ -28,11 +28,11 @@ class Swapchain {
     VkExtent2D extent;
 
     std::vector<std::shared_ptr<Image>> images;
-    std::vector<ImageView *> imageViews;
+    std::vector<TexPtr> imageViews;
     std::vector<Framebuffer *> framebuffers;
 
     std::shared_ptr<Image> depthImage;
-    ImageView *depthImageView;
+    TexPtr depthImageView;
 
     RenderPass *renderPass;
 };

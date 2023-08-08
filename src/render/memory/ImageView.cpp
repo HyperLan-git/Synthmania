@@ -22,24 +22,23 @@ ImageView::ImageView(std::shared_ptr<Image> image, VkFormat format,
     this->name = name;
 }
 
-ImageView::ImageView(ImageView &&img)
-    : device(img.device), image(img.getImage()) {
+ImageView::ImageView(ImageView &&img) : device(img.device) {
     *this = std::move(img);
 }
 
 ImageView &ImageView::operator=(ImageView &&img) {
     assert(this->device == img.device);
     std::swap(this->view, img.view);
-    this->image = img.image;
+    std::swap(this->image, img.image);
     this->name = img.name;
     return *this;
 }
 
 VkImageView ImageView::getView() { return view; }
 
-std::shared_ptr<Image> &ImageView::getImage() { return image; }
+Image &ImageView::getImage() { return *image; }
 
-std::string ImageView::getName() { return name; }
+std::string ImageView::getName() const { return name; }
 
 Device &ImageView::getDevice() { return device; }
 

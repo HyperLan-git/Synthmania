@@ -6,7 +6,7 @@ class Button;
 
 class Button : public MenuElement {
    public:
-    Button(ImageView* texture, ImageView* pressedTexture, std::string name,
+    Button(Texture texture, Texture pressedTexture, std::string name,
            glm::vec2 position, glm::vec2 size);
 
     bool isPressed();
@@ -19,6 +19,6 @@ class Button : public MenuElement {
     virtual ~Button();
 
    private:
-    ImageView *normalTexture, *pressedTexture;
+    Texture normalTexture, pressedTexture;
     bool pressed = false;
 };

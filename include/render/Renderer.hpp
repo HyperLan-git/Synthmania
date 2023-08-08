@@ -7,6 +7,7 @@ class Renderer;
 #include "RenderModule.hpp"
 #include "Shader.hpp"
 #include "Swapchain.hpp"
+#include "Texture.hpp"
 #include "stb_image.h"
 
 // Font texture sizes
@@ -44,8 +45,6 @@ class Renderer : public boost::noncopyable {
     void render();
 
     void loadTextures(std::map<std::string, std::string> textures);
-
-    std::vector<ImageView*> getTextures();
 
     void setStartTime(double start);
 
@@ -86,8 +85,8 @@ class Renderer : public boost::noncopyable {
     // TODO simplify this shit I should not have to create all of this just to
     // do a second pass
     // What if I want to do 5 passes?
-    ImageView* renderImageView = NULL;
-    ImageView* depthImageView = NULL;
+    TexPtr renderImageView;
+    TexPtr depthImageView;
     Framebuffer* framebuffer = NULL;
     CommandBuffer* renderCommandBuffer = NULL;
     Pipeline* renderPipeline = NULL;
@@ -126,7 +125,7 @@ class Renderer : public boost::noncopyable {
     uint32_t currentFrame = 0;
 
     std::vector<Model> models;
-    std::vector<ImageView*> textures;
+    std::unordered_map<Texture, TexPtr, Texture::HashFunction> textures;
 
     TextHandler* textHandler = NULL;
 
@@ -173,7 +172,7 @@ class Renderer : public boost::noncopyable {
 
     std::shared_ptr<Image> createTextureImage(const char* path);
 
-    ImageView* readTexture(const char* path, const char* name);
+    TexPtr readTexture(const char* path, const char* name);
 
     void addTexture(std::shared_ptr<Image> texture, const char* name);
 

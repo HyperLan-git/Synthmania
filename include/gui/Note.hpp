@@ -20,17 +20,15 @@ unsigned char transposePitch(Key k, unsigned char pitch);
 
 std::vector<double> splitDuration(double duration);
 
-ImageView* getTextureForNote(std::vector<ImageView*> textures,
-                             unsigned char pitch, double duration,
-                             Key currentKey);
+Texture getTextureForNote(unsigned char pitch, double duration, Key currentKey);
 
 glm::vec2 getSizeAndLocForNote(double duration, Key k, unsigned char pitch);
 
 class Note : public PartitionNotation {
    public:
     Note(std::string name, int64_t time, unsigned char pitch,
-         double totalDuration, double duration, uint64_t MPQ,
-         std::vector<ImageView*> textures, Key key, KeySignature signature);
+         double totalDuration, double duration, uint64_t MPQ, Key key,
+         KeySignature signature);
 
     void setStatus(NoteStatus status);
 

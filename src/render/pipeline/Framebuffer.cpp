@@ -1,7 +1,7 @@
 #include "Framebuffer.hpp"
 
 Framebuffer::Framebuffer(RenderPass& pass, VkExtent2D extent,
-                         std::vector<ImageView*> views)
+                         std::vector<TexPtr> views)
     : device(pass.getDevice()), pass(pass) {
     this->extent = extent;
     VkImageView v[views.size()];

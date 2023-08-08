@@ -65,9 +65,9 @@ Swapchain::Swapchain(Device &device, Window &window, VkSurfaceKHR surface)
     images = createImagesForSwapchain(device, swapchain, extent);
 
     for (uint32_t i = 0; i < images.size(); i++)
-        imageViews.push_back(new ImageView(images[i], imageFormat,
-                                           VK_IMAGE_ASPECT_COLOR_BIT,
-                                           "swapimage" + i));
+        imageViews.push_back(std::make_shared<ImageView>(
+            images[i], imageFormat, VK_IMAGE_ASPECT_COLOR_BIT,
+            "swapimage" + i));
 
     VkFormat depthFormat = findDepthFormat(device.getPhysicalDevice());
 
@@ -75,13 +75,13 @@ Swapchain::Swapchain(Device &device, Window &window, VkSurfaceKHR surface)
         device, extent.width, extent.height, depthFormat,
         VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    depthImageView = new ImageView(depthImage, depthFormat,
-                                   VK_IMAGE_ASPECT_DEPTH_BIT, "depthimage");
+    depthImageView = std::make_shared<ImageView>(
+        depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, "depthimage");
 
     renderPass = new RenderPass(device, imageFormat);
 
     for (size_t i = 0; i < imageViews.size(); i++) {
-        std::vector<ImageView *> attachments = {imageViews[i], depthImageView};
+        std::vector<TexPtr> attachments = {imageViews[i], depthImageView};
         framebuffers.push_back(
             new Framebuffer(*renderPass, extent, attachments));
     }
@@ -96,15 +96,9 @@ VkExtent2D Swapchain::getExtent() { return extent; }
 VkSwapchainKHR Swapchain::getSwapchain() { return swapchain; }
 
 Swapchain::~Swapchain() {
-    delete depthImageView;
-
-    for (auto framebuffer : framebuffers) {
-        delete framebuffer;
-    }
+    for (auto framebuffer : framebuffers) delete framebuffer;
 
     delete renderPass;
-
-    for (auto imageView : imageViews) delete imageView;
 
     vkDestroySwapchainKHR(device.getDevice(), swapchain, nullptr);
 }

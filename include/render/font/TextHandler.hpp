@@ -40,12 +40,11 @@ class TextHandler {
         CommandPool* commandPool);
 
     std::vector<Font> getFonts();
-    std::vector<ImageView*> getTextures();
+    std::vector<TexPtr> getTextures();
 
     unsigned int getTextureSize();
 
-    std::optional<Character> getCharacter(std::string fontName,
-                                          unsigned long code);
+    Character getCharacter(std::string fontName, unsigned long code);
 
     std::vector<Text> createText_w(std::wstring text, std::string fontName,
                                    double size, glm::vec2 start);
@@ -62,8 +61,7 @@ class TextHandler {
     FT_Library lib = NULL;
 
     std::vector<Font> fonts;
-    std::vector<ImageView*> textures;
-    VkPhysicalDevice* physicalDevice;
+    std::vector<TexPtr> textures;
     Device& device;
 
     unsigned int textureSize;

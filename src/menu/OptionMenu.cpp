@@ -3,17 +3,16 @@
 OptionMenu::OptionMenu(Game* game) : Menu(game) {
     options = dynamic_cast<Synthmania*>(game)->getOptions();
     TextHandler* text = game->getTextHandler();
-    std::vector<ImageView*> textures = game->getRenderer()->getTextures();
-    ImageView *sliderBg = getTextureByName(textures, "slider"),
-              *sliderTex = getTextureByName(textures, "slider_button");
-    std::shared_ptr<Button> back = std::make_shared<Button>(
-        getTextureByName(textures, "button"),
-        getTextureByName(textures, "button-pressed"), "back",
-        glm::vec2({-1.5, .85}), glm::vec2({.6, .3}));
+    Texture sliderBg("slider"), sliderTex("slider_button"), button("button"),
+        button_pressed("button-pressed"), selector("selector"),
+        text_area("text-area");
+    std::shared_ptr<Button> back =
+        std::make_shared<Button>(button, button_pressed, "back",
+                                 glm::vec2({-1.5, .85}), glm::vec2({.6, .3}));
     buttons.push_back(back);
     for (Text t : text->createText("Save", "Stupid", 12, glm::vec2({-.1, 0}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "Back_arrow", back);
+            t.character.texture, "Back_arrow", back);
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -21,7 +20,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("OPTIONS", "Stupid", 20, glm::vec2({-.5, -.85}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Title");
+            std::make_shared<Gui>(t.character.texture, "Title");
         g->setPosition(t.pos);
         g->setSize(t.size);
         g->setColor(glm::vec4(.7, .7, .2, 1));
@@ -32,7 +31,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Audio", "Stupid", 12, glm::vec2({-1.4, -.7}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Audio");
+            std::make_shared<Gui>(t.character.texture, "Audio");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -41,7 +40,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Midi", "Stupid", 12, glm::vec2({-1.4, -.3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Midi");
+            std::make_shared<Gui>(t.character.texture, "Midi");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -50,7 +49,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Gameplay", "Stupid", 12, glm::vec2({-1.4, -.1}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Gameplay");
+            std::make_shared<Gui>(t.character.texture, "Gameplay");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -59,7 +58,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Appearance", "Stupid", 12, glm::vec2({-1.4, .3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Appearance");
+            std::make_shared<Gui>(t.character.texture, "Appearance");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -68,7 +67,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Plugin", "Stupid", 12, glm::vec2({-1.4, .6}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Plugin");
+            std::make_shared<Gui>(t.character.texture, "Plugin");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -77,7 +76,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Volume", "Stupid", 8, glm::vec2({-.2, -.7}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Volume");
+            std::make_shared<Gui>(t.character.texture, "Volume");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -95,7 +94,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
 
     for (Text t : text->createText("Music", "Stupid", 8, glm::vec2({0, -.5}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Volume");
+            std::make_shared<Gui>(t.character.texture, "Volume");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -114,7 +113,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Synth", "Stupid", 8, glm::vec2({-1.3, -.5}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "synth");
+            std::make_shared<Gui>(t.character.texture, "synth");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -137,10 +136,8 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
         std::string name = in.get_port_name(i);
         ports.push_back(name);
     }
-    midiDevice =
-        std::make_shared<Selector>(getTextureByName(textures, "selector"),
-                                   getTextureByName(textures, "button"), game,
-                                   "midi selector", ports, 5, "Stupid", 18);
+    midiDevice = std::make_shared<Selector>(
+        selector, button, game, "midi selector", ports, 5, "Stupid", 18);
     midiDevice->setPosition({-.6, -.3});
     midiDevice->setSize({.7, .15});
     midiDevice->select(*(options->getValue<int>("midi.device")));
@@ -149,10 +146,9 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
         this->guis.push_back(g);
     this->elements.push_back(midiDevice);
     std::vector<std::string> audioDevices = getAudioDevices();
-    audioDevice = std::make_shared<Selector>(
-        getTextureByName(textures, "selector"),
-        getTextureByName(textures, "button"), game, "audio selector",
-        audioDevices, 5, "Stupid", 18);
+    audioDevice =
+        std::make_shared<Selector>(selector, button, game, "audio selector",
+                                   audioDevices, 5, "Stupid", 18);
     audioDevice->setPosition({-.6, -.7});
     audioDevice->setSize({.7, .15});
     audioDevice->select(*(options->getValue<int>("audio.device")));
@@ -161,8 +157,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
         this->guis.push_back(g);
     this->elements.push_back(audioDevice);
     notation = std::make_shared<Selector>(
-        getTextureByName(textures, "selector"),
-        getTextureByName(textures, "button"), game, "note selector",
+        selector, button, game, "note selector",
         std::vector<std::string>({"Roman", "Latin"}), 5, "Stupid", 18);
     notation->setPosition({-.2, -.1});
     notation->setSize({.7, .15});
@@ -173,15 +168,15 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t : text->createText("Audio latency", "Stupid", 6,
                                    glm::vec2({.17, -.1}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Audio latency");
+            std::make_shared<Gui>(t.character.texture, "Audio latency");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
     }
     wchar_t c = L'I';  //"│";
-    audioLatency = std::make_shared<TextArea>(
-        getTextureByName(textures, "text_area"), "audio latency", text,
-        "Stupid", 4, 4, c, 8, integerPredicate);
+    audioLatency =
+        std::make_shared<TextArea>(text_area, "audio latency", text, "Stupid",
+                                   4, 4, c, 8, integerPredicate);
     audioLatency->setSize({.4, .125});
     audioLatency->setPosition({.8, -.1});
     std::string latency =
@@ -195,14 +190,14 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t : text->createText("Video latency", "Stupid", 6,
                                    glm::vec2({.17, -.3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Video latency");
+            std::make_shared<Gui>(t.character.texture, "Video latency");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
     }
-    graphicLatency = std::make_shared<TextArea>(
-        getTextureByName(textures, "text_area"), "video latency", text,
-        "Stupid", 4, 4, c, 8, integerPredicate);
+    graphicLatency =
+        std::make_shared<TextArea>(text_area, "video latency", text, "Stupid",
+                                   4, 4, c, 8, integerPredicate);
     graphicLatency->setSize({.4, .125});
     graphicLatency->setPosition({.8, -.3});
     latency =
@@ -216,14 +211,14 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t : text->createText("Audio leniency", "Stupid", 6,
                                    glm::vec2({-1.4, .1}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Audio leniency");
+            std::make_shared<Gui>(t.character.texture, "Audio leniency");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
     }
-    audioLeniency = std::make_shared<TextArea>(
-        getTextureByName(textures, "text_area"), "audio leniency", text,
-        "Stupid", 5, 5, c, 8, integerPredicate);
+    audioLeniency =
+        std::make_shared<TextArea>(text_area, "audio leniency", text, "Stupid",
+                                   5, 5, c, 8, integerPredicate);
     audioLeniency->setSize({.4, .125});
     audioLeniency->setPosition({-.7, .1});
     audioLeniency->setText(
@@ -236,14 +231,13 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Fullscreen", "Stupid", 6, glm::vec2({-.6, .3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "Fullscreen");
+            std::make_shared<Gui>(t.character.texture, "Fullscreen");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
     }
     fullscreen = std::make_shared<Checkbox>(
-        getTextureByName(textures, "checkbox"),
-        getTextureByName(textures, "checkbox-pressed"), "fullscreen");
+        Texture("checkbox"), Texture("checkbox-pressed"), "fullscreen");
     fullscreen->setPosition({-.2, .3});
     fullscreen->setSize({.15, .15});
     fullscreen->check(*(options->getValue<bool>("appearance.fullscreen")));
@@ -251,16 +245,15 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
 
     for (Text t : text->createText("Skin", "Stupid", 6, glm::vec2({0, .3}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "skin");
+            std::make_shared<Gui>(t.character.texture, "skin");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
     }
     // TODO make skin system
-    skin = std::make_shared<Selector>(
-        getTextureByName(textures, "selector"),
-        getTextureByName(textures, "button"), game, "note selector",
-        std::vector<std::string>({"default"}), 5, "Stupid", 18);
+    skin = std::make_shared<Selector>(selector, button, game, "note selector",
+                                      std::vector<std::string>({"default"}), 5,
+                                      "Stupid", 18);
     skin->setPosition({.5, .3});
     skin->setSize({.7, .15});
     skin->select(*(options->getValue<int>("appearance.skin")));
@@ -270,7 +263,7 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Buffer size", "Stupid", 6, glm::vec2({-.9, .6}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "buf size");
+            std::make_shared<Gui>(t.character.texture, "buf size");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
@@ -278,14 +271,13 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Audio buffers", "Stupid", 6, glm::vec2({0, .6}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "audio buffers");
+            std::make_shared<Gui>(t.character.texture, "audio buffers");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
     }
     bufSize = std::make_shared<TextArea>(
-        getTextureByName(textures, "text_area"), "buffer size", text, "Stupid",
-        4, 4, c, 8, integerPredicate);
+        text_area, "buffer size", text, "Stupid", 4, 4, c, 8, integerPredicate);
     bufSize->setSize({.4, .125});
     bufSize->setPosition({-.3, .6});
     bufSize->setText(
@@ -294,9 +286,8 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     bufSize->recalculateText();
     bufSize->recalculateCursor();
     this->elements.push_back(bufSize);
-    bufAmt = std::make_shared<TextArea>(getTextureByName(textures, "text_area"),
-                                        "buffer amt", text, "Stupid", 2, 2, c,
-                                        8, integerPredicate);
+    bufAmt = std::make_shared<TextArea>(text_area, "buffer amt", text, "Stupid",
+                                        2, 2, c, 8, integerPredicate);
     bufAmt->setSize({.4, .125});
     bufAmt->setPosition({.7, .6});
     bufAmt->setText(
@@ -308,14 +299,14 @@ OptionMenu::OptionMenu(Game* game) : Menu(game) {
     for (Text t :
          text->createText("Plugin folders", "Stupid", 6, glm::vec2({-1, .8}))) {
         std::shared_ptr<Gui> g =
-            std::make_shared<Gui>(&t.character.texture, "plugin folders");
+            std::make_shared<Gui>(t.character.texture, "plugin folders");
         g->setPosition(t.pos);
         g->setSize(t.size);
         guis.push_back(g);
     }
-    pluginFolders = std::make_shared<TextArea>(
-        getTextureByName(textures, "text_area"), "plugin folders", text,
-        "Stupid", 23, 256, c, 8, truePredicate);
+    pluginFolders =
+        std::make_shared<TextArea>(text_area, "plugin folders", text, "Stupid",
+                                   23, 256, c, 8, truePredicate);
     pluginFolders->setSize({1.4, .125});
     pluginFolders->setPosition({.3, .8});
     std::string folders = "";

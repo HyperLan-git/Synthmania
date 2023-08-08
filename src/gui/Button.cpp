@@ -1,6 +1,6 @@
 #include "Button.hpp"
 
-Button::Button(ImageView* texture, ImageView* pressedTexture, std::string name,
+Button::Button(Texture texture, Texture pressedTexture, std::string name,
                glm::vec2 position, glm::vec2 size)
     : MenuElement(texture, name) {
     this->normalTexture = texture;

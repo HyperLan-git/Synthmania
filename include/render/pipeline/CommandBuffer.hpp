@@ -48,7 +48,7 @@ class CommandBuffer {
 
     void copyBufferRegion(Buffer &src, Buffer &dest, VkDeviceSize size);
 
-    void beginRenderPass(Framebuffer &framebuffer,
+    void beginRenderPass(Framebuffer &framebuffer, RenderPass &renderPass,
                          std::initializer_list<VkClearValue> clearValues);
     void endRenderPass();
     void bindPipeline(Pipeline &pipeline, VkPipelineBindPoint bindPoint =

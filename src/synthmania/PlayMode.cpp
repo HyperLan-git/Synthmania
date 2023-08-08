@@ -45,23 +45,18 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
     this->drum = partition.drumming;
     Model model =
         loadFromFile(renderer->getDevice(), "resources/models/room.obj");
-    std::vector<ImageView *> textures = renderer->getTextures();
-    std::shared_ptr<Entity> la_creatura76 =
-        std::make_shared<Entity>(&renderer->addModel(std::move(model)),
-                                 getTextureByName(textures, "room"), "Bob");
+    std::shared_ptr<Entity> la_creatura76 = std::make_shared<Entity>(
+        &renderer->addModel(std::move(model)), Texture("room"), "Bob");
     game->addEntity(la_creatura76);
     Key k = drum ? Key::DRUM : Key::SOL;
     std::string keyName = (drum) ? "drum_key" : "sol_key";
-    std::shared_ptr<Gui> part = std::make_shared<Gui>(
-                             getTextureByName(textures, "partition"),
-                             "partition"),
-                         bg = std::make_shared<Gui>(
-                             getTextureByName(textures, "background"), "bg"),
-                         precision = std::make_shared<Gui>(
-                             getTextureByName(textures, "precision"),
-                             "precision"),
-                         key = std::make_shared<Gui>(
-                             getTextureByName(textures, keyName), "key");
+    std::shared_ptr<Gui> part = std::make_shared<Gui>(Texture("partition"),
+                                                      "partition"),
+                         bg =
+                             std::make_shared<Gui>(Texture("background"), "bg"),
+                         precision = std::make_shared<Gui>(Texture("precision"),
+                                                           "precision"),
+                         key = std::make_shared<Gui>(Texture(keyName), "key");
     switch (k) {
         case Key::SOL:
             key->setPosition({-1.6f, 0.1f});
@@ -83,8 +78,8 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
     part->setSize({5, 1});
     precision->setSize({1.5f, 0.5f});
     precision->setPosition({0, 0.9f});
-    std::shared_ptr<Judgement> bar =
-        std::make_shared<Judgement>("judgement", textures, partition);
+    std::shared_ptr<Judgement> bar = std::make_shared<Judgement>(
+        "judgement", Texture("judgement"), partition);
     line = bar;
     bar->setPosition({-1.3f, bar->getPosition().y});
     bar->setSize({0.25f, 1.f});
@@ -110,7 +105,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
             }
             std::shared_ptr<Note> n = std::make_shared<Note>(
                 name.c_str(), note.timestamp, note.note, totalDuration,
-                cutDown[0], partition.MPQ, textures, k, partition.signature);
+                cutDown[0], partition.MPQ, k, partition.signature);
             keepAlive.push_back(n);
             notes.push_back(n);
             int diff = getDifferenceFromC4(transposePitch(k, note.note),
@@ -126,7 +121,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
                     std::shared_ptr<PartitionNotation> readability =
                         std::make_shared<PartitionNotation>(
                             barName.c_str(), note.timestamp, (0.5 - 0.083 * i),
-                            getTextureByName(textures, "bar"));
+                            Texture("bar"));
                     readability->setPosition({0, readability->getPosition().y});
                     readability->setSize({0.25, 0.15});
                     game->addTGui(readability);
@@ -136,8 +131,8 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
             double p = .2;
             for (int i = 0; i < firstDots; i++) {
                 std::shared_ptr<ParentedGui> dot =
-                    std::make_shared<ParentedGui>(
-                        getTextureByName(textures, "dot"), name.c_str(), n);
+                    std::make_shared<ParentedGui>(Texture("dot"), name.c_str(),
+                                                  n);
                 dot->setSize({.05, .05});
                 dot->setPosition({p, 0});
                 tempNotes.push_back(dot);
@@ -149,9 +144,8 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
                 std::string sharpName = "Sharp_";
                 sharpName.append(hash);
                 std::shared_ptr<ParentedGui> sharp =
-                    std::make_shared<ParentedGui>(
-                        getTextureByName(textures, "sharp"), sharpName.c_str(),
-                        n);
+                    std::make_shared<ParentedGui>(Texture("sharp"),
+                                                  sharpName.c_str(), n);
                 sharp->setPosition({-0.25, 0});
                 sharp->setSize({0.25, 0.25});
                 tempNotes.push_back(sharp);
@@ -164,8 +158,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
                 name2.append(std::to_string(i));
                 double d = cutDown[i];
                 std::shared_ptr<ParentedGui> p = std::make_shared<ParentedGui>(
-                    getTextureForNote(textures, note.note, d, k), name2.c_str(),
-                    n);
+                    getTextureForNote(note.note, d, k), name2.c_str(), n);
                 glm::vec2 temp = getSizeAndLocForNote(d, k, note.note);
                 p->setPosition({(t - note.timestamp) / 300000.f, 0});
                 p->addEffect(
@@ -173,8 +166,8 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
                 p->setSize({temp.y, temp.y});
                 tempNotes.push_back(p);
                 std::shared_ptr<ParentedGui> arc =
-                    std::make_shared<ParentedGui>(
-                        getTextureByName(textures, "arc"), name2.c_str(), n);
+                    std::make_shared<ParentedGui>(Texture("arc"), name2.c_str(),
+                                                  n);
                 arc->setPosition(
                     {(((t + last) / 2) - note.timestamp) / 300000.f, 0});
                 arc->addEffect(new GraphicalEffect(
@@ -338,8 +331,7 @@ void PlayMode::noteHit(const std::shared_ptr<Note> &note) {
     int64_t time = game->getCurrentTimeMicros();
     int64_t delta = autoPlay ? 0 : time - note->getTime();
     std::shared_ptr<Gui> prec = std::make_shared<Precision>(
-        getTextureByName(game->getRenderer()->getTextures(), "precision_tick"),
-        "tick", time, delta);
+        Texture("precision_tick"), "tick", time, delta);
     prec->setSize({0.1f, 0.4f});
     prec->setPosition({0, 0.9f});
     prec->updateGraphics(time);
@@ -396,7 +388,7 @@ void PlayMode::noteMiss(const std::shared_ptr<Note> &note) {
         name.append("_");
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =
-            std::make_shared<Gui>(&t.character.texture, name.c_str());
+            std::make_shared<Gui>(t.character.texture, name.c_str());
         gui->addEffect(new GraphicalEffect(applyTemp));
         gui->setColor({1, 0, 0, 1});
         gui->setNegate(true);

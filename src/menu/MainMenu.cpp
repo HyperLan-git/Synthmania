@@ -4,11 +4,8 @@
 
 MainMenu::MainMenu(Game* g) : Menu(g) {
     TextHandler* text = g->getTextHandler();
-    std::vector<ImageView*> tex = g->getRenderer()->getTextures();
-    ImageView *piano = getTextureByName(tex, "piano"),
-              *piano_pressed = getTextureByName(tex, "piano-pressed"),
-              *black_key = getTextureByName(tex, "black_key"),
-              *black_key_pressed = getTextureByName(tex, "black_key-pressed");
+    Texture piano("piano"), piano_pressed("piano-pressed"),
+        black_key("black_key"), black_key_pressed("black_key-pressed");
 
     // CDE
     buttons.push_back(std::make_shared<Button>(piano, piano_pressed, "start",
@@ -56,11 +53,11 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
                                                "updates*", glm::vec2({.8, .3f}),
                                                glm::vec2({.2, .6f})));
 
-    for (Text t :
+    for (Text& t :
          text->createText("The quick brown fox jumps over the lazy dog",
                           "Stupid", 12, glm::vec2({0, -.5}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "PLAY", buttons[0]);
+            t.character.texture, "PLAY", buttons[0]);
         t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -71,7 +68,7 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
     for (Text t :
          text->createVerticalText("PLAY", "Stupid", 12, glm::vec2({0, -.4}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "PLAY", buttons[0]);
+            t.character.texture, "PLAY", buttons[0]);
         t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -83,7 +80,7 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
     for (Text t :
          text->createVerticalText("EDIT", "Stupid", 12, glm::vec2({0, -.4}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "EDIT", buttons[1]);
+            t.character.texture, "EDIT", buttons[1]);
         t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -95,7 +92,7 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
     for (Text t : text->createVerticalText("OPTIONS", "Stupid", 12,
                                            glm::vec2({0, -.4}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "OPTIONS", buttons[2]);
+            t.character.texture, "OPTIONS", buttons[2]);
         t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -107,7 +104,7 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
     for (Text t :
          text->createVerticalText("TESTS", "Stupid", 12, glm::vec2({0, -.4}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "TESTS", buttons[3]);
+            t.character.texture, "TESTS", buttons[3]);
         t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -119,7 +116,7 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
     for (Text t : text->createVerticalText("SOCIAL", "Stupid", 12,
                                            glm::vec2({0, -.4}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "SOCIAL", buttons[4]);
+            t.character.texture, "SOCIAL", buttons[4]);
         t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -131,7 +128,7 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
     for (Text t : text->createVerticalText("UPDATES", "Stupid", 12,
                                            glm::vec2({0, -.4}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "UPDATES", buttons[5]);
+            t.character.texture, "UPDATES", buttons[5]);
         t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -143,7 +140,7 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
     for (Text t :
          text->createVerticalText("MAPS", "Stupid", 12, glm::vec2({0, -.4}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "MAPS", buttons[6]);
+            t.character.texture, "MAPS", buttons[6]);
         t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);
@@ -155,7 +152,7 @@ MainMenu::MainMenu(Game* g) : Menu(g) {
     for (Text t :
          text->createVerticalText("EXTRA", "Stupid", 12, glm::vec2({0, -.4}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            &t.character.texture, "EXTRA", buttons[7]);
+            t.character.texture, "EXTRA", buttons[7]);
         t.pos.x -= t.size.x / 2;
         g->setPosition(t.pos);
         g->setSize(t.size);

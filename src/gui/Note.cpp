@@ -16,17 +16,16 @@ std::vector<double> splitDuration(double duration) {
     return result;
 }
 
-ImageView* getTextureForNote(std::vector<ImageView*> textures,
-                             unsigned char pitch, double duration,
-                             Key currentKey) {
+Texture getTextureForNote(unsigned char pitch, double duration,
+                          Key currentKey) {
     if (currentKey == Key::DRUM) {
         switch (pitch) {
             case MidiPercussion::CRASH:
             case MidiPercussion::HAT:
             case MidiPercussion::RIDE:
-                return getTextureByName(textures, "note_cross");
+                return Texture("note_cross");
             default:
-                return getTextureByName(textures, "note_4th");
+                return Texture("note_4th");
         }
     }
     float initial = 2;
@@ -41,7 +40,7 @@ ImageView* getTextureForNote(std::vector<ImageView*> textures,
     else
         texName += std::to_string((int)initial);
 
-    return getTextureByName(textures, texName.c_str());
+    return Texture(texName);
 }
 
 glm::vec2 getSizeAndLocForNote(double duration, Key k, unsigned char pitch) {
@@ -78,10 +77,10 @@ unsigned char transposePitch(Key k, unsigned char pitch) {
 }
 
 Note::Note(std::string name, int64_t time, unsigned char pitch,
-           double totalDuration, double duration, uint64_t MPQ,
-           std::vector<ImageView*> textures, Key key, KeySignature signature)
+           double totalDuration, double duration, uint64_t MPQ, Key key,
+           KeySignature signature)
     : PartitionNotation(name, time, transposePitch(key, pitch),
-                        getTextureForNote(textures, pitch, duration, key), key,
+                        getTextureForNote(pitch, duration, key), key,
                         signature) {
     this->totalDuration = totalDuration * MPQ * 4;
     this->duration = duration * MPQ * 4;

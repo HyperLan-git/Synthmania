@@ -1,8 +1,7 @@
 #include "Judgement.hpp"
 
-Judgement::Judgement(std::string name, std::vector<ImageView*> textures,
-                     TrackPartition notes)
-    : Gui(getTextureByName(textures, "judgement_line"), name) {
+Judgement::Judgement(std::string name, Texture texture, TrackPartition notes)
+    : Gui(texture, name) {
     this->partition = notes;
     if (this->partition.drumming) {
         this->position.y = 0;

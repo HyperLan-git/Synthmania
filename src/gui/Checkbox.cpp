@@ -1,6 +1,6 @@
 #include "Checkbox.hpp"
 
-Checkbox::Checkbox(ImageView *unchecked, ImageView *checked, std::string name,
+Checkbox::Checkbox(Texture unchecked, Texture checked, std::string name,
                    bool isChecked)
     : MenuElement(unchecked, name) {
     this->checkedTex = checked;

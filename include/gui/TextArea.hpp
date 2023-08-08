@@ -13,7 +13,7 @@ typedef bool (*TextPredicate)(std::wstring, int, unsigned int);
 
 class TextArea : public MenuElement {
    public:
-    TextArea(ImageView* texture, std::string name, TextHandler* handler,
+    TextArea(Texture texture, std::string name, TextHandler* handler,
              std::string fontName, int chars, int maxChars,
              unsigned long cursor, float textSize,
              TextPredicate textPredicate = truePredicate);

@@ -1,6 +1,6 @@
 #include "ParentedGui.hpp"
 
-ParentedGui::ParentedGui(ImageView* texture, std::string name,
+ParentedGui::ParentedGui(Texture texture, std::string name,
                          std::weak_ptr<Gui> parent)
     : Gui(texture, name) {
     this->parent = parent;

@@ -88,7 +88,7 @@ int getOffset(Key key) {
 }
 
 PartitionNotation::PartitionNotation(std::string name, int64_t time,
-                                     unsigned char pitch, ImageView* texture,
+                                     unsigned char pitch, Texture texture,
                                      Key key, KeySignature signature)
     : Gui(texture, name) {
     this->time = time;
@@ -97,8 +97,7 @@ PartitionNotation::PartitionNotation(std::string name, int64_t time,
 }
 
 PartitionNotation::PartitionNotation(std::string name, int64_t time,
-                                     double verticalPosition,
-                                     ImageView* texture)
+                                     double verticalPosition, Texture texture)
     : Gui(texture, name) {
     this->time = time;
     this->position.y = verticalPosition;

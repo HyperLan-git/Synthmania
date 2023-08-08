@@ -127,10 +127,11 @@ VkResult CommandBuffer::submit(const Queue &queue, Semaphore &waitSemaphore,
 }
 
 void CommandBuffer::beginRenderPass(
-    Framebuffer &framebuffer, std::initializer_list<VkClearValue> clearValues) {
+    Framebuffer &framebuffer, RenderPass &renderPass,
+    std::initializer_list<VkClearValue> clearValues) {
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = framebuffer.getRenderPass().getPass();
+    renderPassInfo.renderPass = renderPass.getPass();
     renderPassInfo.framebuffer = framebuffer.getFramebuffer();
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = framebuffer.getExtent();
@@ -188,6 +189,7 @@ void CommandBuffer::setImageLayout(Image &image, VkImageLayout oldLayout,
                                    uint32_t numLayers) {
     VkImageMemoryBarrier barrier;
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    // barrier.oldLayout = image.getLayout();
     barrier.oldLayout = oldLayout;
     barrier.newLayout = newLayout;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -247,6 +249,7 @@ void CommandBuffer::setImageLayout(Image &image, VkImageLayout oldLayout,
     }
     vkCmdPipelineBarrier(buffer, sourceStage, destinationStage, 0, 0, NULL, 0,
                          NULL, 1, &barrier);
+    // image.setLayout(newLayout);
 }
 
 void CommandBuffer::copyBufferToImage(Buffer &srcBuffer, Image &image,

@@ -10,7 +10,7 @@ class Selector;
 // by one
 class Selector : public MenuElement {
    public:
-    Selector(ImageView* texture, ImageView* selectTexture, Game* game,
+    Selector(Texture texture, Texture selectTexture, Game* game,
              std::string name, std::vector<std::string> elements,
              double textSize, std::string font, int textLimit);
 

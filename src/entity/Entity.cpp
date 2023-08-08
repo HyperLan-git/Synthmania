@@ -3,14 +3,14 @@
 #include <math.h>
 #include <stdlib.h>
 
-Entity::Entity(Model* model, ImageView* texture, std::string name) {
+Entity::Entity(Model* model, Texture texture, std::string name) {
     this->model = model;
     this->texture = texture;
     this->name = name;
 }
 
 Model* Entity::getModel() const { return this->model; }
-ImageView* Entity::getTexture() const { return this->texture; }
+Texture Entity::getTexture() const { return this->texture; }
 
 glm::vec3 Entity::getPosition() const { return this->position; }
 glm::vec4 Entity::getRotation() const { return this->rotation; }

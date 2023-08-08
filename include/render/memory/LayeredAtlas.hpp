@@ -8,8 +8,7 @@ class LayeredAtlas;
 
 class LayeredAtlas {
    public:
-    LayeredAtlas(std::shared_ptr<Image> image, VkFormat format,
-                 VkImageAspectFlags aspectFlags, std::string name);
+    LayeredAtlas(std::shared_ptr<Image> image);
 
     LayeredAtlas(LayeredAtlas &&) = delete;
     LayeredAtlas &operator=(LayeredAtlas &&) = delete;
@@ -21,7 +20,7 @@ class LayeredAtlas {
      * Checks whether a new image can fit in this atlas
      * @return false if the atlas does not have enough remaining space
      */
-    bool fits(ImageView *image) const;
+    bool fits(Image &image) const;
 
     /**
      * Adds to the atlas another image and creates a new view
@@ -32,7 +31,8 @@ class LayeredAtlas {
      */
     uint32_t append(Image &imageToCopy, CommandPool &pool);
 
-    ImageView &getTexture(uint32_t layer);
+    TexPtr getTexture(uint32_t layer, VkFormat format,
+                      VkImageAspectFlags aspectFlags, std::string name);
     Image &getImage();
 
     virtual ~LayeredAtlas();
@@ -40,8 +40,6 @@ class LayeredAtlas {
    private:
     Device &device;
     std::shared_ptr<Image> img;
-    std::vector<ImageView> views;
     // Write pointer
     uint32_t layer;
-    std::map<std::string, uint32_t> contents;
 };

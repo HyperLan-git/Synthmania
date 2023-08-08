@@ -8,7 +8,7 @@ bool integerPredicate(std::wstring cur, int pos, unsigned int text) {
     return text >= '0' && text <= '9';
 }
 
-TextArea::TextArea(ImageView* texture, std::string name, TextHandler* handler,
+TextArea::TextArea(Texture texture, std::string name, TextHandler* handler,
                    std::string fontName, int chars, int maxChars,
                    unsigned long cursor, float textSize,
                    TextPredicate textPredicate)
@@ -31,7 +31,7 @@ TextArea::TextArea(ImageView* texture, std::string name, TextHandler* handler,
         this->textContents.push_back(g);
     }
     this->cursor =
-        std::make_shared<Gui>(&cursorChar.character.texture, name + "_cursor");
+        std::make_shared<Gui>(cursorChar.character.texture, name + "_cursor");
     this->cursor->setSize(cursorChar.size);
 }
 
@@ -154,7 +154,7 @@ void TextArea::recalculateText() {
                                {position.x - size.x * .5 + cursor->getSize().x,
                                 position.y + size.y * .25})) {
         std::shared_ptr<Gui> g = this->textContents[i++];
-        g->setTexture(&t.character.texture);
+        g->setTexture(t.character.texture);
         g->setPosition(t.pos);
         g->setSize(t.size);
         if (i >= textContents.size()) return;

@@ -109,13 +109,15 @@ void Renderer::createSwapchain() {
     swapchain = new Swapchain(*device, *window, surface);
     setName(functions, *device, "Swapchain", VK_OBJECT_TYPE_SWAPCHAIN_KHR,
             swapchain->getSwapchain());
-    renderImageView = new ImageView(
+    renderImageView = std::make_shared<ImageView>(
         std::make_shared<Image>(
             *device, ext.width, ext.height, VK_FORMAT_B8G8R8A8_SRGB,
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
         VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, "render");
+    setName(functions, *device, "render image", VK_OBJECT_TYPE_IMAGE,
+            renderImageView->getImage().getImage());
     setName(functions, *device, "render image view", VK_OBJECT_TYPE_IMAGE_VIEW,
             renderImageView->getView());
     sampler = new TextureSampler(*device);
@@ -123,12 +125,14 @@ void Renderer::createSwapchain() {
             sampler->getSampler());
     VkFormat depthFormat = findDepthFormat(physicalDevice);
 
-    depthImageView = new ImageView(
+    depthImageView = std::make_shared<ImageView>(
         std::make_shared<Image>(*device, ext.width, ext.height, depthFormat,
                                 VK_IMAGE_TILING_OPTIMAL,
                                 VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
         depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, "depth image");
+    setName(functions, *device, "depth image", VK_OBJECT_TYPE_IMAGE,
+            depthImageView->getImage().getImage());
     setName(functions, *device, "depth image view", VK_OBJECT_TYPE_IMAGE_VIEW,
             depthImageView->getView());
 
@@ -144,12 +148,13 @@ void Renderer::createSwapchain() {
 }
 
 void Renderer::loadTextures(std::map<std::string, std::string> textures) {
-    for (auto entry : textures) {
-        this->textures.push_back(
+    for (auto& entry : textures) {
+        this->textures.emplace(
+            Texture(entry.first),
             readTexture(entry.second.c_str(), entry.first.c_str()));
     }
-    for (ImageView* view : textHandler->getTextures())
-        this->textures.push_back(view);
+    for (TexPtr view : textHandler->getTextures())
+        this->textures.emplace(Texture(view->getName()), view);
 
     uint32_t type_sz = 2 * this->textures.size();
     std::vector<VkDescriptorType> types(type_sz);
@@ -188,8 +193,6 @@ Model& Renderer::addModel(Model&& model) {
     return models.emplace_back(std::move(model));
 }
 
-std::vector<ImageView*> Renderer::getTextures() { return textures; }
-
 void Renderer::render() { drawFrame(); }
 
 Renderer::~Renderer() {
@@ -197,8 +200,8 @@ Renderer::~Renderer() {
 
     delete swapchain;
 
-    delete renderImageView;
-    delete depthImageView;
+    renderImageView.reset();
+    depthImageView.reset();
     delete renderPass;
     delete framebuffer;
     delete renderCommandBuffer;
@@ -230,7 +233,9 @@ Renderer::~Renderer() {
 
     delete guiModel;
 
-    for (ImageView* i : textures) delete i;
+    models.clear();
+
+    textures.clear();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete renderFinishedSemaphores[i];
@@ -254,9 +259,9 @@ void Renderer::recreateSwapchain() {
     device->wait();
 
     delete swapchain;
-    delete renderImageView;
+    renderImageView.reset();
     delete sampler;
-    delete depthImageView;
+    depthImageView.reset();
     delete renderPass;
     delete framebuffer;
     delete renderPipeline;
@@ -490,19 +495,19 @@ bool Renderer::hasStencilComponent(VkFormat format) {
 }
 
 void Renderer::addTexture(std::shared_ptr<Image> texture, const char* name) {
-    ImageView* view = new ImageView(texture, VK_FORMAT_R8G8B8A8_SRGB,
-                                    VK_IMAGE_ASPECT_COLOR_BIT, name);
+    TexPtr view = std::make_shared<ImageView>(texture, VK_FORMAT_R8G8B8A8_SRGB,
+                                              VK_IMAGE_ASPECT_COLOR_BIT, name);
     std::string n = name;
     n.append("_view");
     setName(getDebugFunctions(*instance), *device, n, VK_OBJECT_TYPE_IMAGE_VIEW,
             view->getView());
-    this->textures.push_back(view);
+    this->textures.emplace(name, view);
 }
 
-ImageView* Renderer::readTexture(const char* path, const char* name) {
+TexPtr Renderer::readTexture(const char* path, const char* name) {
     std::shared_ptr<Image> tex = createTextureImage(path);
-    ImageView* result = new ImageView(tex, VK_FORMAT_R8G8B8A8_SRGB,
-                                      VK_IMAGE_ASPECT_COLOR_BIT, name);
+    TexPtr result = std::make_shared<ImageView>(
+        tex, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, name);
     std::string n = name;
     n.append("_view");
     setName(getDebugFunctions(*instance), *device, n, VK_OBJECT_TYPE_IMAGE_VIEW,
@@ -672,10 +677,10 @@ void Renderer::updateDescriptorSet(ShaderDescriptorSet& descriptor,
 void Renderer::createDescriptorSets() {
     size_t j = 0;
     DebugFunc functions = getDebugFunctions(*instance);
-    for (ImageView* img : textures) {
+    for (auto& img : textures) {
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            objModule->addDescriptorSet(img, uniformBuffers[i]);
-            guiModule->addDescriptorSet(img, guiUniformBuffers[i]);
+            objModule->addDescriptorSet(img.second, uniformBuffers[i]);
+            guiModule->addDescriptorSet(img.second, guiUniformBuffers[i]);
         }
         j += MAX_FRAMES_IN_FLIGHT;
     }
@@ -787,18 +792,18 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer& commandBuffer,
     commandBuffer.setScissor(extent);
     commandBuffer.setViewport((float)extent.width, (float)extent.height);
 
-    commandBuffer.beginRenderPass(framebuffer,
+    commandBuffer.beginRenderPass(framebuffer, renderPass,
                                   {VkClearValue{.color = {1, 1, 1, 0}},
                                    VkClearValue{.depthStencil = {1, 0}}});
 
     Model* lastModel = NULL;
-    ImageView* lastTexture = NULL;
+    Texture lastTexture;
     std::vector<std::shared_ptr<Entity>> entities = game->getEntities();
     if (!entities.empty()) {
         commandBuffer.bindPipeline(*objModule->getPipeline());
         for (std::shared_ptr<Entity>& e : entities) {
             Model* model = e->getModel();
-            ImageView* texture = e->getTexture();
+            Texture t = e->getTexture();
             if (lastModel != model) {
                 model->toVertexBuffer().copyTo(*vertexBuffer, queue,
                                                *commandPool);
@@ -807,16 +812,18 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer& commandBuffer,
                 commandBuffer.bindVertexBuffers({vertexBuffer});
                 commandBuffer.bindIndexBuffer(*indexBuffer);
             }
-            if (texture == NULL)
-                texture = getTextureByName(textures, "missing");
-            if (lastTexture != texture)
+            if (lastTexture != t) {
+                TexPtr texture = textures.find(t) != textures.end()
+                                     ? textures[t]
+                                     : textures[Texture("missing")];
                 commandBuffer.bindDescriptorSet(
                     *objModule->getPipeline(),
                     *objModule->getDescriptorSet(texture, currentFrame));
+            }
 
             drawEntity(e, commandBuffer);
             lastModel = model;
-            lastTexture = texture;
+            lastTexture = t;
         }
     }
 
@@ -833,15 +840,18 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer& commandBuffer,
         if (g->getRealPosition().x + g->getGraphicalPosition().x >
             2. + g->getSize().x)
             continue;
-        ImageView* texture = g->getTexture();
-        if (texture == NULL) texture = getTextureByName(textures, "missing");
-        if (lastTexture != texture)
+        Texture t = g->getTexture();
+        if (lastTexture != t) {
+            TexPtr texture = textures.find(t) != textures.end()
+                                 ? textures[t]
+                                 : textures[Texture("missing")];
             commandBuffer.bindDescriptorSet(
                 *guiModule->getPipeline(),
                 *guiModule->getDescriptorSet(texture, currentFrame));
+        }
 
         drawGui(g, commandBuffer);
-        lastTexture = texture;
+        lastTexture = t;
     }
 
     commandBuffer.endRenderPass();
@@ -859,7 +869,7 @@ void Renderer::recordCommandBuffer(CommandBuffer& commandBuffer,
     commandBuffer.setScissor(extent);
     commandBuffer.setViewport((float)extent.width, (float)extent.height);
 
-    commandBuffer.beginRenderPass(framebuffer,
+    commandBuffer.beginRenderPass(framebuffer, renderPass,
                                   {VkClearValue{.color = {0, 0, 0, 0}},
                                    VkClearValue{.depthStencil = {1, 0}}});
 

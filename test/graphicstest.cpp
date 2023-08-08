@@ -49,15 +49,14 @@ class Test : public Game {
 
     void init() {
         Game::init();
-        auto g = std::make_shared<Gui>(
-            getTextureByName(renderer->getTextures(), "missing"), "back");
+        auto g = std::make_shared<Gui>(Texture(), "back");
         g->setSize({1.f, 1.f});
         addGui(g);
         int i = 0;
         for (auto t : this->getTextHandler()->createText("Hell o", "Stupid", 55,
                                                          glm::vec2({-2, 0}))) {
             std::shared_ptr<Gui> gui =
-                std::make_shared<Gui>(&t.character.texture, "hi");
+                std::make_shared<Gui>(t.character.texture, "hi");
             gui->setPosition(t.pos);
             gui->setSize(t.size);
             addGui(gui);

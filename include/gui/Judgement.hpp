@@ -9,8 +9,7 @@ class Judgement;
 // And thy punishment... is death!
 class Judgement : public Gui {
    public:
-    Judgement(std::string name, std::vector<ImageView*> textures,
-              TrackPartition notes);
+    Judgement(std::string name, Texture texture, TrackPartition notes);
 
     virtual bool update(int64_t time);
 

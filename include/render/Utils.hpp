@@ -58,9 +58,6 @@ VkPresentModeKHR chooseSwapPresentMode(
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
                             Window& window);
 
-// TODO replace with map for quick access
-ImageView* getTextureByName(std::vector<ImageView*> textures, std::string name);
-
 struct DebugFunc {
     PFN_vkSetDebugUtilsObjectTagEXT setTag;
     PFN_vkSetDebugUtilsObjectNameEXT setName;

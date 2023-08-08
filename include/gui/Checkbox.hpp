@@ -7,7 +7,7 @@ class Checkbox;
 // Twitter blue checkmark
 class Checkbox : public MenuElement {
    public:
-    Checkbox(ImageView *unchecked, ImageView *checked, std::string name,
+    Checkbox(Texture unchecked, Texture checked, std::string name,
              bool isChecked = false);
 
     virtual void onClicked(glm::vec2 pos);
@@ -17,5 +17,5 @@ class Checkbox : public MenuElement {
 
    private:
     bool checked;
-    ImageView *uncheckedTex, *checkedTex;
+    Texture uncheckedTex, checkedTex;
 };

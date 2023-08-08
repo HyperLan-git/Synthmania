@@ -6,7 +6,7 @@ class MenuElement;
 
 class MenuElement : public Gui {
    public:
-    MenuElement(ImageView* texture, std::string name);
+    MenuElement(Texture texture, std::string name);
 
     void focus(bool focused = true);
 

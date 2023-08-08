@@ -142,15 +142,6 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
     }
 }
 
-ImageView* getTextureByName(std::vector<ImageView*> textures,
-                            std::string name) {
-    for (ImageView* img : textures)
-        if (name == img->getName()) return img;
-    if (name.compare("missing") == 0) return NULL;
-
-    return getTextureByName(textures, "missing");
-}
-
 DebugFunc getDebugFunctions(Instance& instance) {
     DebugFunc result;
 #ifdef DEBUG

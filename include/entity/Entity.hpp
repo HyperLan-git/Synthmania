@@ -7,8 +7,8 @@ struct EntityData;
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-#include "ImageView.hpp"
 #include "Model.hpp"
+#include "Texture.hpp"
 
 struct ShaderData {
     void* data;
@@ -23,10 +23,10 @@ struct EntityData {
 
 class Entity {
    public:
-    Entity(Model* model, ImageView* texture, std::string name);
+    Entity(Model* model, Texture texture, std::string name);
 
     Model* getModel() const;
-    ImageView* getTexture() const;
+    Texture getTexture() const;
     std::string getName() const;
     glm::vec3 getPosition() const;
     glm::vec4 getRotation() const;
@@ -40,7 +40,7 @@ class Entity {
 
    protected:
     Model* model;
-    ImageView* texture;
+    Texture texture;
     glm::vec3 position = {0, 0, 0};
     glm::vec4 rotation = {0, 0, 0, 1};  // Quaternions my beloved :heart:
     glm::vec3 size = {1, 1, 1};

@@ -4,8 +4,8 @@ class Gui;
 
 #include "Entity.hpp"
 #include "GraphicalEffect.hpp"
-#include "Image.hpp"
 #include "Model.hpp"
+#include "Texture.hpp"
 
 #define ALIGN(type) alignas(sizeof(type)) type
 #define ALIGN_VEC(n, type) alignas(sizeof(type) * n) glm::vec<n, type>
@@ -19,9 +19,9 @@ struct GuiData {
 
 class Gui {
    public:
-    Gui(ImageView* texture, std::string name);
+    Gui(Texture texture, std::string name);
 
-    ImageView* getTexture() const;
+    Texture getTexture() const;
     std::string getName() const;
     glm::vec3 getPosition() const;
     glm::vec2 getGraphicalPosition() const;
@@ -36,7 +36,7 @@ class Gui {
     void setSize(glm::vec2 size);
     void setColor(glm::vec4 color);
     void setNegate(int negate);
-    void setTexture(ImageView* texture);
+    void setTexture(Texture texture);
 
     void addEffect(GraphicalEffect* effect);
 
@@ -55,7 +55,7 @@ class Gui {
     virtual ~Gui();
 
    protected:
-    ImageView* texture;
+    Texture texture;
     glm::vec3 position = {0, 0, 0};
     glm::vec2 graphicalPosition = {0, 0};
     float rotation = 0;

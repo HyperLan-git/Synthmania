@@ -25,9 +25,9 @@ class RenderModule : public boost::noncopyable {
 
     Pipeline* getPipeline();
 
-    ShaderDescriptorSet* getDescriptorSet(ImageView* texture, size_t current);
+    ShaderDescriptorSet* getDescriptorSet(TexPtr texture, size_t current);
 
-    ShaderDescriptorSet* addDescriptorSet(ImageView* img, Buffer* buffer);
+    ShaderDescriptorSet* addDescriptorSet(TexPtr img, Buffer* buffer);
 
     void setExtent(uint32_t w, uint32_t h);
     void setShaders(
@@ -46,15 +46,16 @@ class RenderModule : public boost::noncopyable {
     Instance& instance;
     Device& device;
 
-    ImageView* renderImageView = NULL;
+    TexPtr renderImageView = NULL;
     // TODO make depth optional
-    ImageView* depthImageView = NULL;
+    TexPtr depthImageView = NULL;
     Framebuffer* framebuffer = NULL;
     Pipeline* renderPipeline = NULL;
     PipelineLayout* renderPipelineLayout = NULL;
     ShaderDescriptorSetLayout* renderLayout = NULL;
     ShaderDescriptorPool* descriptorPool = NULL;
-    std::map<ImageView*, std::vector<ShaderDescriptorSet*>> descriptorSets;
+    // Map from texture name to descriptor sets
+    std::map<std::string, std::vector<ShaderDescriptorSet*>> descriptorSets;
     std::vector<Buffer*> guiUniformBuffers;
     std::vector<Buffer*> guiConstantBuffers;
     TextureSampler* sampler = NULL;

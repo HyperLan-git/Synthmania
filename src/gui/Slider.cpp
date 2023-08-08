@@ -1,6 +1,6 @@
 #include "Slider.hpp"
 
-Slider::Slider(ImageView* texture, std::string name, float width, float min,
+Slider::Slider(Texture texture, std::string name, float width, float min,
                float max, bool vertical)
     : MenuElement(texture, name) {
     this->min = min;

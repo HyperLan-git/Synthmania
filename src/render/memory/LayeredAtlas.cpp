@@ -1,15 +1,12 @@
 #include "LayeredAtlas.hpp"
 
-LayeredAtlas::LayeredAtlas(std::shared_ptr<Image> image, VkFormat format,
-                           VkImageAspectFlags aspectFlags, std::string name)
-    : img(image), device(image->getDevice()), layer(0), contents() {
-    this->views.reserve(image->getLayers());
-    for (uint32_t l = 0; l < image->getLayers(); l++)
-        this->views.emplace_back(image, format, aspectFlags, name, l);
-}
+LayeredAtlas::LayeredAtlas(std::shared_ptr<Image> image)
+    : img(image), device(image->getDevice()), layer(0) {}
 
-bool LayeredAtlas::fits(ImageView *image) const {
-    return layer < image->getImage()->getLayers();
+bool LayeredAtlas::fits(Image &image) const {
+    VkExtent3D e1 = this->img->getExtent(), e2 = image.getExtent();
+    if (e2.width > e1.width || e2.height > e1.height) return false;
+    return layer < this->img->getLayers();
 }
 
 uint32_t LayeredAtlas::append(Image &imageToCopy, CommandPool &pool) {
@@ -26,8 +23,11 @@ uint32_t LayeredAtlas::append(Image &imageToCopy, CommandPool &pool) {
 
 Image &LayeredAtlas::getImage() { return *this->img; }
 
-ImageView &LayeredAtlas::getTexture(uint32_t layer) {
-    return this->views[layer];
+TexPtr LayeredAtlas::getTexture(uint32_t layer, VkFormat format,
+                                VkImageAspectFlags aspectFlags,
+                                std::string name) {
+    return std::make_shared<ImageView>(this->img, format, aspectFlags, name,
+                                       layer);
 }
 
 LayeredAtlas::~LayeredAtlas() {}

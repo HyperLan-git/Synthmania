@@ -1,6 +1,8 @@
 #pragma once
 
 class ImageView;
+#include <memory>
+typedef std::shared_ptr<ImageView> TexPtr;
 
 #include "Image.hpp"
 
@@ -17,8 +19,8 @@ class ImageView {
     ImageView &operator=(const ImageView &img) = delete;
 
     VkImageView getView();
-    std::shared_ptr<Image> &getImage();
-    std::string getName();
+    Image &getImage();
+    std::string getName() const;
     Device &getDevice();
     ~ImageView();
 

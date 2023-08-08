@@ -19,10 +19,10 @@ int getOffset(Key key);
 class PartitionNotation : public Gui {
    public:
     PartitionNotation(std::string name, int64_t time, unsigned char pitch,
-                      ImageView* texture, Key key, KeySignature signature);
+                      Texture texture, Key key, KeySignature signature);
 
     PartitionNotation(std::string name, int64_t time, double verticalPosition,
-                      ImageView* texture);
+                      Texture texture);
 
     int64_t getTime();
 

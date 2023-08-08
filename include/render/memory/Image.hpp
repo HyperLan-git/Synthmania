@@ -18,6 +18,7 @@ class Image {
     Image &operator=(const Image &img) = delete;
 
     VkImage getImage();
+    VkImageLayout getLayout();
     Device &getDevice();
 
     /**
@@ -41,6 +42,7 @@ class Image {
    private:
     Device &device;
     VkImage image;
+    VkImageLayout currentLayout;
     std::unique_ptr<Memory> memory;
     VkExtent3D extent;
     uint32_t layers;

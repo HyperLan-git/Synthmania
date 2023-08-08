@@ -3,7 +3,6 @@
 TextHandler::TextHandler(VkPhysicalDevice* physicalDevice, Device& device,
                          unsigned int textureSize)
     : device(device) {
-    this->physicalDevice = physicalDevice;
     this->textureSize = textureSize;
     if (FT_Init_FreeType(&lib))
         throw std::runtime_error("Could not init freetype !");
@@ -71,9 +70,7 @@ void TextHandler::loadFonts(
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
             entry.second.size());
-        LayeredAtlas* atlas = new LayeredAtlas(
-            img, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT,
-            std::string("font_") + f->family_name);
+        LayeredAtlas* atlas = new LayeredAtlas(img);
 
         {
             CommandBuffer buf(*commandPool, true);
@@ -103,8 +100,13 @@ void TextHandler::loadFonts(
                 buf.submit(queue);
             }
 
-            Character chr{
-                .texture = atlas->getTexture(atlas->append(*ch, *commandPool))};
+            uint32_t layer = atlas->append(*ch, *commandPool);
+
+            TexPtr& ptr = this->textures.emplace_back(atlas->getTexture(
+                layer, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT,
+                std::string("font_") + f->family_name + '_' +
+                    std::to_string(layer)));
+            Character chr{.texture = Texture(ptr->getName())};
             chr.character = c;
             chr.width = f->glyph->bitmap.width + 2;
             chr.height = f->glyph->bitmap.rows + 2;
@@ -112,8 +114,7 @@ void TextHandler::loadFonts(
             chr.vAdvance = f->glyph->linearVertAdvance / 65536;
             chr.offsetTop = f->glyph->bitmap_top;
             chr.offsetLeft = f->glyph->bitmap_left;
-            this->textures.emplace_back(
-                &font.characters.emplace(c, chr).first->second.texture);
+            font.characters.emplace(c, chr);
             delete ch;
             i++;
         }
@@ -134,20 +135,17 @@ void TextHandler::loadFonts(
 
 std::vector<Font> TextHandler::getFonts() { return fonts; }
 
-std::vector<ImageView*> TextHandler::getTextures() { return textures; }
+std::vector<TexPtr> TextHandler::getTextures() { return textures; }
 
 unsigned int TextHandler::getTextureSize() { return textureSize; }
 
-std::optional<Character> TextHandler::getCharacter(std::string fontName,
-                                                   unsigned long code) {
-    for (Font f : fonts)
+Character TextHandler::getCharacter(std::string fontName, unsigned long code) {
+    for (Font& f : fonts)
         if (fontName.compare(f.name) == 0) {
-            if (!f.characters.count(code)) return std::optional<Character>();
-            Character c = f.characters.at(code);
-            return std::make_optional<Character>(std::move(c));
+            if (!f.characters.count(code)) return Character{};
+            return f.characters.at(code);
         }
-
-    return std::optional<Character>();
+    return Character{};
 }
 
 // TODO redo character drawing cause these coefficients fucked up man...
@@ -157,8 +155,9 @@ std::vector<Text> TextHandler::createText(std::string text,
     std::vector<Text> result;
     double conv = 64. * textureSize / size;
     for (int i = 0; i < text.size(); i++) {
-        Character c = *getCharacter(fontName, (unsigned long)text[i]);
-        Text t{.character = c};
+        Character c = getCharacter(fontName, (unsigned long)text[i]);
+        Text t;
+        t.character = c;
         t.pos = {start.x + (double)textureSize / conv / 2 - c.offsetLeft / conv,
                  start.y + (double)textureSize / conv / 2 - c.offsetTop / conv};
 
@@ -175,7 +174,7 @@ std::vector<Text> TextHandler::createText_w(std::wstring text,
     std::vector<Text> result;
     double conv = 64. * textureSize / size;
     for (int i = 0; i < text.size(); i++) {
-        Character c = *getCharacter(fontName, (unsigned long)text[i]);
+        Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t{.character = c};
         t.pos = {start.x + (double)textureSize / conv / 2 - c.offsetLeft / conv,
                  start.y + (double)textureSize / conv / 2 - c.offsetTop / conv};
@@ -194,7 +193,7 @@ std::vector<Text> TextHandler::createVerticalText(std::string text,
     std::vector<Text> result;
     double conv = 64. * this->textureSize / size;
     for (int i = 0; i < text.size(); i++) {
-        Character c = *getCharacter(fontName, (unsigned long)text[i]);
+        Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t{.character = c};
         t.pos = {start.x +
                      (double)(this->textureSize * 2 - c.width) / conv / 2 -
@@ -210,7 +209,7 @@ std::vector<Text> TextHandler::createVerticalText(std::string text,
 }
 
 TextHandler::~TextHandler() {
-    // TODO for (Font& f : fonts) delete f.textures;
+    for (Font& f : fonts) delete f.textures;
     FT_Done_FreeType(lib);
 }
 
@@ -225,7 +224,7 @@ std::vector<std::shared_ptr<Gui>> printString(std::string text,
         std::string name = entityNames;
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =
-            std::make_shared<Gui>(&t.character.texture, name.c_str());
+            std::make_shared<Gui>(t.character.texture, name.c_str());
         gui->setColor(color);
         gui->setNegate(1);
         gui->setPosition(t.pos);
@@ -272,7 +271,7 @@ std::vector<std::shared_ptr<Gui>> printShakingString(
         std::string name = entityNames;
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =
-            std::make_shared<Gui>(&t.character.texture, name.c_str());
+            std::make_shared<Gui>(t.character.texture, name.c_str());
         gui->addEffect(new GraphicalEffect(applyShaking,
                                            new float[1]{shake * (float)size}));
         gui->setColor(color);
@@ -293,7 +292,7 @@ std::vector<std::shared_ptr<Gui>> printVerticalString(
         std::string name = entityNames;
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =
-            std::make_shared<Gui>(&t.character.texture, name.c_str());
+            std::make_shared<Gui>(t.character.texture, name.c_str());
         gui->setColor(color);
         gui->setNegate(1);
         gui->setPosition(t.pos);
