@@ -3,9 +3,7 @@
 #include <cstdlib>
 #include <map>
 
-Renderer::Renderer(Game* game, Window* window) {
-    this->game = game;
-    this->window = window;
+Renderer::Renderer(Game& game, Window& window) : game(game), window(window) {
     initVulkan();
 }
 
@@ -31,7 +29,7 @@ void Renderer::initVulkan() {
     commandPool = new CommandPool(*device);
     setName(functions, *device, "Command Pool", VK_OBJECT_TYPE_COMMAND_POOL,
             commandPool->getPool());
-    textHandler = new TextHandler(&physicalDevice, *device, FONT_SIZE);
+    textHandler = std::make_unique<TextHandler>(*device, FONT_SIZE);
     createSwapchain();
     int i = 0;
     for (Framebuffer* f : swapchain->getFramebuffers()) {
@@ -106,7 +104,7 @@ void Renderer::createSwapchain() {
     VkExtent2D ext{};
     while (ext.width == 0) ext = getFramebufferSize();
     DebugFunc functions = getDebugFunctions(*instance);
-    swapchain = new Swapchain(*device, *window, surface);
+    swapchain = new Swapchain(*device, window, surface);
     setName(functions, *device, "Swapchain", VK_OBJECT_TYPE_SWAPCHAIN_KHR,
             swapchain->getSwapchain());
     renderImageView = std::make_shared<ImageView>(
@@ -185,7 +183,7 @@ Device& Renderer::getDevice() { return *device; }
 
 Instance& Renderer::getInstance() { return *instance; }
 
-TextHandler* Renderer::getTextHandler() { return textHandler; }
+TextHandler& Renderer::getTextHandler() { return *textHandler; }
 
 void Renderer::setStartTime(double start) { this->startTime = start; }
 
@@ -247,7 +245,7 @@ Renderer::~Renderer() {
     commandBuffers = std::vector<CommandBuffer>();
     delete commandPool;
 
-    delete textHandler;
+    textHandler.reset();
 
     device.reset();
 
@@ -796,22 +794,18 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer& commandBuffer,
                                   {VkClearValue{.color = {1, 1, 1, 0}},
                                    VkClearValue{.depthStencil = {1, 0}}});
 
-    Model* lastModel = NULL;
     Texture lastTexture;
-    std::vector<std::shared_ptr<Entity>> entities = game->getEntities();
+    std::vector<std::shared_ptr<Entity>> entities = game.getEntities();
     if (!entities.empty()) {
         commandBuffer.bindPipeline(*objModule->getPipeline());
         for (std::shared_ptr<Entity>& e : entities) {
-            Model* model = e->getModel();
+            Model& model = e->getModel();
             Texture t = e->getTexture();
-            if (lastModel != model) {
-                model->toVertexBuffer().copyTo(*vertexBuffer, queue,
-                                               *commandPool);
-                model->toIndicesBuffer().copyTo(*indexBuffer, queue,
-                                                *commandPool);
-                commandBuffer.bindVertexBuffers({vertexBuffer});
-                commandBuffer.bindIndexBuffer(*indexBuffer);
-            }
+            // XXX instanced 3d rendering...
+            model.toVertexBuffer().copyTo(*vertexBuffer, queue, *commandPool);
+            model.toIndicesBuffer().copyTo(*indexBuffer, queue, *commandPool);
+            commandBuffer.bindVertexBuffers({vertexBuffer});
+            commandBuffer.bindIndexBuffer(*indexBuffer);
             if (lastTexture != t) {
                 TexPtr texture = textures.find(t) != textures.end()
                                      ? textures[t]
@@ -821,8 +815,7 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer& commandBuffer,
                     *objModule->getDescriptorSet(texture, currentFrame));
             }
 
-            drawEntity(e, commandBuffer);
-            lastModel = model;
+            drawEntity(*e, commandBuffer);
             lastTexture = t;
         }
     }
@@ -834,9 +827,7 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer& commandBuffer,
     commandBuffer.bindVertexBuffers({vertexBuffer});
     commandBuffer.bindIndexBuffer(*indexBuffer);
 
-    std::vector<std::shared_ptr<Gui>> guis = game->getGuis();
-    for (auto iter = guis.begin(); iter != guis.end(); iter++) {
-        std::shared_ptr<Gui>& g = *iter;
+    for (std::shared_ptr<Gui>& g : game.getGuis()) {
         if (g->getRealPosition().x + g->getGraphicalPosition().x >
             2. + g->getSize().x)
             continue;
@@ -850,7 +841,7 @@ void Renderer::drawScreenCommandBuffer(CommandBuffer& commandBuffer,
                 *guiModule->getDescriptorSet(texture, currentFrame));
         }
 
-        drawGui(g, commandBuffer);
+        drawGui(*g, commandBuffer);
         lastTexture = t;
     }
 
@@ -889,36 +880,32 @@ void Renderer::recordCommandBuffer(CommandBuffer& commandBuffer,
     commandBuffer.end();
 }
 
-void Renderer::drawEntity(std::shared_ptr<Entity>& entity,
-                          CommandBuffer& commandBuffer) {
-    Model* model = entity->getModel();
+void Renderer::drawEntity(Entity& entity, CommandBuffer& commandBuffer) {
+    Model& model = entity.getModel();
 
-    ShaderData* data = entity->getShaderData();
+    ShaderData data = entity.getShaderData();
     commandBuffer.pushConstants(*objModule->getPipeline(),
-                                VK_SHADER_STAGE_VERTEX_BIT, 0, data->data,
-                                data->size);
+                                VK_SHADER_STAGE_VERTEX_BIT, 0, data.data,
+                                data.size);
 
-    commandBuffer.draw(model->getIndexes().size());
-    free(data->data);
-    delete data;
+    commandBuffer.draw(model.getIndexes().size());
+    free(data.data);
 }
 
-void Renderer::drawGui(std::shared_ptr<Gui>& gui,
-                       CommandBuffer& commandBuffer) {
+void Renderer::drawGui(Gui& gui, CommandBuffer& commandBuffer) {
     Model* model = guiModel;
 
-    ShaderData* data = gui->getShaderData();
+    ShaderData data = gui.getShaderData();
     commandBuffer.pushConstants(*guiModule->getPipeline(),
-                                VK_SHADER_STAGE_VERTEX_BIT, 0, data->data,
-                                data->size);
+                                VK_SHADER_STAGE_VERTEX_BIT, 0, data.data,
+                                data.size);
 
     commandBuffer.draw(model->getIndexes().size());
-    free(data->data);
-    delete data;
+    free(data.data);
 }
 
 void Renderer::updateUniformBuffer(uint32_t currentImage) {
-    double time_from_start = game->getCurrentTimeMicros() / 1000000.;
+    double time_from_start = game.getCurrentTimeMicros() / 1000000.;
     float x = 0, y = 0;
 
     float ratio =
@@ -932,21 +919,21 @@ void Renderer::updateUniformBuffer(uint32_t currentImage) {
 
     void* p = &ubo;
 
-    if (!game->getEntities().empty()) uniformBuffers[currentImage]->fill(p);
+    if (!game.getEntities().empty()) uniformBuffers[currentImage]->fill(p);
 
-    if (game->getGuis().empty()) return;
+    if (game.getGuis().empty()) return;
     ubo.view = glm::mat4(1.f);
     ubo.proj = glm::orthoLH_ZO<float>(-ratio, ratio, -1, 1, 0.f, 1.f);
 
     p = &ubo;
-    size_t sz = game->updateUBO(p);
+    size_t sz = game.updateUBO(p);
     guiUniformBuffers[currentImage]->fill(p);
     ubo.view = glm::mat4(1.f);
     ubo.proj = glm::orthoLH_ZO<float>(-.5, .5, -.5, .5, 0.f, 1.f);
     p = &ubo;
-    sz = game->updateFinalUBO(p);
+    sz = game.updateFinalUBO(p);
     uniformBuffer->fill(p);
-    if (p != &ubo) game->freeFinalUBO(p);
+    if (p != &ubo) game.freeFinalUBO(p);
 }
 
 glm::vec2 Renderer::getVirtPos(glm::vec2 realPos) {
@@ -975,15 +962,15 @@ VkExtent2D Renderer::getFramebufferSize() {
     if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
             this->physicalDevice, this->surface, &cap) != VK_SUCCESS) {
         VkExtent2D res;
-        window->getFramebufferSize(&res.width, &res.height);
+        window.getFramebufferSize(&res.width, &res.height);
         return res;
     }
     return cap.currentExtent;
 }
 
 void Renderer::drawFrame() {
-    if (window->hasResized()) {
-        window->setResized(false);
+    if (window.hasResized()) {
+        window.setResized(false);
         recreateSwapchain();
     }
     inFlightFences[currentFrame]->wait();
@@ -1033,8 +1020,8 @@ void Renderer::drawFrame() {
     result = vkQueuePresentKHR(queue.getQueue(), &presentInfo);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-        window->hasResized()) {
-        window->setResized(false);
+        window.hasResized()) {
+        window.setResized(false);
         recreateSwapchain();
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");

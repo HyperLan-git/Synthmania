@@ -12,7 +12,7 @@ class OptionMenu;
 
 class OptionMenu : public Menu {
    public:
-    OptionMenu(Game* game);
+    OptionMenu(Game& game);
 
     virtual void show() override;
 
@@ -28,5 +28,5 @@ class OptionMenu : public Menu {
         bufSize, bufAmt, pluginFolders;
     std::shared_ptr<Selector> midiDevice, audioDevice, notation, skin;
     std::shared_ptr<Checkbox> fullscreen;
-    Options* options;
+    Options& options;
 };

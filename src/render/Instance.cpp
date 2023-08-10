@@ -120,9 +120,9 @@ Instance::~Instance() {
     vkDestroyInstance(instance, NULL);
 }
 
-VkSurfaceKHR Instance::createSurface(Window* window) {
+VkSurfaceKHR Instance::createSurface(Window& window) {
     VkSurfaceKHR surface;
-    if (window->createSurface(this, NULL, &surface) != VK_SUCCESS)
+    if (window.createSurface(this, NULL, &surface) != VK_SUCCESS)
         throw std::runtime_error("failed to create window surface!");
 
     return surface;

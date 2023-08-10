@@ -1,9 +1,6 @@
 #include "Menu.hpp"
 
-Menu::Menu(Game* g) {
-    this->game = g;
-    this->selected = NULL;
-}
+Menu::Menu(Game& g) : game(g) {}
 
 const std::vector<std::shared_ptr<Button>>& Menu::getButtons() {
     return buttons;
@@ -27,23 +24,21 @@ void Menu::unselect() {
 }
 
 void Menu::show() {
-    for (std::shared_ptr<Button>& b : buttons) game->addTGui(b);
-    for (std::shared_ptr<MenuElement>& e : elements) game->addTGui(e);
-    for (std::shared_ptr<Gui>& g : guis) game->addGui(g);
-    game->getWindow()->setTextcallback([](GLFWwindow* window, unsigned int c) {
+    for (std::shared_ptr<Button>& b : buttons) game.addTGui(b);
+    for (std::shared_ptr<MenuElement>& e : elements) game.addTGui(e);
+    for (std::shared_ptr<Gui>& g : guis) game.addGui(g);
+    game.getWindow().setTextcallback([](GLFWwindow* window, unsigned int c) {
         Game* g = (Game*)(glfwGetWindowUserPointer(window));
         if (!g) return;
-        Menu* menu = dynamic_cast<Menu*>(g->getCurrentMenu());
-        if (!menu) return;
-        menu->textCallback(window, c);
+        Menu& menu = g->getCurrentMenu();
+        menu.textCallback(window, c);
     });
-    game->getWindow()->setKeycallback(
+    game.getWindow().setKeycallback(
         [](GLFWwindow* window, int key, int scancode, int action, int mods) {
             Game* g = (Game*)(glfwGetWindowUserPointer(window));
             if (g == NULL) return;
-            Menu* menu = g->getCurrentMenu();
-            if (menu == NULL) return;
-            menu->keyCallback(window, key, scancode, action, mods);
+            Menu& menu = g->getCurrentMenu();
+            menu.keyCallback(window, key, scancode, action, mods);
         });
 }
 

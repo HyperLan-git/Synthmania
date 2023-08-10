@@ -43,8 +43,7 @@ void Slider::onPressed(glm::vec2 pos) {
 
 void Slider::onClicked(glm::vec2 pos) {}
 
-ShaderData* Slider::getShaderData() const {
-    ShaderData* data = new ShaderData();
+ShaderData Slider::getShaderData() const {
     GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
     glm::vec3 p = glm::vec3(graphicalPosition, 0);
     p += position;
@@ -55,9 +54,7 @@ ShaderData* Slider::getShaderData() const {
     edata->size = size;
     edata->color = color;
     if (negate) edata->color.a *= -1;
-    data->data = edata;
-    data->size = sizeof(GuiData);
-    return data;
+    return {edata, sizeof(GuiData)};
 }
 
 Slider::~Slider() {}

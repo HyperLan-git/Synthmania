@@ -11,9 +11,8 @@ bool ParentedGui::update(int64_t time) {
     return std::shared_ptr<Gui>(parent)->isDestroyed();
 }
 
-ShaderData* ParentedGui::getShaderData() const {
+ShaderData ParentedGui::getShaderData() const {
     if (parent.expired()) return Gui::getShaderData();
-    ShaderData* data = new ShaderData();
     GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
     std::shared_ptr<Gui> par(parent);
     float rot = par->getRotation();
@@ -31,9 +30,7 @@ ShaderData* ParentedGui::getShaderData() const {
     color.b *= this->color.b;
     if (par->getNegate() != this->negate) color.a *= -1;
     edata->color = color;
-    data->data = edata;
-    data->size = sizeof(GuiData);
-    return data;
+    return {edata, sizeof(GuiData)};
 }
 
 glm::vec2 ParentedGui::getRealPosition() const {

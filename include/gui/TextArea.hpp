@@ -13,7 +13,7 @@ typedef bool (*TextPredicate)(std::wstring, int, unsigned int);
 
 class TextArea : public MenuElement {
    public:
-    TextArea(Texture texture, std::string name, TextHandler* handler,
+    TextArea(Texture texture, std::string name, TextHandler& handler,
              std::string fontName, int chars, int maxChars,
              unsigned long cursor, float textSize,
              TextPredicate textPredicate = truePredicate);
@@ -36,7 +36,7 @@ class TextArea : public MenuElement {
     void recalculateCursor();
 
    private:
-    TextHandler* handler;
+    TextHandler& handler;
     std::wstring text;
     std::string fontName;
     std::vector<std::shared_ptr<Gui>> textContents;

@@ -1,6 +1,6 @@
 #include "Selector.hpp"
 
-Selector::Selector(Texture texture, Texture selectTexture, Game* game,
+Selector::Selector(Texture texture, Texture selectTexture, Game& game,
                    std::string name, std::vector<std::string> elements,
                    double textSize, std::string font, int textLimit)
     : MenuElement(texture, name) {
@@ -11,7 +11,7 @@ Selector::Selector(Texture texture, Texture selectTexture, Game* game,
         std::vector<std::pair<Text, std::shared_ptr<Gui>>> vec;
         if (e.length() > textLimit) e = e.substr(0, textLimit - 2) + "..";
         for (Text t :
-             game->getTextHandler()->createText(e, font, textSize, {0, 0})) {
+             game.getTextHandler().createText(e, font, textSize, {0, 0})) {
             std::shared_ptr<Gui> g =
                 std::make_shared<Gui>(t.character.texture, name + "_text");
             g->setColor({1, 1, 1, 0});

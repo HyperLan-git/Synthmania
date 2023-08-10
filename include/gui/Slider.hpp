@@ -18,7 +18,7 @@ class Slider : public MenuElement {
 
     virtual void onClicked(glm::vec2 pos);
 
-    virtual ShaderData* getShaderData() const;
+    virtual ShaderData getShaderData() const;
 
     virtual ~Slider();
 

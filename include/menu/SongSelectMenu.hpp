@@ -9,7 +9,7 @@ class SongSelectMenu;
 
 class SongSelectMenu : public Menu {
    public:
-    SongSelectMenu(Game* g, std::string folder);
+    SongSelectMenu(Game& g, std::string folder);
 
     virtual void show() override;
 

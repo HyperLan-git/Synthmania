@@ -12,7 +12,7 @@ class Menu;
 
 class Menu {
    public:
-    Menu(Game *g);
+    Menu(Game &g);
 
     const std::vector<std::shared_ptr<Button>> &getButtons();
     const std::vector<std::shared_ptr<MenuElement>> &getMenuElements();
@@ -39,9 +39,9 @@ class Menu {
     virtual ~Menu();
 
    protected:
+    Game &game;
     std::vector<std::shared_ptr<Gui>> guis;
     std::vector<std::shared_ptr<MenuElement>> elements;
     std::vector<std::shared_ptr<Button>> buttons;
     std::shared_ptr<MenuElement> selected;
-    Game *game;
 };

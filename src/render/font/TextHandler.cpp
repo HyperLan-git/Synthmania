@@ -1,7 +1,6 @@
 #include "TextHandler.hpp"
 
-TextHandler::TextHandler(VkPhysicalDevice* physicalDevice, Device& device,
-                         unsigned int textureSize)
+TextHandler::TextHandler(Device& device, unsigned int textureSize)
     : device(device) {
     this->textureSize = textureSize;
     if (FT_Init_FreeType(&lib))
@@ -9,7 +8,7 @@ TextHandler::TextHandler(VkPhysicalDevice* physicalDevice, Device& device,
 }
 
 Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
-                                  CommandPool* commandPool) {
+                                  CommandPool& commandPool) {
     FT_GlyphSlot glyphSlot = face->glyph;
     FT_UInt i = FT_Get_Char_Index(face, character);
     FT_Load_Glyph(face, i, FT_LOAD_DEFAULT);
@@ -39,7 +38,7 @@ Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
         }
 
     {
-        CommandBuffer commandBuffer(*commandPool, true);
+        CommandBuffer commandBuffer(commandPool, true);
         commandBuffer.begin();
 
         commandBuffer.setImageLayout(*image, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -55,7 +54,7 @@ Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
 
 void TextHandler::loadFonts(
     std::map<std::string, std::vector<unsigned long>> fontsToLoad,
-    CommandPool* commandPool) {
+    CommandPool& commandPool) {
     Queue queue = *device.getQueue("secondary");
     for (const auto& entry : fontsToLoad) {
         FT_Face f;
@@ -73,7 +72,7 @@ void TextHandler::loadFonts(
         LayeredAtlas* atlas = new LayeredAtlas(img);
 
         {
-            CommandBuffer buf(*commandPool, true);
+            CommandBuffer buf(commandPool, true);
             buf.begin();
             buf.setImageLayout(atlas->getImage(), VK_IMAGE_LAYOUT_UNDEFINED,
                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0,
@@ -92,7 +91,7 @@ void TextHandler::loadFonts(
             charName.append(std::to_string(c));
             Image* ch = loadCharacter(f, c, commandPool);
             {
-                CommandBuffer buf(*commandPool, true);
+                CommandBuffer buf(commandPool, true);
                 buf.begin();
                 buf.setImageLayout(*ch, VK_IMAGE_LAYOUT_UNDEFINED,
                                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
@@ -100,7 +99,7 @@ void TextHandler::loadFonts(
                 buf.submit(queue);
             }
 
-            uint32_t layer = atlas->append(*ch, *commandPool);
+            uint32_t layer = atlas->append(*ch, commandPool);
 
             TexPtr& ptr = this->textures.emplace_back(atlas->getTexture(
                 layer, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT,
@@ -119,7 +118,7 @@ void TextHandler::loadFonts(
             i++;
         }
         {
-            CommandBuffer buf(*commandPool, true);
+            CommandBuffer buf(commandPool, true);
             buf.begin();
             buf.setImageLayout(atlas->getImage(),
                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -214,13 +213,13 @@ TextHandler::~TextHandler() {
 }
 
 std::vector<std::shared_ptr<Gui>> printString(std::string text,
-                                              TextHandler* textHandler,
+                                              TextHandler& textHandler,
                                               std::string entityNames,
                                               std::string font, double size,
                                               glm::vec2 pos, glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
-    for (Text t : textHandler->createText(text, font, size, pos)) {
+    for (Text t : textHandler.createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =
@@ -235,7 +234,7 @@ std::vector<std::shared_ptr<Gui>> printString(std::string text,
 }
 
 std::vector<std::shared_ptr<Gui>> printShadowedString(
-    std::string text, TextHandler* textHandler, std::string entityNames,
+    std::string text, TextHandler& textHandler, std::string entityNames,
     std::string font, double size, glm::vec2 pos, glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result, result2;
     glm::vec2 shadowPos = pos;
@@ -262,12 +261,12 @@ std::vector<std::shared_ptr<Gui>> printShadowedString(
 }
 
 std::vector<std::shared_ptr<Gui>> printShakingString(
-    std::string text, TextHandler* textHandler, std::string entityNames,
+    std::string text, TextHandler& textHandler, std::string entityNames,
     std::string font, double size, glm::vec2 pos, float shake,
     glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
-    for (Text t : textHandler->createText(text, font, size, pos)) {
+    for (Text t : textHandler.createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =
@@ -284,11 +283,11 @@ std::vector<std::shared_ptr<Gui>> printShakingString(
 }
 
 std::vector<std::shared_ptr<Gui>> printVerticalString(
-    std::string text, TextHandler* textHandler, std::string entityNames,
+    std::string text, TextHandler& textHandler, std::string entityNames,
     std::string font, double size, glm::vec2 pos, glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
-    for (Text t : textHandler->createText(text, font, size, pos)) {
+    for (Text t : textHandler.createText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =

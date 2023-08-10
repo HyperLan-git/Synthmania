@@ -16,7 +16,7 @@ class Synthmania;
 
 class PlayMode : public Gamemode {
    public:
-    PlayMode(Synthmania *game, std::string songFolder);
+    PlayMode(Synthmania &game, std::string songFolder);
 
     virtual bool update() override;
 
@@ -49,13 +49,13 @@ class PlayMode : public Gamemode {
                             int mods);
 
    private:
-    Synthmania *game;
+    Synthmania &game;
 
     TrackPartition partition;
     Chart chart;
     Diff diff;
     // Discord reference
-    ChartHandler *mod = NULL;
+    std::unique_ptr<ChartHandler> mod;
 
     std::vector<std::weak_ptr<Note>> notes;
     AudioSource *music = NULL;

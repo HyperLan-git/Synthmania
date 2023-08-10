@@ -26,7 +26,7 @@ class Instance : public boost::noncopyable {
                  std::vector<const char*>(),
              std::string logFile = "a.log");
 
-    VkSurfaceKHR createSurface(Window* window);
+    VkSurfaceKHR createSurface(Window& window);
     void destroySurface(VkSurfaceKHR surface);
 
     VkInstance getInstance();

@@ -4,8 +4,8 @@
 Synthmania::Synthmania(std::string skin, std::string config) {
     this->skin = skin;
     this->options = std::make_unique<Options>("resources/default.json", config);
-    handler = new MidiHandler();
-    audio = new AudioHandler();
+    handler = std::make_unique<MidiHandler>();
+    audio = std::make_unique<AudioHandler>();
     textures = readTextures(std::string(skin).append("/skin.json"));
     for (auto &elem : textures)
         elem.second = std::string(skin).append("/").append(elem.second);
@@ -17,6 +17,7 @@ void Synthmania::resetAudio() {
     audio->clearSounds();
     // TODO json file again xd
     audio->addSound("click", new AudioBuffer("resources/sounds/click.wav"));
+    // TODO handle soundfonts?
     audio->addSound("piano", new AudioBuffer("resources/sounds/painoC4.wav"));
     audio->addSound("kick", new AudioBuffer("resources/sounds/kick.wav"));
     audio->addSound("snare", new AudioBuffer("resources/sounds/snare.wav"));
@@ -30,23 +31,22 @@ void Synthmania::resetAudio() {
 
 void Synthmania::init() {
     Game::init();
-    this->menus.emplace("main", new MainMenu(this));
+    this->menus.emplace("main", std::make_shared<MainMenu>(*this));
     // TODO song folder as option
-    this->menus.emplace("song select",
-                        new SongSelectMenu(this, "resources/songs"));
-    this->menus.emplace("options", new OptionMenu(this));
+    this->menus.emplace("song select", std::make_shared<SongSelectMenu>(
+                                           *this, "resources/songs"));
+    this->menus.emplace("options", std::make_shared<OptionMenu>(*this));
 }
 
 void Synthmania::loadSong(std::string songFolder) {
-    setGamemode(new PlayMode(this, songFolder));
+    setGamemode(std::make_shared<PlayMode>(*this, songFolder));
 }
 
-void Synthmania::setGamemode(Gamemode *gamemode) {
-    if (this->gamemode) delete this->gamemode;
+void Synthmania::setGamemode(std::shared_ptr<Gamemode> gamemode) {
     this->gamemode = gamemode;
 }
 
-Options *Synthmania::getOptions() { return options.get(); }
+Options &Synthmania::getOptions() { return *options; }
 
 void Synthmania::addGui(std::shared_ptr<Gui> &gui) {
     Game::addGui(gui);
@@ -78,10 +78,8 @@ void Synthmania::update() {
                                return e->update(time_from_start);
                            }),
             this->entities.end());
-    if (gamemode && gamemode->update()) {
-        delete gamemode;
-        gamemode = NULL;
-    }
+    if (gamemode && gamemode->update()) gamemode.reset();
+
     std::this_thread::yield();
 }
 // TODO find a good way to handle fullscreen (link options to window creation)
@@ -142,17 +140,17 @@ void Synthmania::freeFinalUBO(void *&ubo) {
 }
 
 Synthmania::~Synthmania() {
-    if (gamemode) delete gamemode;
+    gamemode.reset();
 
-    delete handler;
+    handler.reset();
 }
 
 float Synthmania::getMusicVolume() { return musicVol; }
 int64_t Synthmania::getAudioLeniency() { return audioLeniency; }
 int64_t Synthmania::getStartTime() { return startTime; }
-MidiHandler *Synthmania::getMidiHandler() { return handler; }
-AudioHandler *Synthmania::getAudioHandler() { return audio; }
-Gamemode *Synthmania::getGamemode() { return gamemode; }
+MidiHandler &Synthmania::getMidiHandler() { return *handler; }
+AudioHandler &Synthmania::getAudioHandler() { return *audio; }
+Gamemode &Synthmania::getGamemode() { return *gamemode; }
 
 #ifdef VST
 std::string Synthmania::getPlugin(std::string name) {

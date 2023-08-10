@@ -7,7 +7,7 @@ class MainMenu;
 
 class MainMenu : public Menu {
    public:
-    MainMenu(Game *g);
+    MainMenu(Game &g);
 
     virtual void show() override;
 

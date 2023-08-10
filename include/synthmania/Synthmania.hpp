@@ -41,7 +41,7 @@ class Synthmania : public Game {
 
     void loadSong(std::string songFolder);
 
-    void setGamemode(Gamemode *gamemode);
+    void setGamemode(std::shared_ptr<Gamemode> gamemode);
 
     void resetAudio();
 
@@ -57,9 +57,9 @@ class Synthmania : public Game {
 
     int64_t getStartTime();
 
-    Options *getOptions();
-    MidiHandler *getMidiHandler();
-    AudioHandler *getAudioHandler();
+    Options &getOptions();
+    MidiHandler &getMidiHandler();
+    AudioHandler &getAudioHandler();
 
     float getMusicVolume();
     int64_t getAudioLeniency();
@@ -77,7 +77,7 @@ class Synthmania : public Game {
 #ifdef VST
     std::string getPlugin(std::string plugin);
 #endif
-    Gamemode *getGamemode();
+    Gamemode &getGamemode();
 
     bool isFullscreen();
 
@@ -86,9 +86,9 @@ class Synthmania : public Game {
     ~Synthmania();
 
    private:
-    MidiHandler *handler;
+    std::unique_ptr<MidiHandler> handler;
 
-    Gamemode *gamemode = NULL;
+    std::shared_ptr<Gamemode> gamemode;
 
     std::string skin;
     std::map<unsigned char, unsigned char> midiMapping;

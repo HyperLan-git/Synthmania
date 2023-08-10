@@ -14,11 +14,10 @@ Game::Game() {
 }
 
 void Game::init() {
-    CommandPool *pool = new CommandPool(renderer->getDevice());
-    renderer->getTextHandler()->loadFonts(fontsToLoad, pool);
+    CommandPool pool(renderer->getDevice());
+    renderer->getTextHandler().loadFonts(fontsToLoad, pool);
     renderer->loadTextures(textures);
     window->setWindowUserPointer(this);
-    delete pool;
 }
 
 void Game::resetScene() {
@@ -89,9 +88,9 @@ void Game::setTimeMicros(int64_t time) {
     relativeTime -= time - getCurrentTimeMicros();
 }
 
-Menu *Game::getMenu(std::string menu) { return menus[menu]; }
+Menu &Game::getMenu(std::string menu) { return *menus[menu]; }
 
-Menu *Game::getCurrentMenu() { return menu; }
+Menu &Game::getCurrentMenu() { return *menu; }
 
 void Game::resetClock() {
     this->begTime = std::chrono::high_resolution_clock::now();
@@ -116,14 +115,18 @@ int64_t Game::getCurrentTimeMicros() {
            (int64_t)relativeTime;
 }
 
-void Game::setRenderer(Renderer *renderer) { this->renderer = renderer; }
-void Game::setWindow(Window *window) { this->window = window; }
+void Game::setRenderer(std::unique_ptr<Renderer> &&renderer) {
+    this->renderer = std::move(renderer);
+}
+void Game::setWindow(std::unique_ptr<Window> &&window) {
+    this->window = std::move(window);
+}
 
-Window *Game::getWindow() { return this->window; }
+Window &Game::getWindow() { return *this->window; }
 
-Renderer *Game::getRenderer() { return renderer; }
+Renderer &Game::getRenderer() { return *renderer; }
 
-TextHandler *Game::getTextHandler() { return renderer->getTextHandler(); }
+TextHandler &Game::getTextHandler() { return renderer->getTextHandler(); }
 
 // TODO replace with render module thingy thing
 size_t Game::updateUBO(void *&ubo) { return sizeof(UniformBufferObject); }
@@ -155,12 +158,12 @@ void Game::playSound(std::string sound) { this->audio->playSound(sound); }
 Game::~Game() {
     resetScene();
 
-    for (auto entry : menus) delete entry.second;
+    menus.clear();
 
-    delete audio;
+    audio.reset();
 
-    delete renderer;
-    delete window;
+    renderer.reset();
+    window.reset();
 
     glfwTerminate();
 }

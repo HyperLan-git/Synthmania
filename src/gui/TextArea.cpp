@@ -8,14 +8,14 @@ bool integerPredicate(std::wstring cur, int pos, unsigned int text) {
     return text >= '0' && text <= '9';
 }
 
-TextArea::TextArea(Texture texture, std::string name, TextHandler* handler,
+TextArea::TextArea(Texture texture, std::string name, TextHandler& handler,
                    std::string fontName, int chars, int maxChars,
                    unsigned long cursor, float textSize,
                    TextPredicate textPredicate)
     : MenuElement(texture, name),
-      cursorChar(handler->createText_w(std::wstring({(wchar_t)cursor, 0}),
-                                       fontName, textSize * .9, {0, 0})[0]) {
-    this->handler = handler;
+      cursorChar(handler.createText_w(std::wstring({(wchar_t)cursor, 0}),
+                                      fontName, textSize * .9, {0, 0})[0]),
+      handler(handler) {
     this->pos = 0;
     this->cursorPos = 0;
     this->shown = chars;
@@ -150,10 +150,10 @@ void TextArea::recalculateText() {
     std::wstring sub = text.substr(pos);
     int i = 0;
     for (Text t :
-         handler->createText_w(sub, fontName, textSize,
-                               {position.x - size.x * .5 + cursor->getSize().x,
-                                position.y + size.y * .25})) {
-        std::shared_ptr<Gui> g = this->textContents[i++];
+         handler.createText_w(sub, fontName, textSize,
+                              {position.x - size.x * .5 + cursor->getSize().x,
+                               position.y + size.y * .25})) {
+        std::shared_ptr<Gui>& g = this->textContents[i++];
         g->setTexture(t.character.texture);
         g->setPosition(t.pos);
         g->setSize(t.size);

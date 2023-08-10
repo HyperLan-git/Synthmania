@@ -1,14 +1,14 @@
 #include "PlayMode.hpp"
 
-PlayMode::PlayMode(Synthmania *game, std::string songFolder)
+PlayMode::PlayMode(Synthmania &game, std::string songFolder)
     : game(game), songFolder(songFolder) {
-    game->getWindow()->setKeycallback(PlayMode::keyCallback);
+    game.getWindow().setKeycallback(PlayMode::keyCallback);
     std::string json = songFolder;
     json.append("/sdata.json");
     chart = readChart(json.c_str());
     diff = chart.diffs[0];
-    game->resetClock();  //<==> game->startTime = chart.offset;
-    Renderer *renderer = game->getRenderer();
+    game.resetClock();  //<==> game->startTime = chart.offset;
+    Renderer &renderer = game.getRenderer();
     // TODO could be in a function
     if (chart.animation.compare("None") != 0) {
         std::cout << "loading animation" << std::endl;
@@ -23,7 +23,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
             if (e != NULL)
                 std::cerr << "Error while loading anim ! " << e << "\n";
             else
-                this->mod = f(this);  // Shit
+                this->mod = std::unique_ptr<ChartHandler>(f(this));  // Shit
         }
         std::string v = this->mod->getVertShaderCode(),
                     g = this->mod->getGeomShaderCode(),
@@ -34,20 +34,20 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
         VkDeviceSize UBOSize = this->mod->getUBOSize(),
                      fUBOSize = this->mod->getFinalUBOSize();
         if (!v.empty() || !g.empty() || !f.empty())
-            renderer->loadGuiShaders(v, g, f, UBOSize);
+            renderer.loadGuiShaders(v, g, f, UBOSize);
         if (!v_f.empty() || !g_f.empty() || !f_f.empty())
-            renderer->loadFinalShaders(v_f, g_f, f_f, fUBOSize);
+            renderer.loadFinalShaders(v_f, g_f, f_f, fUBOSize);
     }
     std::string path = songFolder;
     path.append("/");
     path.append(diff.midi);
-    partition = game->getMidiHandler()->readMidi(path.c_str());
+    partition = game.getMidiHandler().readMidi(path.c_str());
     this->drum = partition.drumming;
     Model model =
-        loadFromFile(renderer->getDevice(), "resources/models/room.obj");
+        loadFromFile(renderer.getDevice(), "resources/models/room.obj");
     std::shared_ptr<Entity> la_creatura76 = std::make_shared<Entity>(
-        &renderer->addModel(std::move(model)), Texture("room"), "Bob");
-    game->addEntity(la_creatura76);
+        renderer.addModel(std::move(model)), Texture("room"), "Bob");
+    game.addEntity(la_creatura76);
     Key k = drum ? Key::DRUM : Key::SOL;
     std::string keyName = (drum) ? "drum_key" : "sol_key";
     std::shared_ptr<Gui> part = std::make_shared<Gui>(Texture("partition"),
@@ -71,19 +71,19 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
             key->setSize({0.8f, 0.8f});
             break;
     }
-    game->addGui(bg);
-    game->addGui(part);
-    game->addGui(key);
+    game.addGui(bg);
+    game.addGui(part);
+    game.addGui(key);
     bg->setSize({5, 30});
     part->setSize({5, 1});
     precision->setSize({1.5f, 0.5f});
     precision->setPosition({0, 0.9f});
     std::shared_ptr<Judgement> bar = std::make_shared<Judgement>(
-        "judgement", Texture("judgement"), partition);
+        "judgement", Texture("judgement_line"), partition);
     line = bar;
     bar->setPosition({-1.3f, bar->getPosition().y});
     bar->setSize({0.25f, 1.f});
-    game->addTGui(bar);
+    game.addTGui(bar);
     std::vector<std::shared_ptr<Gui>> tempNotes;
     // TODO make this less cringe
     {
@@ -124,7 +124,7 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
                             Texture("bar"));
                     readability->setPosition({0, readability->getPosition().y});
                     readability->setSize({0.25, 0.15});
-                    game->addTGui(readability);
+                    game.addTGui(readability);
                 }
             }
 
@@ -184,20 +184,20 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
 
         if (tmp.size() > 0) sortGuis(tmp, cmpGuisByTexture);
         if (tempNotes.size() > 0) sortGuis(tempNotes, cmpGuisByTexture);
-        for (std::shared_ptr<Gui> &note : tmp) game->addGui(note);
+        for (std::shared_ptr<Gui> &note : tmp) game.addGui(note);
     }
-    for (std::shared_ptr<Gui> &gui : tempNotes) game->addGui(gui);
+    for (std::shared_ptr<Gui> &gui : tempNotes) game.addGui(gui);
     music = NULL;
-    AudioHandler *audio = game->getAudioHandler();
+    AudioHandler &audio = game.getAudioHandler();
     if (chart.audio.compare("None") != 0) {
         std::string wav = songFolder;
         wav.append("/");
         wav.append(chart.audio);
         AudioBuffer *buffer = new AudioBuffer(wav);
 
-        audio->addSound("song", buffer);
-        music = audio->playSound("song");
-        music->setGain(game->getMusicVolume());
+        audio.addSound("song", buffer);
+        music = audio.playSound("song");
+        music->setGain(game.getMusicVolume());
         music->setDestroyOnFinished(false);
     }
 #ifdef VST
@@ -218,15 +218,13 @@ PlayMode::PlayMode(Synthmania *game, std::string songFolder)
     text.append(chart.artist);
 
     for (std::shared_ptr<Gui> &g :
-         printShadowedString(text, renderer->getTextHandler(), "title_",
+         printShadowedString(text, renderer.getTextHandler(), "title_",
                              "Stupid", 11, {-1.75, -.9}, {.2, .2, 1, 1}))
-        game->addGui(g);
+        game.addGui(g);
 
-    /*for (Gui *g : printShakingString("ANGERY", renderer, "scary_", "Stupid",
-       22, {0, 0}, .001, {1, 0, 0, 1})) game->addGui(g);*/
     // Needs to be above everything else
-    game->addGui(precision);
-    game->setTimeMicros(-chart.offset);
+    game.addGui(precision);
+    game.setTimeMicros(-chart.offset);
 }
 
 bool PlayMode::update() {
@@ -234,7 +232,7 @@ bool PlayMode::update() {
         (music == NULL && this->notes.size() == 0)) {
         return true;
     }
-    int64_t time_from_start = game->getCurrentTimeMicros();
+    int64_t time_from_start = game.getCurrentTimeMicros();
     // std::cout << std::dec << time_from_start << " ";
     if (autoPlay)
         for (std::weak_ptr<Note> &note : notes) {
@@ -270,7 +268,7 @@ bool PlayMode::update() {
     }
 
     if (!autoPlay) {
-        Message m = game->getMidiHandler()->getMessage();
+        Message m = game.getMidiHandler().getMessage();
         while (m.type != libremidi::message_type::INVALID) {
             if (m.type == libremidi::message_type::NOTE_ON) {
                 short got_one = false;
@@ -300,7 +298,7 @@ bool PlayMode::update() {
                     }
                 }
             }
-            m = game->getMidiHandler()->getMessage();
+            m = game.getMidiHandler().getMessage();
         }
     }
     this->notes.erase(
@@ -309,7 +307,7 @@ bool PlayMode::update() {
         this->notes.end());
     if (music != NULL) {  // audio latency study
         long long j = music->getSampleOffset() * 1000000L;
-        int64_t a = game->getCurrentTimeMicros();
+        int64_t a = game.getCurrentTimeMicros();
         int64_t res = j / (uint64_t)44100 - chart.offset;
         int err;
         if ((err = alGetError()) != AL_NO_ERROR)
@@ -321,21 +319,21 @@ bool PlayMode::update() {
         //           << a << "\n";
         // If music gets more than 10ms off reset it
         // Most people can play with 10ms off right? (I'm sorry rythm gamers)
-        if (b > game->getAudioLeniency()) game->setTimeMicros(a);
+        if (b > game.getAudioLeniency()) game.setTimeMicros(a);
     }
     return false;
 }
 
 void PlayMode::noteHit(const std::shared_ptr<Note> &note) {
     if (note->getStatus() != WAITING) return;
-    int64_t time = game->getCurrentTimeMicros();
+    int64_t time = game.getCurrentTimeMicros();
     int64_t delta = autoPlay ? 0 : time - note->getTime();
     std::shared_ptr<Gui> prec = std::make_shared<Precision>(
         Texture("precision_tick"), "tick", time, delta);
     prec->setSize({0.1f, 0.4f});
     prec->setPosition({0, 0.9f});
     prec->updateGraphics(time);
-    game->addGui(prec);
+    game.addGui(prec);
     delta = std::clamp<int64_t>(delta, 0, note->getTotalDuration() / 2);
     // TODO velocity
     if (!drum) {
@@ -373,13 +371,13 @@ void PlayMode::noteHit(const std::shared_ptr<Note> &note) {
 
 void PlayMode::noteMiss(const std::shared_ptr<Note> &note) {
     if (note->getStatus() != WAITING) return;
-    int64_t time = game->getCurrentTimeMicros();
+    int64_t time = game.getCurrentTimeMicros();
     note->setStatus(MISSED);
     note->kill(time);
 
     std::string text = "BAD";
     int i = 0;
-    for (Text t : game->getRenderer()->getTextHandler()->createText(
+    for (Text t : game.getRenderer().getTextHandler().createText(
              text, "Stupid", 11,
              {-2, (double)(-.25 + line->getPosition().y +
                            line->getSize().y / 2.)})) {
@@ -394,7 +392,7 @@ void PlayMode::noteMiss(const std::shared_ptr<Note> &note) {
         gui->setNegate(true);
         gui->setPosition(t.pos);
         gui->setSize(t.size);
-        game->addGui(gui);
+        game.addGui(gui);
     }
 }
 
@@ -404,31 +402,31 @@ TrackPartition PlayMode::getPartition() { return partition; }
 std::string PlayMode::getSongFolder() { return songFolder; }
 
 void PlayMode::playDrumSound(unsigned char pitch) {
-    AudioHandler *audio = game->getAudioHandler();
+    AudioHandler &audio = game.getAudioHandler();
     switch (pitch) {
         case MidiPercussion::KICK:
-            audio->playSound("kick");
+            audio.playSound("kick");
             break;
         case MidiPercussion::SNARE:
-            audio->playSound("snare");
+            audio.playSound("snare");
             break;
         case MidiPercussion::RIDE:
-            audio->playSound("ride");
+            audio.playSound("ride");
             break;
         case MidiPercussion::CRASH:
-            audio->playSound("crash");
+            audio.playSound("crash");
             break;
         case MidiPercussion::HAT:
-            audio->playSound("hat");
+            audio.playSound("hat");
             break;
         case MidiPercussion::TOM_HIGH:
-            audio->playSound("tom-high");
+            audio.playSound("tom-high");
             break;
         case MidiPercussion::TOM_MID:
-            audio->playSound("tom-mid");
+            audio.playSound("tom-mid");
             break;
         case MidiPercussion::TOM_LOW:
-            audio->playSound("tom-low");
+            audio.playSound("tom-low");
             break;
         default:
             std::cout << "bruh : " << (unsigned int)pitch << "\n";
@@ -436,7 +434,7 @@ void PlayMode::playDrumSound(unsigned char pitch) {
 }
 
 void PlayMode::playPianoSound(unsigned char pitch) {
-    AudioSource *source = game->getAudioHandler()->playSound("piano");
+    AudioSource *source = game.getAudioHandler().playSound("piano");
     float p = std::pow(1. + 1. / 12., (pitch - 60));
     source->setPitch(p);
 }
@@ -444,33 +442,33 @@ void PlayMode::playPianoSound(unsigned char pitch) {
 void PlayMode::spawnNote(MidiNote note) {}
 
 PlayMode::~PlayMode() {
-    game->getAudioHandler()->removeSound(this->music);
+    game.getAudioHandler().removeSound(this->music);
     if (this->mod) {
-        delete this->mod;
-        Renderer *renderer = game->getRenderer();
-        renderer->loadGuiShaders("bin/gui.vert.spv", "bin/def.geom.spv",
-                                 "bin/def.frag.spv",
-                                 sizeof(UniformBufferObject));
-        renderer->loadFinalShaders("bin/pass.vert.spv", "bin/pass.geom.spv",
-                                   "bin/pass.frag.spv",
-                                   sizeof(UniformBufferObject));
+        mod.reset();
+        Renderer &renderer = game.getRenderer();
+        renderer.loadGuiShaders("bin/gui.vert.spv", "bin/def.geom.spv",
+                                "bin/def.frag.spv",
+                                sizeof(UniformBufferObject));
+        renderer.loadFinalShaders("bin/pass.vert.spv", "bin/pass.geom.spv",
+                                  "bin/pass.frag.spv",
+                                  sizeof(UniformBufferObject));
     }
 #ifdef VST
     if (this->plugin) delete this->plugin;
 #endif
-    game->resetScene();
-    game->loadMenu("song select");
+    game.resetScene();
+    game.loadMenu("song select");
 }
 
 void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,
                            int mods) {
     Synthmania *game = (Synthmania *)glfwGetWindowUserPointer(win);
-    Window *window = game->getWindow();
+    Window &window = game->getWindow();
     if (game == NULL || action != GLFW_PRESS) return;
-    PlayMode *inst = dynamic_cast<PlayMode *>(game->getGamemode());
+    PlayMode &inst = dynamic_cast<PlayMode &>(game->getGamemode());
 
     if (key == GLFW_KEY_TAB) {
-        inst->autoPlay = !inst->autoPlay;
+        inst.autoPlay = !inst.autoPlay;
         return;
     }
     if (key == GLFW_KEY_RIGHT) {
@@ -482,7 +480,7 @@ void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,
         game->loadMenu("song select");
         return;
     }
-    if (inst->autoPlay) return;
+    if (inst.autoPlay) return;
     /*int k = 0;
     int keys[] = {GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_X, GLFW_KEY_D,
                   GLFW_KEY_C, GLFW_KEY_V, GLFW_KEY_G, GLFW_KEY_B,
@@ -490,21 +488,21 @@ void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,
     for (k = 0; k < 12; k++) {
         if (keys[k] == key) break;
     }*/
-    for (std::weak_ptr<Note> &note : inst->notes) {
+    for (std::weak_ptr<Note> &note : inst.notes) {
         if (note.expired()) continue;
         std::shared_ptr<Note> n(note);
         // This is ADOFAI for now
         if (  // b->getPitch() == k &&
             n->getStatus() == WAITING &&
             std::abs(n->getTime() - game->getCurrentTimeMicros()) <
-                (inst->drum
+                (inst.drum
                      ? DRUM_HIT_WINDOW
                      : HIT_WINDOW)  // && next note not skipped/close?? or
                                     // just set OD to a value that prevents
                                     // the need for notelock idk hmm
         ) {
-            inst->noteHit(n);
-            if (inst->drum) inst->playDrumSound(n->getPitch());
+            inst.noteHit(n);
+            if (inst.drum) inst.playDrumSound(n->getPitch());
             break;
         }
     }
@@ -512,16 +510,16 @@ void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,
 
 void PlayMode::onClockAdjust(int64_t t) {
     if (music)
-        music->setSampleOffset((game->getCurrentTimeMicros() + chart.offset) *
+        music->setSampleOffset((game.getCurrentTimeMicros() + chart.offset) *
                                44100 / 1000000.f);
 }
 
 void PlayMode::onConfigChange() {
-    if (music) music->setGain(game->getMusicVolume());
+    if (music) music->setGain(game.getMusicVolume());
 }
 
 size_t PlayMode::updateUBO(void *&ubo) {
-    if (mod) return mod->updateUBO(ubo, game->getCurrentTimeMicros());
+    if (mod) return mod->updateUBO(ubo, game.getCurrentTimeMicros());
     return sizeof(UniformBufferObject);
 }
 
@@ -530,7 +528,7 @@ void PlayMode::freeUBO(void *&ubo) {
 }
 
 size_t PlayMode::updateFinalUBO(void *&ubo) {
-    if (mod) return mod->updateFinalUBO(ubo, game->getCurrentTimeMicros());
+    if (mod) return mod->updateFinalUBO(ubo, game.getCurrentTimeMicros());
     return sizeof(UniformBufferObject);
 }
 

@@ -23,9 +23,9 @@ struct EntityData {
 
 class Entity {
    public:
-    Entity(Model* model, Texture texture, std::string name);
+    Entity(Model& model, Texture texture, std::string name);
 
-    Model* getModel() const;
+    Model& getModel() const;
     Texture getTexture() const;
     std::string getName() const;
     glm::vec3 getPosition() const;
@@ -34,12 +34,12 @@ class Entity {
 
     virtual bool update(int64_t time);
 
-    virtual ShaderData* getShaderData() const;
+    virtual ShaderData getShaderData() const;
 
     virtual ~Entity();
 
    protected:
-    Model* model;
+    Model& model;
     Texture texture;
     glm::vec3 position = {0, 0, 0};
     glm::vec4 rotation = {0, 0, 0, 1};  // Quaternions my beloved :heart:

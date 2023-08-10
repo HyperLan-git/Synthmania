@@ -16,8 +16,7 @@ class TextHandler;
 
 class TextHandler {
    public:
-    TextHandler(VkPhysicalDevice* physicalDevice, Device& device,
-                unsigned int textureSize);
+    TextHandler(Device& device, unsigned int textureSize);
 
     TextHandler(TextHandler&&) = delete;
     TextHandler& operator=(TextHandler&&) = delete;
@@ -26,7 +25,7 @@ class TextHandler {
     TextHandler& operator=(const TextHandler&) = delete;
 
     Image* loadCharacter(FT_Face face, unsigned long character,
-                         CommandPool* commandPool);
+                         CommandPool& commandPool);
 
     /**
      * @brief Whenever you use this function you need to reload all textures
@@ -37,7 +36,7 @@ class TextHandler {
      */
     void loadFonts(
         std::map<std::string, std::vector<unsigned long>> fontsToLoad,
-        CommandPool* commandPool);
+        CommandPool& commandPool);
 
     std::vector<Font> getFonts();
     std::vector<TexPtr> getTextures();
@@ -68,18 +67,18 @@ class TextHandler {
 };
 
 std::vector<std::shared_ptr<Gui>> printString(std::string text,
-                                              TextHandler* textHandler,
+                                              TextHandler& textHandler,
                                               std::string entityNames,
                                               std::string font, double size,
                                               glm::vec2 pos,
                                               glm::vec4 color = {0, 0, 0, 1});
 
 std::vector<std::shared_ptr<Gui>> printShadowedString(
-    std::string text, TextHandler* textHandler, std::string entityNames,
+    std::string text, TextHandler& textHandler, std::string entityNames,
     std::string font, double size, glm::vec2 pos,
     glm::vec4 color = {0, 0, 0, 1});
 
 std::vector<std::shared_ptr<Gui>> printShakingString(
-    std::string text, TextHandler* textHandler, std::string entityNames,
+    std::string text, TextHandler& textHandler, std::string entityNames,
     std::string font, double size, glm::vec2 pos, float shake,
     glm::vec4 color = {0, 0, 0, 1});

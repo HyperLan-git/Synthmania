@@ -34,10 +34,10 @@ class Game {
     std::map<std::string, std::string> readTextures(std::string file);
     std::map<std::string, std::string> getTextures();
 
-    void setRenderer(Renderer *renderer);
-    void setWindow(Window *window);
+    void setRenderer(std::unique_ptr<Renderer> &&renderer);
+    void setWindow(std::unique_ptr<Window> &&window);
 
-    Renderer *getRenderer();
+    Renderer &getRenderer();
 
     std::vector<std::shared_ptr<Entity>> getEntities();
     std::vector<std::shared_ptr<Gui>> getGuis();
@@ -45,9 +45,9 @@ class Game {
     virtual void resetScene();
     virtual void loadMenu(std::string menu);
 
-    Window *getWindow();
+    Window &getWindow();
 
-    TextHandler *getTextHandler();
+    TextHandler &getTextHandler();
 
     virtual size_t updateUBO(void *&ubo);
     virtual void freeUBO(void *&ubo);
@@ -63,8 +63,8 @@ class Game {
     virtual void addGui(std::shared_ptr<Gui> &gui);
     virtual void addEntity(std::shared_ptr<Entity> &entity);
 
-    Menu *getMenu(std::string menu);
-    Menu *getCurrentMenu();
+    Menu &getMenu(std::string menu);
+    Menu &getCurrentMenu();
 
     void playSound(std::string sound);
 
@@ -76,10 +76,10 @@ class Game {
 
    protected:
     GLFWkeyfun keyFunction = NULL;
-    Window *window;
-    Renderer *renderer;
+    std::unique_ptr<Window> window;
+    std::unique_ptr<Renderer> renderer;
 
-    AudioHandler *audio;
+    std::unique_ptr<AudioHandler> audio;
 
     std::chrono::_V2::system_clock::time_point begTime =
         std::chrono::high_resolution_clock::now();
@@ -92,6 +92,6 @@ class Game {
     std::vector<std::shared_ptr<Gui>> guis;
 
     // What will I serve you today sir ?
-    Menu *menu = NULL;
-    std::map<std::string, Menu *> menus;
+    std::shared_ptr<Menu> menu;
+    std::map<std::string, std::shared_ptr<Menu>> menus;
 };

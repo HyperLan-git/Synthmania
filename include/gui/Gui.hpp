@@ -50,7 +50,7 @@ class Gui {
     void updateGraphics(int64_t time);
 
     // Data for the shader, will depend on the shader
-    virtual ShaderData* getShaderData() const;
+    virtual ShaderData getShaderData() const;
 
     virtual ~Gui();
 

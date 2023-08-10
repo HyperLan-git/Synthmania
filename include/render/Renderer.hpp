@@ -40,7 +40,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
 
 class Renderer : public boost::noncopyable {
    public:
-    Renderer(Game* theGame, Window* window);
+    Renderer(Game& theGame, Window& window);
 
     void render();
 
@@ -53,7 +53,7 @@ class Renderer : public boost::noncopyable {
 
     Instance& getInstance();
 
-    TextHandler* getTextHandler();
+    TextHandler& getTextHandler();
 
     Model& addModel(Model&& m);
 
@@ -70,9 +70,9 @@ class Renderer : public boost::noncopyable {
     ~Renderer();
 
    private:
-    Game* game = NULL;
+    Game& game;
 
-    Window* window = NULL;
+    Window& window;
 
     std::unique_ptr<Instance> instance;
     VkSurfaceKHR surface = NULL;
@@ -127,7 +127,7 @@ class Renderer : public boost::noncopyable {
     std::vector<Model> models;
     std::unordered_map<Texture, TexPtr, Texture::HashFunction> textures;
 
-    TextHandler* textHandler = NULL;
+    std::unique_ptr<TextHandler> textHandler;
 
     std::chrono::_V2::system_clock::time_point begTime =
         std::chrono::high_resolution_clock::now();
@@ -207,9 +207,8 @@ class Renderer : public boost::noncopyable {
                                  Framebuffer& framebuffer);
     void updateUniformBuffer(uint32_t currentImage);
     void drawFrame();
-    void drawEntity(std::shared_ptr<Entity>& entity,
-                    CommandBuffer& commandBuffer);
-    void drawGui(std::shared_ptr<Gui>& gui, CommandBuffer& commandBuffer);
+    void drawEntity(Entity& entity, CommandBuffer& commandBuffer);
+    void drawGui(Gui& gui, CommandBuffer& commandBuffer);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
         const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(

@@ -16,7 +16,7 @@ class ParentedGui : public Gui {
 
     virtual bool update(int64_t time);
 
-    virtual ShaderData* getShaderData() const;
+    virtual ShaderData getShaderData() const;
 
    private:
     std::weak_ptr<Gui> parent;
