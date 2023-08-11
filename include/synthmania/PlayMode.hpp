@@ -58,9 +58,9 @@ class PlayMode : public Gamemode {
     std::unique_ptr<ChartHandler> mod;
 
     std::vector<std::weak_ptr<Note>> notes;
-    AudioSource *music = NULL;
+    std::optional<std::reference_wrapper<AudioSource>> music;
     std::string songFolder;
-    std::shared_ptr<Judgement> line = NULL;
+    std::shared_ptr<Judgement> line;
     bool autoPlay = false, drum = false;
 
 #ifdef VST

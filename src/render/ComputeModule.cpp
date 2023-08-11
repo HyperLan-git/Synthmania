@@ -4,23 +4,29 @@ ComputeModule::ComputeModule(
     CommandPool& pool, ComputeShader& shader,
     std::initializer_list<VkPushConstantRange> pushConstants,
     std::initializer_list<VkDescriptorSetLayoutBinding> bindings,
-    VkDeviceSize* bufferSizes, uint32_t nBuffers)
+    std::initializer_list<VkDeviceSize> buffers)
     : device(pool.getDevice()), pool(pool), shader(shader) {
-    VkDescriptorType types[bindings.size()];
+    std::initializer_list<VkDescriptorPoolSize> sizes;
+    std::vector<VkDescriptorPoolSize> poolSz(bindings.size());
     auto iter1 = bindings.begin();
     for (int i = 0; i < bindings.size(); i++, iter1++)
-        types[i] = iter1->descriptorType;
-    shaderPool = new ShaderDescriptorPool(device, types, bindings.size());
+        poolSz[i] =
+            VkDescriptorPoolSize{.type = iter1->descriptorType,
+                                 .descriptorCount = iter1->descriptorCount};
+    shaderPool = std::make_unique<ShaderDescriptorPool>(device, poolSz);
     shaderLayout = new ShaderDescriptorSetLayout(device, bindings);
     shaderSet = new ShaderDescriptorSet(*shaderPool, *shaderLayout);
-    for (int i = 0; i < nBuffers; i++) {
-        buffers.push_back(new Buffer(device, bufferSizes[i],
-                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
-        VkDescriptorBufferInfo info = {.buffer = buffers[i]->getBuffer(),
-                                       .offset = 0,
-                                       .range = bufferSizes[i]};
+    int i = 0;
+    for (auto it = buffers.begin(); it != buffers.end(); it++, i++) {
+        VkDescriptorBufferInfo info = {
+            .buffer = this->buffers
+                          .emplace_back(
+                              device, *it, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+                          .getBuffer(),
+            .offset = 0,
+            .range = *it};
         shaderSet->updateAccess(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, i,
                                 VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &info, NULL);
     }
@@ -29,7 +35,7 @@ ComputeModule::ComputeModule(
     commandBuffer = new CommandBuffer(pool, true);
 }
 
-void ComputeModule::run(Queue* queue, void* constants, VkDeviceSize sz,
+void ComputeModule::run(Queue& queue, void* constants, VkDeviceSize sz,
                         uint64_t workers) {
     commandBuffer->reset();
 
@@ -45,24 +51,24 @@ void ComputeModule::run(Queue* queue, void* constants, VkDeviceSize sz,
 
     commandBuffer->end();
     // TODO check if is done handle async
-    commandBuffer->submit(*queue);
+    commandBuffer->submit(queue);
 }
 
 void ComputeModule::fillBuffer(uint32_t buffer, void* data) {
-    buffers[buffer]->fill(data);
+    buffers[buffer].fill(data);
 }
 
 void ComputeModule::emptyBuffer(uint32_t buffer, void* data) {
-    buffers[buffer]->empty(data);
+    buffers[buffer].empty(data);
 }
 
 ComputeModule::~ComputeModule() {
     device.wait();
-    for (Buffer* b : buffers) delete b;
+    buffers.clear();
     delete commandBuffer;
     delete pipeline;
     delete layout;
     delete shaderSet;
     delete shaderLayout;
-    delete shaderPool;
+    shaderPool.reset();
 }

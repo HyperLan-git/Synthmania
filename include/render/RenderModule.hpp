@@ -21,7 +21,7 @@ class RenderModule : public boost::noncopyable {
         std::initializer_list<VkDescriptorSetLayoutBinding> descriptorBindings,
         std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages,
         std::initializer_list<VkPushConstantRange> constantRanges,
-        uint32_t* nDescriptorSets);
+        std::initializer_list<VkDescriptorPoolSize> sets);
 
     Pipeline* getPipeline();
 
@@ -32,11 +32,11 @@ class RenderModule : public boost::noncopyable {
     void setExtent(uint32_t w, uint32_t h);
     void setShaders(
         std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages);
-    void setDescriptorLayouts(VkDescriptorSetLayoutBinding* bindings,
-                              uint32_t* nDescriptorSets, uint32_t nBindings);
+    void setDescriptorLayouts(
+        std::initializer_list<VkDescriptorSetLayoutBinding> descriptorBindings);
 
-    void recreateDescriptorPool(VkDescriptorType* types,
-                                uint32_t* nDescriptorSets, uint32_t nTypes);
+    void recreateDescriptorPool(
+        std::initializer_list<VkDescriptorPoolSize> sets);
 
     void recreate();
 
@@ -66,9 +66,10 @@ class RenderModule : public boost::noncopyable {
     // For debugging xdd
     std::string name;
 
-    std::initializer_list<VkDescriptorSetLayoutBinding> descriptorBindings;
-    std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages;
-    std::initializer_list<VkPushConstantRange> constantRanges;
+    std::vector<VkDescriptorSetLayoutBinding> descriptorBindings;
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    std::vector<VkPushConstantRange> constantRanges;
+    std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
 
     VkExtent2D extent;
 };

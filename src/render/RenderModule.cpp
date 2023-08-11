@@ -6,14 +6,16 @@ RenderModule::RenderModule(
     std::initializer_list<VkDescriptorSetLayoutBinding> bindings,
     std::initializer_list<VkPipelineShaderStageCreateInfo> shaders,
     std::initializer_list<VkPushConstantRange> constantRanges,
-    uint32_t* nDescriptorSets)
-    : device(device), instance(instance), renderPass(renderPass) {
-    this->name = name;
-    this->descriptorBindings = bindings;
-    this->shaderStages = shaders;
-    this->constantRanges = constantRanges;
-    this->extent = {w, h};
-
+    std::initializer_list<VkDescriptorPoolSize> sets)
+    : device(device),
+      instance(instance),
+      renderPass(renderPass),
+      name(name),
+      descriptorBindings(bindings),
+      shaderStages(shaders),
+      constantRanges(constantRanges),
+      descriptorPoolSizes(sets),
+      extent({w, h}) {
     DebugFunc functions = getDebugFunctions(instance);
 
     renderImageView = std::make_shared<ImageView>(
@@ -42,7 +44,7 @@ RenderModule::RenderModule(
     setName(functions, device, name + " command buffer",
             VK_OBJECT_TYPE_COMMAND_BUFFER, commandBuffer->getBuffer());
 
-    renderLayout = new ShaderDescriptorSetLayout(device, bindings);
+    renderLayout = new ShaderDescriptorSetLayout(device, descriptorBindings);
     setName(functions, device, name + " layout",
             VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, renderLayout->getLayout());
 
@@ -55,12 +57,7 @@ RenderModule::RenderModule(
     setName(functions, device, name + " pipeline", VK_OBJECT_TYPE_PIPELINE,
             renderPipeline->getPipeline());
 
-    VkDescriptorType types[bindings.size()];
-    auto iter = bindings.begin();
-    for (int i = 0; i < bindings.size(); i++, iter++)
-        types[i] = iter->descriptorType;
-    this->descriptorPool = new ShaderDescriptorPool(
-        device, types, nDescriptorSets, bindings.size());
+    this->descriptorPool = new ShaderDescriptorPool(device, sets);
     setName(functions, device, name + " descriptor pool",
             VK_OBJECT_TYPE_DESCRIPTOR_POOL, this->descriptorPool->getPool());
 }
@@ -128,12 +125,7 @@ void RenderModule::setExtent(uint32_t w, uint32_t h) {
                                   VkExtent2D({w, h}), shaderStages);
     setName(functions, device, name + " pipeline", VK_OBJECT_TYPE_PIPELINE,
             renderPipeline->getPipeline());
-    std::vector<VkDescriptorType> types;
-    auto iter = descriptorBindings.begin();
-    for (int i = 0; i < descriptorBindings.size(); i++)
-        types.push_back(iter->descriptorType);
-    descriptorPool = new ShaderDescriptorPool(device, types.data(),
-                                              descriptorBindings.size());
+    descriptorPool = new ShaderDescriptorPool(device, descriptorPoolSizes);
 }
 
 void RenderModule::setShaders(
@@ -151,17 +143,17 @@ void RenderModule::setShaders(
             renderPipeline->getPipeline());
 }
 
-void RenderModule::recreateDescriptorPool(VkDescriptorType* types,
-                                          uint32_t* nDescriptorSets,
-                                          uint32_t nTypes) {
+void RenderModule::recreateDescriptorPool(
+    std::initializer_list<VkDescriptorPoolSize> sets) {
     for (auto entry : descriptorSets)
         for (ShaderDescriptorSet* descriptor : entry.second) delete descriptor;
     descriptorSets.clear();
     delete descriptorPool;
 
     DebugFunc functions = getDebugFunctions(instance);
+    descriptorPoolSizes = sets;
     this->descriptorPool =
-        new ShaderDescriptorPool(device, types, nDescriptorSets, nTypes);
+        new ShaderDescriptorPool(device, descriptorPoolSizes);
     setName(functions, device, name + " descriptor pool",
             VK_OBJECT_TYPE_DESCRIPTOR_POOL, this->descriptorPool->getPool());
 }

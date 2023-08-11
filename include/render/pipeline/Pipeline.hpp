@@ -12,6 +12,10 @@ class Pipeline {
         PipelineLayout &layout, RenderPass &renderPass,
         VkExtent2D swapChainExtent,
         std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages);
+    Pipeline(PipelineLayout &layout, RenderPass &renderPass,
+             VkExtent2D swapChainExtent,
+             const std::vector<VkPipelineShaderStageCreateInfo> &shaderStages);
+
     Pipeline(PipelineLayout &layout, ComputeShader &shader);
 
     Pipeline(Pipeline &&) = delete;

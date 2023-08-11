@@ -8,6 +8,18 @@
 #include <valarray>
 #include <variant>
 
+#ifdef DEBUG
+#define OPENAL_DEBUG(msg)                                                 \
+    {                                                                     \
+        int openal_err;                                                   \
+        while ((openal_err = alGetError()) != AL_NO_ERROR)                \
+            std::cerr << "OpenAL error when " << msg << ":" << openal_err \
+                      << std::endl;                                       \
+    }
+#else
+#define OPENAL_DEBUG(msg)
+#endif
+
 const double PI = 3.141592653589793238460;
 
 typedef std::complex<double> Complex;
@@ -50,4 +62,4 @@ struct AudioData {
 
 bool checkWavHeader(std::string filename);
 
-AudioData* loadWavFile(std::string filename);
+AudioData loadWavFile(std::string filename);

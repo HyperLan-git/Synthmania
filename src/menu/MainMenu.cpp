@@ -53,16 +53,25 @@ MainMenu::MainMenu(Game& g) : Menu(g) {
                                                "updates*", glm::vec2({.8, .3f}),
                                                glm::vec2({.2, .6f})));
 
+    int i = 0;
+    // 8bit -> Silkscreen
+    // vg -> Arcade Interlaced
+    // hitech -> Yukarimobile
+    // Goth hardcor -> Textura Belgica
+    // Country? Western? -> Saddlebag
+    // Japanese? -> Gang of Three
+
+    std::string font = "Yukarimobile";
     for (Text& t :
-         text.createText("The quick brown fox jumps over the lazy dog",
-                         "Stupid", 12, glm::vec2({0, -.5}))) {
+         text.createText("Synthmania", font, 20, glm::vec2({.6, -1}))) {
         std::shared_ptr<ParentedGui> g = std::make_shared<ParentedGui>(
-            t.character.texture, "PLAY", buttons[0]);
-        t.pos.x -= t.size.x / 2;
+            t.character.texture, "Title", buttons[0]);
         g->setPosition(t.pos);
         g->setSize(t.size);
         g->setColor(glm::vec4(.2, .2, .7, 1));
         g->setNegate(true);
+        g->addEffect(
+            GraphicalEffect(applyWavy, {.01, .05}, {i++ * 500000, 1000000}));
         guis.push_back(g);
     }
     for (Text t :

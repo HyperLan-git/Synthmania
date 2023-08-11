@@ -38,9 +38,9 @@ class Gui {
     void setNegate(int negate);
     void setTexture(Texture texture);
 
-    void addEffect(GraphicalEffect* effect);
+    void addEffect(GraphicalEffect&& effect);
 
-    std::vector<GraphicalEffect*>& getGraphicalEffects();
+    std::vector<GraphicalEffect>& getGraphicalEffects();
 
     void setDestroyed();
     bool isDestroyed();
@@ -63,6 +63,6 @@ class Gui {
     glm::vec4 color = {1, 1, 1, 1};
     int negate = false;
     std::string name;
-    std::vector<GraphicalEffect*> effects;
+    std::vector<GraphicalEffect> effects;
     bool destroyed = false;
 };

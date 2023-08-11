@@ -152,17 +152,16 @@ std::vector<Text> TextHandler::createText(std::string text,
                                           std::string fontName, double size,
                                           glm::vec2 start) {
     std::vector<Text> result;
-    double conv = 64. * textureSize / size;
+    double sz = size / 64. / this->textureSize;
     for (int i = 0; i < text.size(); i++) {
         Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t;
         t.character = c;
-        t.pos = {start.x + (double)textureSize / conv / 2 - c.offsetLeft / conv,
-                 start.y + (double)textureSize / conv / 2 - c.offsetTop / conv};
-
-        t.size = {(double)textureSize / conv, (double)textureSize / conv};
+        t.pos = {start.x + (double)textureSize * sz / 2 - c.offsetLeft * sz,
+                 start.y + (double)textureSize * sz / 2 - c.offsetTop * sz};
+        t.size = {(double)textureSize * sz, (double)textureSize * sz};
         result.push_back(t);
-        start.x += (c.advance) / conv;
+        start.x += (c.advance) * sz;
     }
     return result;
 }
@@ -171,7 +170,8 @@ std::vector<Text> TextHandler::createText_w(std::wstring text,
                                             std::string fontName, double size,
                                             glm::vec2 start) {
     std::vector<Text> result;
-    double conv = 64. * textureSize / size;
+    double sz = size / 64. / this->textureSize;
+    double conv = 1. / sz;
     for (int i = 0; i < text.size(); i++) {
         Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t{.character = c};
@@ -190,19 +190,19 @@ std::vector<Text> TextHandler::createVerticalText(std::string text,
                                                   double size,
                                                   glm::vec2 start) {
     std::vector<Text> result;
-    double conv = 64. * this->textureSize / size;
+    double sz = size / 64. / this->textureSize;
+    double conv = 1. / sz;
     for (int i = 0; i < text.size(); i++) {
         Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t{.character = c};
-        t.pos = {start.x +
-                     (double)(this->textureSize * 2 - c.width) / conv / 2 -
-                     c.offsetLeft / conv * .75,
-                 start.y + (double)this->textureSize / conv / 2 -
-                     c.offsetTop / conv * .75};
-        t.size = {(double)this->textureSize / conv,
-                  (double)this->textureSize / conv};
+        t.pos = {start.x + (double)(this->textureSize * 2 - c.width) * sz / 2 -
+                     c.offsetLeft * sz * .75,
+                 start.y + (double)this->textureSize * sz / 2 -
+                     c.offsetTop * sz * .75};
+        t.size = {(double)this->textureSize * sz,
+                  (double)this->textureSize * sz};
         result.push_back(t);
-        start.y += (c.vAdvance) / conv * .7;
+        start.y += c.vAdvance * sz * .7;
     }
     return result;
 }
@@ -271,8 +271,8 @@ std::vector<std::shared_ptr<Gui>> printShakingString(
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =
             std::make_shared<Gui>(t.character.texture, name.c_str());
-        gui->addEffect(new GraphicalEffect(applyShaking,
-                                           new float[1]{shake * (float)size}));
+        gui->addEffect(GraphicalEffect(
+            applyShaking, std::initializer_list<float>{shake * (float)size}));
         gui->setColor(color);
         gui->setNegate(true);
         gui->setPosition(t.pos);

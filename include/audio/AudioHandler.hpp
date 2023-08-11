@@ -6,7 +6,8 @@ class AudioHandler;
 #include <AL/alc.h>
 
 #include <iostream>
-#include <map>
+#include <list>
+#include <unordered_map>
 #include <vector>
 
 #include "AudioBuffer.hpp"
@@ -19,17 +20,15 @@ class AudioHandler {
     AudioHandler(const ALCchar* device = NULL);
 
     /**
-     * @brief Will put a sound in the string map. If a sound with the same name
-     * already exists, will destroy the sound, so make sure that no source is
-     * playing with this sound !
+     * @brief Will put a sound in the string map.
      *
      * @param name The name of the sound to be used in playSound
      * @param sound The buffer of the sound
      */
-    void addSound(std::string name, AudioBuffer* sound);
-    AudioSource* playSound(std::string name);
+    void addSound(std::string name, AudioBuffer&& sound);
+    AudioSource& playSound(std::string name);
 
-    void removeSound(AudioSource* source);
+    void removeSound(AudioSource& source);
 
     void clearSounds();
 
@@ -37,7 +36,7 @@ class AudioHandler {
 
     void setDevice(const ALCchar* device);
 
-    void addSource(AudioSource* source);
+    void addSource(AudioSource&& source);
 
     ALCint getSampleRate();
 
@@ -46,9 +45,9 @@ class AudioHandler {
     ~AudioHandler();
 
    private:
-    ALCdevice* device = nullptr;
+    ALCdevice* device = NULL;
     int sampleRate;
-    std::vector<AudioSource*> sources;
-    std::map<std::string, AudioBuffer*> sounds;
+    std::list<AudioSource> sources;
+    std::unordered_map<std::string, AudioBuffer> sounds;
     float volume = 1.f;
 };

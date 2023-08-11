@@ -61,12 +61,12 @@ unsigned int log2i(unsigned int n) {
     return result;
 }
 
-AudioData* loadWavFile(std::string filename) {
+AudioData loadWavFile(std::string filename) {
     FILE* soundFile = NULL;
     WAVE_Format wave_format;
     RIFF_Header riff_header;
     WAVE_Data wave_data;
-    AudioData* result = new AudioData();
+    AudioData result;
 
     try {
         soundFile = fopen(filename.c_str(), "rb");
@@ -109,29 +109,28 @@ AudioData* loadWavFile(std::string filename) {
             wave_data.subChunkID[2] != 't' || wave_data.subChunkID[3] != 'a')
             throw("Invalid data header");
 
-        result->data = new unsigned char[wave_data.subChunk2Size];
+        result.data = new unsigned char[wave_data.subChunk2Size];
 
-        if (!fread(result->data, wave_data.subChunk2Size, 1, soundFile))
+        if (!fread(result.data, wave_data.subChunk2Size, 1, soundFile))
             throw("WAVE data read fail !");
 
-        result->size = wave_data.subChunk2Size;
-        result->frequency = wave_format.sampleRate;
+        result.size = wave_data.subChunk2Size;
+        result.frequency = wave_format.sampleRate;
 
         if (wave_format.numChannels == 1) {
             if (wave_format.bitsPerSample == 8)
-                result->format = AL_FORMAT_MONO8;
+                result.format = AL_FORMAT_MONO8;
             else if (wave_format.bitsPerSample == 16)
-                result->format = AL_FORMAT_MONO16;
+                result.format = AL_FORMAT_MONO16;
         } else if (wave_format.numChannels == 2) {
             if (wave_format.bitsPerSample == 8)
-                result->format = AL_FORMAT_STEREO8;
+                result.format = AL_FORMAT_STEREO8;
             else if (wave_format.bitsPerSample == 16)
-                result->format = AL_FORMAT_STEREO16;
+                result.format = AL_FORMAT_STEREO16;
         }
         fclose(soundFile);
     } catch (const char* error) {
         if (soundFile) fclose(soundFile);
-        delete result;
         throw error;
     }
     return result;

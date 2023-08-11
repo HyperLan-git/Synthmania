@@ -15,6 +15,9 @@ class ShaderDescriptorSetLayout {
     ShaderDescriptorSetLayout(
         Device& device,
         std::initializer_list<VkDescriptorSetLayoutBinding> bindings);
+    ShaderDescriptorSetLayout(
+        Device& device,
+        const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
     ShaderDescriptorSetLayout(ShaderDescriptorSetLayout&&) = delete;
     ShaderDescriptorSetLayout& operator=(ShaderDescriptorSetLayout&&) = delete;

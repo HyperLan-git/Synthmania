@@ -16,17 +16,18 @@ Synthmania::Synthmania(std::string skin, std::string config) {
 void Synthmania::resetAudio() {
     audio->clearSounds();
     // TODO json file again xd
-    audio->addSound("click", new AudioBuffer("resources/sounds/click.wav"));
+    audio->addSound("click",
+                    std::move(AudioBuffer("resources/sounds/click.wav")));
     // TODO handle soundfonts?
-    audio->addSound("piano", new AudioBuffer("resources/sounds/painoC4.wav"));
-    audio->addSound("kick", new AudioBuffer("resources/sounds/kick.wav"));
-    audio->addSound("snare", new AudioBuffer("resources/sounds/snare.wav"));
-    audio->addSound("hat", new AudioBuffer("resources/sounds/hat.wav"));
-    audio->addSound("ride", new AudioBuffer("resources/sounds/ride.wav"));
-    audio->addSound("crash", new AudioBuffer("resources/sounds/crash.wav"));
-    audio->addSound("tom-high", new AudioBuffer("resources/sounds/tom1.wav"));
-    audio->addSound("tom-mid", new AudioBuffer("resources/sounds/tom2.wav"));
-    audio->addSound("tom-low", new AudioBuffer("resources/sounds/tom3.wav"));
+    audio->addSound("piano", AudioBuffer("resources/sounds/painoC4.wav"));
+    audio->addSound("kick", AudioBuffer("resources/sounds/kick.wav"));
+    audio->addSound("snare", AudioBuffer("resources/sounds/snare.wav"));
+    audio->addSound("hat", AudioBuffer("resources/sounds/hat.wav"));
+    audio->addSound("ride", AudioBuffer("resources/sounds/ride.wav"));
+    audio->addSound("crash", AudioBuffer("resources/sounds/crash.wav"));
+    audio->addSound("tom-high", AudioBuffer("resources/sounds/tom1.wav"));
+    audio->addSound("tom-mid", AudioBuffer("resources/sounds/tom2.wav"));
+    audio->addSound("tom-low", AudioBuffer("resources/sounds/tom3.wav"));
 }
 
 void Synthmania::init() {

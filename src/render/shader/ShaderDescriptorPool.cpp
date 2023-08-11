@@ -1,20 +1,16 @@
 #include "ShaderDescriptorPool.hpp"
 
-ShaderDescriptorPool::ShaderDescriptorPool(Device &device,
-                                           VkDescriptorType *types,
-                                           uint32_t *typeCounts, uint32_t count)
+ShaderDescriptorPool::ShaderDescriptorPool(
+    Device &device, std::initializer_list<VkDescriptorPoolSize> types)
     : device(device) {
-    VkDescriptorPoolSize poolSizes[count];
     uint32_t maxSets = 0;
-    for (uint32_t i = 0; i < count; i++) {
-        poolSizes[i].type = types[i];
-        poolSizes[i].descriptorCount = typeCounts[i];
-        maxSets += typeCounts[i];
-    }
+    for (auto it = types.begin(); it != types.end(); it++)
+        maxSets += it->descriptorCount;
+
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = count;
-    poolInfo.pPoolSizes = poolSizes;
+    poolInfo.poolSizeCount = types.size();
+    poolInfo.pPoolSizes = types.begin();
     poolInfo.maxSets = maxSets;
     // TODO remove flag for more efficiency
     poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
@@ -25,23 +21,20 @@ ShaderDescriptorPool::ShaderDescriptorPool(Device &device,
     }
 }
 
-// TODO remove bad constructor
-ShaderDescriptorPool::ShaderDescriptorPool(Device &device,
-                                           VkDescriptorType *types,
-                                           uint32_t count)
+ShaderDescriptorPool::ShaderDescriptorPool(
+    Device &device, const std::vector<VkDescriptorPoolSize> &types)
     : device(device) {
-    VkDescriptorPoolSize poolSizes[count];
     uint32_t maxSets = 0;
-    for (uint32_t i = 0; i < count; i++) {
-        poolSizes[i].type = types[i];
-        poolSizes[i].descriptorCount = 64;
-        maxSets += poolSizes[i].descriptorCount;
+    for (auto it = types.begin(); it != types.end(); it++) {
+        maxSets += it->descriptorCount;
     }
+
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = count;
-    poolInfo.pPoolSizes = poolSizes;
+    poolInfo.poolSizeCount = types.size();
+    poolInfo.pPoolSizes = types.data();
     poolInfo.maxSets = maxSets;
+    // TODO remove flag for more efficiency
     poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
     if (vkCreateDescriptorPool(device.getDevice(), &poolInfo, NULL, &pool) !=

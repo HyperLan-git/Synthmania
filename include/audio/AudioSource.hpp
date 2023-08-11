@@ -10,8 +10,13 @@ class AudioSource;
 
 class AudioSource {
    public:
-    AudioSource(bool destroyOnFinished = true);
+    explicit AudioSource(bool destroyOnFinished = true);
     AudioSource(AudioBuffer& data, bool destroyOnFinished = true);
+
+    AudioSource(AudioSource&&);
+    AudioSource& operator=(AudioSource&&);
+    AudioSource(const AudioSource&) = delete;
+    AudioSource& operator=(const AudioSource&) = delete;
 
     void setBuffer(AudioBuffer& data);
 
@@ -56,6 +61,8 @@ class AudioSource {
     void setLooping(bool looping);
     void setGain(ALfloat gain);
     void setPitch(ALfloat pitch);
+
+    bool operator==(const AudioSource&) const;
 
     ~AudioSource();
 

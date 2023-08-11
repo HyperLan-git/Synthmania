@@ -13,6 +13,12 @@ class AudioBuffer {
     AudioBuffer();
     AudioBuffer(std::string file);
 
+    AudioBuffer(AudioBuffer &&);
+    AudioBuffer &operator=(AudioBuffer &&);
+
+    AudioBuffer(const AudioBuffer &) = delete;
+    AudioBuffer &operator=(const AudioBuffer &) = delete;
+
     void* operator new[](size_t buffers) noexcept = delete;
     // I have to make something fucked up like that bcs new gives the number of
     // bytes allowed to use which are not necessarily related to the number of

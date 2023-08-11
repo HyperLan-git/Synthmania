@@ -2,21 +2,17 @@
 
 AudioBuffer::AudioBuffer() : format(AL_NONE), data(NULL) {
     alGenBuffers(1, &bufferID);
-    int err;
-    if ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error when creating buffer:" << err << std::endl;
+    OPENAL_DEBUG("creating buffer");
 }
 
 AudioBuffer::AudioBuffer(std::string file) : AudioBuffer() {
     try {
-        AudioData* result = loadWavFile(file);
-        this->write(result->format, result->data, result->size,
-                    result->frequency);
-        this->data = new char[result->size];
-        this->format = result->format;
-        memcpy(this->data, result->data, result->size);
-        delete[] (unsigned char*)result->data;
-        delete result;
+        AudioData result = loadWavFile(file);
+        this->write(result.format, result.data, result.size, result.frequency);
+        this->data = new char[result.size];
+        this->format = result.format;
+        memcpy(this->data, result.data, result.size);
+        delete[] (unsigned char*)result.data;
     } catch (const char* err) {
         std::cerr << "Error when opening " << file << "\n" << err << std::endl;
         if (bufferID == AL_NONE)
@@ -25,9 +21,21 @@ AudioBuffer::AudioBuffer(std::string file) : AudioBuffer() {
     }
 }
 
+AudioBuffer::AudioBuffer(AudioBuffer&& other) : AudioBuffer() {
+    *this = std::move(other);
+}
+
+AudioBuffer& AudioBuffer::operator=(AudioBuffer&& other) {
+    std::swap(this->bufferID, other.bufferID);
+    std::swap(this->data, other.data);
+    this->format = other.format;
+    return *this;
+}
+
 void AudioBuffer::write(ALenum format, const ALvoid* data, ALsizei size,
                         ALsizei samplerate) {
     alBufferData(bufferID, format, data, size, samplerate);
+    OPENAL_DEBUG("filling buffer");
     // if (this->data) delete[] (unsigned char*)this->data;
     // this->data = new unsigned char[size];
     // memcpy(this->data, data, size);
@@ -42,9 +50,7 @@ void* AudioBuffer::operator new[](size_t sz, size_t elems) noexcept {
     ALuint* p = (ALuint*)ptr;
     alGenBuffers(elems, p);
     p[elems] = 0;
-    int err;
-    if ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error when creating buffers:" << err << std::endl;
+    OPENAL_DEBUG("creating buffers");
     return ptr;
 }
 
@@ -52,9 +58,7 @@ void AudioBuffer::operator delete[](void* ptr) noexcept {
     size_t sz = 0;
     for (ALuint* p = (ALuint*)ptr; *p != 0; p++) sz++;
     alDeleteBuffers(sz, (ALuint*)ptr);
-    int err;
-    if ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error when deleting buffers:" << err << std::endl;
+    OPENAL_DEBUG("deleting buffers");
     ::operator delete[](ptr);
 }
 
@@ -79,7 +83,8 @@ ALenum AudioBuffer::getFormat() { return format; }
 
 ALint AudioBuffer::getBufferi(ALenum param) {
     ALint result;
-    alGetBufferi(getBuffer(), param, &result);
+    alGetBufferi(bufferID, param, &result);
+    OPENAL_DEBUG("using getBufferi(" << param << ")");
     return result;
 }
 
@@ -97,7 +102,5 @@ void AudioBuffer::setBuffer(ALuint id) {
 AudioBuffer::~AudioBuffer() {
     if (bufferID != 0 && alIsBuffer(bufferID)) alDeleteBuffers(1, &bufferID);
     if (data) delete[] (char*)data;
-    int err;
-    if ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error when deleting buffer:" << err << std::endl;
+    OPENAL_DEBUG("deleting buffer");
 }

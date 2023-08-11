@@ -155,23 +155,15 @@ void Renderer::loadTextures(std::map<std::string, std::string> textures) {
         this->textures.emplace(Texture(view->getName()), view);
 
     uint32_t type_sz = 2 * this->textures.size();
-    std::vector<VkDescriptorType> types(type_sz);
-    for (size_t i = 0; i < textures.size(); i++) {
-        types[2 * i] = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        types[2 * i + 1] = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    }
-    VkDescriptorType* tp = types.data();
 
-    pool = new ShaderDescriptorPool(*device, tp, type_sz);
-    setName(getDebugFunctions(*instance), *device, "mainDescriptorPool",
-            VK_OBJECT_TYPE_DESCRIPTOR_POOL, pool->getPool());
     uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
     if (sz == 0) sz = 1;
-    uint32_t i[] = {sz, sz};
-    VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
-    guiModule->recreateDescriptorPool(type, i, 2);
-    renderDescriptorPool = new ShaderDescriptorPool(*device, type, 2);
+    guiModule->recreateDescriptorPool(
+        {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, sz},
+         {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sz}});
+    renderDescriptorPool = new ShaderDescriptorPool(
+        *device, {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, sz},
+                  {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sz}});
     setName(getDebugFunctions(*instance), *device, "renderDescriptorPool",
             VK_OBJECT_TYPE_DESCRIPTOR_POOL, renderDescriptorPool->getPool());
     // This is needed trust me
@@ -217,7 +209,6 @@ Renderer::~Renderer() {
         delete guiUniformBuffers[i];
     }
 
-    delete pool;
     delete renderDescriptorPool;
 
     delete textureSampler;
@@ -276,9 +267,14 @@ void Renderer::recreateSwapchain() {
     createGraphicsPipeline();
     createGuiPipeline();
     createMainPipeline();
-    VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
-    renderDescriptorPool = new ShaderDescriptorPool(*device, type, 2);
+    uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
+    if (sz == 0) sz = 1;
+    renderDescriptorPool = new ShaderDescriptorPool(
+        *device, {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, sz},
+                  {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sz}});
+
+    setName(getDebugFunctions(*instance), *device, "renderDescriptorPool",
+            VK_OBJECT_TYPE_DESCRIPTOR_POOL, renderDescriptorPool->getPool());
 
     createDescriptorSets();
 }
@@ -353,13 +349,15 @@ void Renderer::createGraphicsPipeline() {
 
     uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
     if (sz == 0) sz = 1;
-    uint32_t nDescriptorSets[] = {sz, sz};
+    std::initializer_list<VkDescriptorPoolSize> pSz = {
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, sz},
+        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sz}};
     objModule = new RenderModule(
         *instance, *device, "3D", swapchain->getExtent().width,
         swapchain->getExtent().height, *renderPass, {ubo, textureSampler},
         {vertShader.toPipeline(), geomShader.toPipeline(),
          fragShader.toPipeline()},
-        {range}, nDescriptorSets);
+        {range}, pSz);
 }
 
 void Renderer::createGuiPipeline() {
@@ -400,13 +398,15 @@ void Renderer::createGuiPipeline() {
 
     uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
     if (sz == 0) sz = 1;
-    uint32_t nDescriptorSets[] = {sz, sz};
+    std::initializer_list<VkDescriptorPoolSize> pSz = {
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, sz},
+        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sz}};
     guiModule = new RenderModule(
         *instance, *device, "2D", swapchain->getExtent().width,
         swapchain->getExtent().height, *renderPass, {ubo, textureSampler},
         {vertShader.toPipeline(), geomShader.toPipeline(),
          fragShader.toPipeline()},
-        {range}, nDescriptorSets);
+        {range}, pSz);
 }
 
 void Renderer::createMainPipeline() {
@@ -699,7 +699,6 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
 
     device->wait();
     delete renderDescriptor;
-    delete pool;
     delete renderDescriptorPool;
     // TODO use vkResetDescriptorPool and other pools aswell
     for (size_t i = 0; i < uniformBuffers.size(); i++) {
@@ -723,17 +722,14 @@ void Renderer::loadGuiShaders(std::string vShader, std::string gShader,
     }
     VkDescriptorType* tp = types.data();
 
-    // TODO This is so fucking stupid I'm just going to prepare in advance a
-    // big pool and then scale it up when needed
-    pool = new ShaderDescriptorPool(*device, tp, type_sz);
     uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
     if (sz == 0) sz = 1;
-    uint32_t i[] = {sz, sz};
-    VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
-    guiModule->recreateDescriptorPool(type, i, 2);
-    objModule->recreateDescriptorPool(type, i, 2);
-    renderDescriptorPool = new ShaderDescriptorPool(*device, type, 2);
+    std::initializer_list<VkDescriptorPoolSize> pSz = {
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, sz},
+        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sz}};
+    guiModule->recreateDescriptorPool(pSz);
+    objModule->recreateDescriptorPool(pSz);
+    renderDescriptorPool = new ShaderDescriptorPool(*device, pSz);
     createDescriptorSets();
 
     recreateSwapchain();
@@ -748,28 +744,18 @@ void Renderer::loadFinalShaders(std::string vShader, std::string gShader,
 
     device->wait();
     delete renderDescriptor;
-    delete pool;
     delete renderDescriptorPool;
 
     delete uniformBuffer;
 
-    uint32_t type_sz = MAX_FRAMES_IN_FLIGHT * this->textures.size();
-    std::vector<VkDescriptorType> types(type_sz);
-    for (size_t i = 0; i < textures.size(); i++) {
-        types[2 * i] = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        types[2 * i + 1] = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    }
-    VkDescriptorType* tp = types.data();
-
-    pool = new ShaderDescriptorPool(*device, tp, type_sz);
     uint32_t sz = textures.size() * MAX_FRAMES_IN_FLIGHT;
     if (sz == 0) sz = 1;
-    uint32_t i[] = {sz, sz};
-    VkDescriptorType type[] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER};
-    guiModule->recreateDescriptorPool(type, i, 2);
-    objModule->recreateDescriptorPool(type, i, 2);
-    renderDescriptorPool = new ShaderDescriptorPool(*device, type, 2);
+    std::initializer_list<VkDescriptorPoolSize> pSz = {
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, sz},
+        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, sz}};
+    guiModule->recreateDescriptorPool(pSz);
+    objModule->recreateDescriptorPool(pSz);
+    renderDescriptorPool = new ShaderDescriptorPool(*device, pSz);
 
     uniformBuffer =
         new Buffer(*device, finalUBOSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,

@@ -87,9 +87,8 @@ Note::Note(std::string name, int64_t time, unsigned char pitch,
     this->kill_moment =
         time + (key == Key::DRUM ? DRUM_HIT_WINDOW : HIT_WINDOW);
     glm::vec2 temp = getSizeAndLocForNote(duration, key, pitch);
-    GraphicalEffect* e =
-        new GraphicalEffect(applyOffset, new float[2]{0, temp.x});
-    this->effects.push_back(e);
+    this->effects.emplace_back(applyOffset,
+                               std::initializer_list<float>{0, temp.x});
     this->size = {temp.y, temp.y};
     this->pitch = pitch;
 }

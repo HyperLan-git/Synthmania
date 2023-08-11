@@ -115,8 +115,6 @@ class Renderer : public boost::noncopyable {
     std::vector<Buffer*> constantBuffers;
     std::vector<Buffer*> guiConstantBuffers;
 
-    ShaderDescriptorPool* pool = NULL;
-
     std::vector<CommandBuffer> commandBuffers;
 
     std::vector<Semaphore*> imageAvailableSemaphores;

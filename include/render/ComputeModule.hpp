@@ -9,9 +9,9 @@ class ComputeModule : public boost::noncopyable {
     ComputeModule(CommandPool& pool, ComputeShader& shader,
                   std::initializer_list<VkPushConstantRange> pushConstants,
                   std::initializer_list<VkDescriptorSetLayoutBinding> bindings,
-                  VkDeviceSize* bufferSizes, uint32_t nBuffers);
+                  std::initializer_list<VkDeviceSize> buffers);
 
-    void run(Queue* queue, void* constants, VkDeviceSize sz, uint64_t workers);
+    void run(Queue& queue, void* constants, VkDeviceSize sz, uint64_t workers);
 
     void fillBuffer(uint32_t buffer, void* data);
     void emptyBuffer(uint32_t buffer, void* data);
@@ -20,13 +20,13 @@ class ComputeModule : public boost::noncopyable {
 
    private:
     Device& device;
-    ShaderDescriptorPool* shaderPool;
+    std::unique_ptr<ShaderDescriptorPool> shaderPool;
     ShaderDescriptorSetLayout* shaderLayout;
     ShaderDescriptorSet* shaderSet;
     PipelineLayout* layout;
     Pipeline* pipeline;
     CommandPool& pool;
     CommandBuffer* commandBuffer;
-    std::vector<Buffer*> buffers;
+    std::vector<Buffer> buffers;
     ComputeShader& shader;
 };

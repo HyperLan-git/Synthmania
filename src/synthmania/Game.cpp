@@ -8,9 +8,23 @@ Game::Game() {
     const char *list =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
         "&\"'(-_)=+|#{}[]`\\^@*,;:!?./%$";
+
+    const char *title = "Synthmai ";
+    std::vector<unsigned long> tit;
+    for (const char *c = title; *c != '\0'; c++) tit.push_back(*c);
     std::vector<unsigned long> chars;
     for (const char *c = list; *c != '\0'; c++) chars.push_back(*c);
+    // TODO Config file ffs
     fontsToLoad.emplace("resources/fonts/Stupid.ttf", chars);
+    fontsToLoad.emplace("resources/fonts/slkscr.ttf", tit);
+    fontsToLoad.emplace("resources/fonts/plexifont.ttf", tit);
+    fontsToLoad.emplace("resources/fonts/commando.ttf", tit);
+    fontsToLoad.emplace("resources/fonts/yukarimobil.ttf", tit);
+    fontsToLoad.emplace("resources/fonts/go3v2.ttf", tit);
+    fontsToLoad.emplace("resources/fonts/OldLondon.ttf", tit);
+    fontsToLoad.emplace("resources/fonts/Saddlebag.ttf", tit);
+    fontsToLoad.emplace("resources/fonts/TexturaBelgica.ttf", tit);
+    fontsToLoad.emplace("resources/fonts/ARCADE_I.ttf", tit);
 }
 
 void Game::init() {

@@ -26,44 +26,33 @@ AudioHandler::AudioHandler(const ALCchar* device) {
     if (!alcMakeContextCurrent(context))
         throw std::runtime_error("Couldn't bind context !");
     alcGetIntegerv(this->device, ALC_FREQUENCY, 1, &sampleRate);
-    int err;
-    while ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error when creating:" << err << std::endl;
+    OPENAL_DEBUG("creating context");
 }
 
-void AudioHandler::addSound(std::string name, AudioBuffer* sound) {
+void AudioHandler::addSound(std::string name, AudioBuffer&& sound) {
     auto iter = sounds.find(name);
-    if (iter != sounds.end()) {
-        delete sounds[name];
-        sounds.erase(iter);
-    }
-    sounds.emplace(name, sound);
+    if (iter != sounds.end()) sounds.erase(iter);
+    auto elem = sounds.emplace(name, std::move(sound));
 }
 
-AudioSource* AudioHandler::playSound(std::string name) {
-    AudioSource* result = new AudioSource(*(sounds[name]));
-    sources.push_back(result);
-    int err;
-    while ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error when playing:" << err << std::endl;
-    result->setGain(volume);
-    result->play();
+AudioSource& AudioHandler::playSound(std::string name) {
+    AudioSource& result = sources.emplace_back(sounds[name]);
+    result.setGain(volume);
+    result.play();
+    OPENAL_DEBUG("playing sound");
     return result;
 }
 
-void AudioHandler::addSource(AudioSource* source) {
-    source->setGain(volume);
-    int err;
-    while ((err = alGetError()) != AL_NO_ERROR)
-        std::cerr << "OpenAL error when adding:" << err << std::endl;
-    sources.push_back(source);
+void AudioHandler::addSource(AudioSource&& source) {
+    sources.emplace_back(std::move(source));
 }
 
 ALCint AudioHandler::getSampleRate() { return sampleRate; }
 
 void AudioHandler::setVolume(float volume) {
     this->volume = volume;
-    for (AudioSource* source : this->sources) source->setGain(volume);
+    // alListenerf(AL_GAIN, volume);
+    for (AudioSource& source : this->sources) source.setGain(volume);
 }
 
 void AudioHandler::setDevice(const ALCchar* device) {
@@ -80,10 +69,9 @@ void AudioHandler::setDevice(const ALCchar* device) {
 
 bool AudioHandler::update() {
     for (auto iter = sources.begin(); iter != sources.end(); iter++) {
-        if (!(*iter)->destroyOnFinished()) continue;
-        ALenum state = (*iter)->getState();
+        if (!iter->destroyOnFinished()) continue;
+        ALenum state = iter->getState();
         if (state == AL_STOPPED) {
-            delete *iter;
             sources.erase(iter);
             return update();
         }
@@ -91,8 +79,7 @@ bool AudioHandler::update() {
     return !sources.empty();
 }
 
-void AudioHandler::removeSound(AudioSource* source) {
-    delete source;
+void AudioHandler::removeSound(AudioSource& source) {
     for (auto iter = this->sources.begin(); iter != this->sources.end(); iter++)
         if (*iter == source) {
             this->sources.erase(iter);
@@ -101,10 +88,7 @@ void AudioHandler::removeSound(AudioSource* source) {
 }
 
 void AudioHandler::clearSounds() {
-    for (AudioSource* source : sources) delete source;
     sources.clear();
-    for (std::pair<std::string, AudioBuffer*> buffer : sounds)
-        delete buffer.second;
     sounds.clear();
 }
 
@@ -112,9 +96,7 @@ AudioHandler::~AudioHandler() {
     int err;
     while ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error this session:" << err << "\n";
-    for (AudioSource* source : sources) delete source;
-    for (auto iter = sounds.begin(); iter != sounds.end(); iter++)
-        delete (*iter).second;
+    clearSounds();
     ALCcontext* context = alcGetCurrentContext();
     alcCloseDevice(device);
     alcMakeContextCurrent(NULL);

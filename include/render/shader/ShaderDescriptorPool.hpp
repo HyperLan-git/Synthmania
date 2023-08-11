@@ -9,10 +9,10 @@ class ShaderDescriptorPool;
 // TODO count what's left to allocate
 class ShaderDescriptorPool {
    public:
-    ShaderDescriptorPool(Device &device, VkDescriptorType *types,
-                         uint32_t count);
-    ShaderDescriptorPool(Device &device, VkDescriptorType *types,
-                         uint32_t *typeCounts, uint32_t count);
+    ShaderDescriptorPool(Device &device,
+                         std::initializer_list<VkDescriptorPoolSize> types);
+    ShaderDescriptorPool(Device &device,
+                         const std::vector<VkDescriptorPoolSize> &types);
 
     ShaderDescriptorPool(ShaderDescriptorPool &&) = delete;
     ShaderDescriptorPool &operator=(ShaderDescriptorPool &&) = delete;

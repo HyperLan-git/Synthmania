@@ -5,12 +5,12 @@ Precision::Precision(Texture texture, std::string name, int64_t time,
     : Gui(texture, name) {
     hit_time = time;
     this->delta = delta;
+    this->position.x = delta / (long double)HIT_WINDOW / 1.2;
 }
 
 bool Precision::update(int64_t time) {
     uint64_t d = this->hit_time + LINGER_PRECISION - time;
     color.a = d / (double)LINGER_PRECISION;
-    this->position.x = delta / (long double)HIT_WINDOW / 1.2;
 
     return this->hit_time + LINGER_PRECISION < time;
 }

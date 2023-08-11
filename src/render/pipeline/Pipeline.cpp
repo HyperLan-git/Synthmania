@@ -4,6 +4,12 @@
 Pipeline::Pipeline(
     PipelineLayout &layout, RenderPass &renderPass, VkExtent2D swapChainExtent,
     std::initializer_list<VkPipelineShaderStageCreateInfo> shaderStages)
+    : Pipeline(layout, renderPass, swapChainExtent,
+               std::vector<VkPipelineShaderStageCreateInfo>(shaderStages)) {}
+
+Pipeline::Pipeline(
+    PipelineLayout &layout, RenderPass &renderPass, VkExtent2D swapChainExtent,
+    const std::vector<VkPipelineShaderStageCreateInfo> &shaderStages)
     : device(layout.getDevice()), layout(layout) {
     this->graphics = true;
 
@@ -108,7 +114,7 @@ Pipeline::Pipeline(
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = shaderStages.size();
-    pipelineInfo.pStages = shaderStages.begin();
+    pipelineInfo.pStages = shaderStages.data();
     pipelineInfo.pVertexInputState = &vertexInputInfo;
     pipelineInfo.pInputAssemblyState = &inputAssembly;
     pipelineInfo.pViewportState = &viewportState;

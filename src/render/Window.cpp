@@ -9,7 +9,7 @@ static void framebufferResizeCallback(GLFWwindow *window, int width,
     void *ptr = glfwGetWindowUserPointer(window);
     if (ptr == NULL) return;
     Game *game = reinterpret_cast<Game *>(ptr);
-    game->getWindow()->onResize();
+    game->getWindow().onResize();
 }
 
 Window::Window(const uint32_t width, const uint32_t height, const char *title,

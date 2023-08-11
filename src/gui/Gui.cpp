@@ -39,19 +39,19 @@ bool Gui::update(int64_t time) { return false; }
 
 void Gui::updateGraphics(int64_t time) {
     this->graphicalPosition = {0, 0};
-    for (GraphicalEffect* e : this->effects)
-        this->graphicalPosition += (*e)(this, time);
+    for (GraphicalEffect& e : this->effects)
+        this->graphicalPosition += e(*this, time);
 }
 
 bool Gui::isDestroyed() { return this->destroyed; }
 
 void Gui::setDestroyed() { this->destroyed = true; }
 
-void Gui::addEffect(GraphicalEffect* effect) {
-    this->effects.push_back(effect);
+void Gui::addEffect(GraphicalEffect&& effect) {
+    this->effects.emplace_back(std::move(effect));
 }
 
-std::vector<GraphicalEffect*>& Gui::getGraphicalEffects() { return effects; }
+std::vector<GraphicalEffect>& Gui::getGraphicalEffects() { return effects; }
 
 ShaderData Gui::getShaderData() const {
     GuiData* edata = (GuiData*)malloc(sizeof(GuiData));
@@ -65,6 +65,4 @@ ShaderData Gui::getShaderData() const {
     return {edata, sizeof(GuiData)};
 }
 
-Gui::~Gui() {
-    for (GraphicalEffect* e : this->effects) delete e;
-}
+Gui::~Gui() {}
