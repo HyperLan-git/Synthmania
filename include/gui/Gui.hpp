@@ -61,7 +61,7 @@ class Gui {
     float rotation = 0;
     glm::vec2 size = {1, 1};
     glm::vec4 color = {1, 1, 1, 1};
-    int negate = false;
+    int negate = false, flip = false;
     std::string name;
     std::vector<GraphicalEffect> effects;
     bool destroyed = false;

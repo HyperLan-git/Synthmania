@@ -76,21 +76,25 @@ unsigned char transposePitch(Key k, unsigned char pitch) {
     return pitch;
 }
 
+bool shouldFlip(unsigned char pitch) { return pitch < 73; }
+
 Note::Note(std::string name, int64_t time, unsigned char pitch,
            double totalDuration, double duration, uint64_t MPQ, Key key,
            KeySignature signature)
     : PartitionNotation(name, time, transposePitch(key, pitch),
                         getTextureForNote(pitch, duration, key), key,
                         signature) {
+    unsigned char tPitch = transposePitch(key, pitch);
+    bool flip = key == Key::DRUM && shouldFlip(tPitch);
     this->totalDuration = totalDuration * MPQ * 4;
     this->duration = duration * MPQ * 4;
     this->kill_moment =
         time + (key == Key::DRUM ? DRUM_HIT_WINDOW : HIT_WINDOW);
-    glm::vec2 temp = getSizeAndLocForNote(duration, key, pitch);
-    this->effects.emplace_back(applyOffset,
-                               std::initializer_list<float>{0, temp.x});
-    this->size = {temp.y, temp.y};
     this->pitch = pitch;
+    glm::vec2 temp = getSizeAndLocForNote(duration, key, pitch);
+    this->effects.emplace_back(
+        applyOffset, std::initializer_list<float>{0, flip ? -temp.x : temp.x});
+    this->size = {temp.y, flip ? -temp.y : temp.y};
 }
 
 void Note::setStatus(NoteStatus status) {

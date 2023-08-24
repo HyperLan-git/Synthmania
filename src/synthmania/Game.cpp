@@ -113,7 +113,7 @@ void Game::resetClock() {
 
 std::map<std::string, std::string> Game::readTextures(std::string file) {
     std::map<std::string, std::string> result;
-    tree *t = readJson(file.c_str());
+    tree *t = readJson(file);
     readTree(*t, result, "");
     delete t;
     return result;

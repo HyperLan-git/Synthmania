@@ -212,18 +212,15 @@ TextHandler::~TextHandler() {
     FT_Done_FreeType(lib);
 }
 
-std::vector<std::shared_ptr<Gui>> printString(std::string text,
-                                              TextHandler& textHandler,
-                                              std::string entityNames,
-                                              std::string font, double size,
-                                              glm::vec2 pos, glm::vec4 color) {
+std::vector<std::shared_ptr<Gui>> TextHandler::printString(
+    std::string text, std::string entityNames, std::string font, double size,
+    glm::vec2 pos, glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
-    for (Text t : textHandler.createText(text, font, size, pos)) {
-        std::string name = entityNames;
-        name.append(std::to_string(i++));
-        std::shared_ptr<Gui> gui =
-            std::make_shared<Gui>(t.character.texture, name.c_str());
+    std::string name = entityNames;
+    for (Text t : createText(text, font, size, pos)) {
+        std::shared_ptr<Gui> gui = std::make_shared<Gui>(
+            t.character.texture, name + std::to_string(i++));
         gui->setColor(color);
         gui->setNegate(1);
         gui->setPosition(t.pos);
@@ -233,24 +230,22 @@ std::vector<std::shared_ptr<Gui>> printString(std::string text,
     return result;
 }
 
-std::vector<std::shared_ptr<Gui>> printShadowedString(
-    std::string text, TextHandler& textHandler, std::string entityNames,
-    std::string font, double size, glm::vec2 pos, glm::vec4 color) {
+std::vector<std::shared_ptr<Gui>> TextHandler::printShadowedString(
+    std::string text, std::string entityNames, std::string font, double size,
+    glm::vec2 pos, glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result, result2;
     glm::vec2 shadowPos = pos;
     shadowPos += glm::vec2({.0005 * size, .0005 * size});
-    std::string shadowName = entityNames;
-    shadowName.append("shadow_");
+    std::string shadowName = entityNames + "shadow_";
     for (std::shared_ptr<Gui> g :
-         printString(text, textHandler, shadowName, font, size, shadowPos,
-                     {0, 0, 0, .7})) {
+         printString(text, shadowName, font, size, shadowPos, {0, 0, 0, .7})) {
         glm::vec2 sz = g->getSize();
         sz *= 1.05;
         g->setSize(sz);
         result.push_back(g);
     }
     for (std::shared_ptr<Gui> g :
-         printString(text, textHandler, entityNames, font, size, pos, color))
+         printString(text, entityNames, font, size, pos, color))
         result.push_back(g);
     for (int i = 0; i < result.size() / 2; i++) {
         result2.push_back(result[i]);
@@ -260,17 +255,15 @@ std::vector<std::shared_ptr<Gui>> printShadowedString(
     return result2;
 }
 
-std::vector<std::shared_ptr<Gui>> printShakingString(
-    std::string text, TextHandler& textHandler, std::string entityNames,
-    std::string font, double size, glm::vec2 pos, float shake,
-    glm::vec4 color) {
+std::vector<std::shared_ptr<Gui>> TextHandler::printShakingString(
+    std::string text, std::string entityNames, std::string font, double size,
+    glm::vec2 pos, float shake, glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
-    for (Text t : textHandler.createText(text, font, size, pos)) {
-        std::string name = entityNames;
-        name.append(std::to_string(i++));
-        std::shared_ptr<Gui> gui =
-            std::make_shared<Gui>(t.character.texture, name.c_str());
+    std::string name = entityNames;
+    for (Text t : createText(text, font, size, pos)) {
+        std::shared_ptr<Gui> gui = std::make_shared<Gui>(
+            t.character.texture, name + std::to_string(i++));
         gui->addEffect(GraphicalEffect(
             applyShaking, std::initializer_list<float>{shake * (float)size}));
         gui->setColor(color);
@@ -282,16 +275,16 @@ std::vector<std::shared_ptr<Gui>> printShakingString(
     return result;
 }
 
-std::vector<std::shared_ptr<Gui>> printVerticalString(
-    std::string text, TextHandler& textHandler, std::string entityNames,
-    std::string font, double size, glm::vec2 pos, glm::vec4 color) {
+std::vector<std::shared_ptr<Gui>> TextHandler::printVerticalString(
+    std::string text, std::string entityNames, std::string font, double size,
+    glm::vec2 pos, glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
-    for (Text t : textHandler.createText(text, font, size, pos)) {
+    for (Text t : createVerticalText(text, font, size, pos)) {
         std::string name = entityNames;
         name.append(std::to_string(i++));
         std::shared_ptr<Gui> gui =
-            std::make_shared<Gui>(t.character.texture, name.c_str());
+            std::make_shared<Gui>(t.character.texture, name);
         gui->setColor(color);
         gui->setNegate(1);
         gui->setPosition(t.pos);

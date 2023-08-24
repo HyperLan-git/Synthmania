@@ -24,12 +24,11 @@ std::vector<std::string> MidiHandler::getMidiPorts() {
     return result;
 }
 
+uint64_t MidiHandler::getTime() { return micros() - this->start_time; }
+
 void MidiHandler::openPort(unsigned int port) {
     this->port = port;
     in.set_callback([this](const libremidi::message &message) {
-        // int bit = message[0] >> 7; // Should always be 1
-        int type = (message[0] >> 4) - 8;
-        int channel = (message[0]) & 0xF;
         Message m;
         if (message.is_note_on_or_off()) {
             int note = message[1];
@@ -37,7 +36,7 @@ void MidiHandler::openPort(unsigned int port) {
             const char *n = notes[note % 12];
             int octave = note / 12 - 1;
             m.type = message.get_message_type();
-            m.channel = channel;
+            m.channel = message.get_channel();
             m.data1 = message[1];
             m.data2 = (message.bytes.size() > 2) ? message[2] : 0;
             m.timestamp = micros() - this->start_time;
@@ -65,7 +64,7 @@ void MidiHandler::openPort(unsigned int port,
 
 int MidiHandler::getOpenPort() { return port; }
 
-TrackPartition MidiHandler::readMidi(const char *path) {
+TrackPartition MidiHandler::readMidi(const std::string path) {
     std::ifstream file(path, std::ios::binary);
 
     std::vector<uint8_t> bytes;

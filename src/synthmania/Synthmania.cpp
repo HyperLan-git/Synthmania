@@ -37,6 +37,7 @@ void Synthmania::init() {
     this->menus.emplace("song select", std::make_shared<SongSelectMenu>(
                                            *this, "resources/songs"));
     this->menus.emplace("options", std::make_shared<OptionMenu>(*this));
+    this->menus.emplace("score", std::make_shared<ScoreScreen>(*this));
 }
 
 void Synthmania::loadSong(std::string songFolder) {
@@ -152,6 +153,16 @@ int64_t Synthmania::getStartTime() { return startTime; }
 MidiHandler &Synthmania::getMidiHandler() { return *handler; }
 AudioHandler &Synthmania::getAudioHandler() { return *audio; }
 Gamemode &Synthmania::getGamemode() { return *gamemode; }
+
+Score Synthmania::getLastScore() { return score; }
+void Synthmania::setLastScore(Score score) { this->score = score; }
+
+void Synthmania::setReplay(uint64_t start, std::vector<Message> replay) {
+    this->replayStart = start;
+    this->replay = replay;
+}
+std::vector<Message> Synthmania::getReplay() { return replay; }
+uint64_t Synthmania::getReplayStart() { return replayStart; }
 
 #ifdef VST
 std::string Synthmania::getPlugin(std::string name) {

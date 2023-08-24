@@ -14,6 +14,19 @@ class TextHandler;
 #include "ImageView.hpp"
 #include "Utils.hpp"
 
+#define SPAWN_TEXT_FUN(textHandler, container, fun, args...)    \
+    for (std::shared_ptr<Gui> & g_text : textHandler.fun(args)) \
+        container.push_back(g_text);
+
+#define SPAWN_TEXT(textHandler, container, args...) \
+    SPAWN_TEXT_FUN(textHandler, container, printString, args)
+
+#define SPAWN_SHADOWED_TEXT(textHandler, container, args...) \
+    SPAWN_TEXT_FUN(textHandler, container, printShadowedString, args)
+
+#define SPAWN_VERTICAL_TEXT(textHandler, container, args...) \
+    SPAWN_TEXT_FUN(textHandler, container, printVerticalString, args)
+
 class TextHandler {
    public:
     TextHandler(Device& device, unsigned int textureSize);
@@ -54,6 +67,23 @@ class TextHandler {
     std::vector<Text> createVerticalText(std::string text, std::string fontName,
                                          double size, glm::vec2 start);
 
+    std::vector<std::shared_ptr<Gui>> printString(
+        std::string text, std::string entityNames, std::string font,
+        double size, glm::vec2 pos, glm::vec4 color = {0, 0, 0, 1});
+
+    std::vector<std::shared_ptr<Gui>> printVerticalString(
+        std::string text, std::string entityNames, std::string font,
+        double size, glm::vec2 pos, glm::vec4 color = {0, 0, 0, 1});
+
+    std::vector<std::shared_ptr<Gui>> printShadowedString(
+        std::string text, std::string entityNames, std::string font,
+        double size, glm::vec2 pos, glm::vec4 color = {0, 0, 0, 1});
+
+    std::vector<std::shared_ptr<Gui>> printShakingString(
+        std::string text, std::string entityNames, std::string font,
+        double size, glm::vec2 pos, float shake,
+        glm::vec4 color = {0, 0, 0, 1});
+
     ~TextHandler();
 
    private:
@@ -65,20 +95,3 @@ class TextHandler {
 
     unsigned int textureSize;
 };
-
-std::vector<std::shared_ptr<Gui>> printString(std::string text,
-                                              TextHandler& textHandler,
-                                              std::string entityNames,
-                                              std::string font, double size,
-                                              glm::vec2 pos,
-                                              glm::vec4 color = {0, 0, 0, 1});
-
-std::vector<std::shared_ptr<Gui>> printShadowedString(
-    std::string text, TextHandler& textHandler, std::string entityNames,
-    std::string font, double size, glm::vec2 pos,
-    glm::vec4 color = {0, 0, 0, 1});
-
-std::vector<std::shared_ptr<Gui>> printShakingString(
-    std::string text, TextHandler& textHandler, std::string entityNames,
-    std::string font, double size, glm::vec2 pos, float shake,
-    glm::vec4 color = {0, 0, 0, 1});

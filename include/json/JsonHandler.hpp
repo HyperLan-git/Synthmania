@@ -11,8 +11,8 @@ class JsonHandler;
 
 typedef boost::property_tree::ptree tree;
 
-tree* readJson(const char* json);
-Chart readChart(const char* json);
+tree* readJson(const std::string json);
+Chart readChart(const std::string json);
 
-void readTree(tree t, std::map<std::string, std::string>& result,
+void readTree(tree &t, std::map<std::string, std::string>& result,
               std::string path);

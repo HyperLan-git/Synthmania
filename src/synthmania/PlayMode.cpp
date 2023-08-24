@@ -1,11 +1,11 @@
 #include "PlayMode.hpp"
 
 PlayMode::PlayMode(Synthmania &game, std::string songFolder)
-    : game(game), songFolder(songFolder) {
+    : game(game), songFolder(songFolder), score() {
     game.getWindow().setKeycallback(PlayMode::keyCallback);
     std::string json = songFolder;
     json.append("/sdata.json");
-    chart = readChart(json.c_str());
+    chart = readChart(json);
     diff = chart.diffs[0];
     game.resetClock();  //<==> game->startTime = chart.offset;
     Renderer &renderer = game.getRenderer();
@@ -41,7 +41,7 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
     std::string path = songFolder;
     path.append("/");
     path.append(diff.midi);
-    partition = game.getMidiHandler().readMidi(path.c_str());
+    partition = game.getMidiHandler().readMidi(path);
     this->drum = partition.drumming;
     Model model =
         loadFromFile(renderer.getDevice(), "resources/models/room.obj");
@@ -104,8 +104,8 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
                 cutDown.erase(cutDown.begin());
             }
             std::shared_ptr<Note> n = std::make_shared<Note>(
-                name.c_str(), note.timestamp, note.note, totalDuration,
-                cutDown[0], partition.MPQ, k, partition.signature);
+                name, note.timestamp, note.note, totalDuration, cutDown[0],
+                partition.MPQ, k, partition.signature);
             keepAlive.push_back(n);
             notes.push_back(n);
             int diff = getDifferenceFromC4(transposePitch(k, note.note),
@@ -120,7 +120,7 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
                     barName.append(hash);
                     std::shared_ptr<PartitionNotation> readability =
                         std::make_shared<PartitionNotation>(
-                            barName.c_str(), note.timestamp, (0.5 - 0.083 * i),
+                            barName, note.timestamp, (0.5 - 0.083 * i),
                             Texture("bar"));
                     readability->setPosition({0, readability->getPosition().y});
                     readability->setSize({0.25, 0.15});
@@ -131,8 +131,7 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
             double p = .2;
             for (int i = 0; i < firstDots; i++) {
                 std::shared_ptr<ParentedGui> dot =
-                    std::make_shared<ParentedGui>(Texture("dot"), name.c_str(),
-                                                  n);
+                    std::make_shared<ParentedGui>(Texture("dot"), name, n);
                 dot->setSize({.05, .05});
                 dot->setPosition({p, 0});
                 tempNotes.push_back(dot);
@@ -144,8 +143,8 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
                 std::string sharpName = "Sharp_";
                 sharpName.append(hash);
                 std::shared_ptr<ParentedGui> sharp =
-                    std::make_shared<ParentedGui>(Texture("sharp"),
-                                                  sharpName.c_str(), n);
+                    std::make_shared<ParentedGui>(Texture("sharp"), sharpName,
+                                                  n);
                 sharp->setPosition({-0.25, 0});
                 sharp->setSize({0.25, 0.25});
                 tempNotes.push_back(sharp);
@@ -158,7 +157,7 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
                 name2.append(std::to_string(i));
                 double d = cutDown[i];
                 std::shared_ptr<ParentedGui> p = std::make_shared<ParentedGui>(
-                    getTextureForNote(note.note, d, k), name2.c_str(), n);
+                    getTextureForNote(note.note, d, k), name2, n);
                 glm::vec2 temp = getSizeAndLocForNote(d, k, note.note);
                 p->setPosition({(t - note.timestamp) / 300000.f, 0});
                 p->addEffect(GraphicalEffect(
@@ -166,8 +165,7 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
                 p->setSize({temp.y, temp.y});
                 tempNotes.push_back(p);
                 std::shared_ptr<ParentedGui> arc =
-                    std::make_shared<ParentedGui>(Texture("arc"), name2.c_str(),
-                                                  n);
+                    std::make_shared<ParentedGui>(Texture("arc"), name2, n);
                 arc->setPosition(
                     {(((t + last) / 2) - note.timestamp) / 300000.f, 0});
                 arc->addEffect(GraphicalEffect(
@@ -218,24 +216,31 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
     text.append(chart.artist);
 
     for (std::shared_ptr<Gui> &g :
-         printShadowedString(text, renderer.getTextHandler(), "title_",
-                             "Stupid", 11, {-1.75, -.9}, {.2, .2, 1, 1}))
+         renderer.getTextHandler().printShadowedString(
+             text, "title_", "Stupid", 11, {-1.75, -.9}, {.2, .2, 1, 1}))
         game.addGui(g);
+
+    this->autoplayText = renderer.getTextHandler().printString(
+        "AUTOPLAY", "autoplay", "Stupid", 16, glm::vec2(.8, 1), glm::vec4(0));
+
+    for (std::shared_ptr<Gui> &g : this->autoplayText) game.addGui(g);
 
     // Needs to be above everything else
     game.addGui(precision);
     game.setTimeMicros(-chart.offset);
+    start = this->game.getMidiHandler().getTime() + chart.offset;
+    score.misses = notes.size();
+    score_per_note =
+        1000000 / notes.size() + (1000000 % notes.size() == 0 ? 0 : 1);
 }
 
 bool PlayMode::update() {
-    // std::cout << "state:" << music->get().getState() << std::endl;
     if ((music && music->get().getState() != AL_PLAYING) &&
         this->notes.size() == 0) {
         std::cout << "state:" << music->get().getState() << std::endl;
         return true;
     }
     int64_t time_from_start = game.getCurrentTimeMicros();
-    // std::cout << std::dec << time_from_start << " ";
     if (autoPlay)
         for (std::weak_ptr<Note> &note : notes) {
             if (note.expired()) continue;
@@ -252,9 +257,7 @@ bool PlayMode::update() {
     if (mod) mod->update(time_from_start);
     // TODO refactor this shit the game should not be handling note logic
     // Or should it ? *vsauce music plays*
-    // Accshually, if I only check a few notes (the first 5 in array for
-    // instance) and if there cannot be more than this amount in the hit window
-    // then I can check shit semi-optimally :nerd:
+    int64_t t_stop = time_from_start + 10000000;
     for (std::weak_ptr<Note> &note : notes) {
         if (note.expired()) continue;
         std::shared_ptr<Note> n(note);
@@ -263,6 +266,7 @@ bool PlayMode::update() {
             continue;
         }
 
+        if (n->getTime() > t_stop) break;
         if (n->getStatus() == HIT &&
             time_from_start >= n->getTime() + n->getTotalDuration()) {
             n->setStatus(FINISHED);
@@ -275,9 +279,8 @@ bool PlayMode::update() {
             if (m.type == libremidi::message_type::NOTE_ON &&
                 m.data2 > 0) {  // vel
                 short got_one = false;
-                if (drum) {
-                    playDrumSound(m.data1);
-                }
+                if (drum) playDrumSound(m.data1);
+
                 for (const std::weak_ptr<Note> &note : notes) {
                     if (note.expired()) continue;
                     std::shared_ptr<Note> n(note);
@@ -328,13 +331,14 @@ bool PlayMode::update() {
 void PlayMode::noteHit(const std::shared_ptr<Note> &note) {
     if (note->getStatus() != WAITING) return;
     int64_t time = game.getCurrentTimeMicros();
-    int64_t delta = autoPlay ? 0 : time - note->getTime();
+    int64_t delta = autoPlay ? 0 : time - note->getTime(), d2 = std::abs(delta);
     std::shared_ptr<Gui> prec = std::make_shared<Precision>(
         Texture("precision_tick"), "tick", time, delta);
     float x = prec->getPosition().x;
     prec->setSize({0.1f, 0.4f});
     prec->setPosition({x, 0.9f});
     game.addGui(prec);
+    bool perfect = d2 < 32000, great = d2 < 64000, good = d2 < 100000;
     delta = std::clamp<int64_t>(delta, 0, note->getTotalDuration() / 2);
     // TODO velocity
     if (!drum) {
@@ -350,19 +354,38 @@ void PlayMode::noteHit(const std::shared_ptr<Note> &note) {
     note->setStatus(HIT);
     note->kill(time + note->getTotalDuration());
 
-    std::string text = "Good!";
+    std::string text;
+    glm::vec4 color;
+    score.misses--;
+    if (perfect) {
+        text = "PERFECT";
+        score.score += score_per_note;
+        color = glm::vec4(.2, .2, 1, 1);
+        score.perfects++;
+    } else if (great) {
+        text = "Great!";
+        score.score += score_per_note * .7;
+        color = glm::vec4(.3, 1, .3, 1);
+        score.near++;
+    } else if (good) {
+        score.score += score_per_note * .5;
+        text = "Good";
+        color = glm::vec4(.3, 1, .3, 1);
+        score.far++;
+    } else {
+        text = "BAD";
+        color = glm::vec4(.3, .3, .3, 1);
+        score.misses++;
+    }
     int i = 0;
-    std::string name = "hit_";
-    name.append(std::to_string((size_t)note.get()));
-    name.append("_");
+    std::string name = "hit_" + std::to_string((size_t)note.get()) + "_";
     for (Text t : this->game.getRenderer().getTextHandler().createText(
              text, "Stupid", 11,
-             {-1.8, (double)(-.25 + line->getPosition().y +
-                             line->getSize().y / 2.)})) {
+             {-1.8, line->getPosition().y - line->getSize().y / 2.})) {
         std::shared_ptr<Gui> gui = std::make_shared<Gui>(
-            t.character.texture, (name + std::to_string(i++)).c_str());
+            t.character.texture, name + std::to_string(i++));
         gui->addEffect(GraphicalEffect(applyTemp));
-        gui->setColor({.3, 1, .3, 1});
+        gui->setColor(color);
         gui->setNegate(true);
         gui->setPosition(t.pos);
         gui->setSize(t.size);
@@ -376,18 +399,15 @@ void PlayMode::noteMiss(const std::shared_ptr<Note> &note) {
     note->setStatus(MISSED);
     note->kill(time);
 
-    std::string text = "BAD";
+    std::string text = "MISS";
+    std::string name = "miss_" + std::to_string((size_t)note.get()) + "_";
     int i = 0;
     for (Text t : game.getRenderer().getTextHandler().createText(
              text, "Stupid", 11,
              {-2, (double)(-.25 + line->getPosition().y +
                            line->getSize().y / 2.)})) {
-        std::string name = "miss_";
-        name.append(std::to_string((size_t)note.get()));
-        name.append("_");
-        name.append(std::to_string(i++));
-        std::shared_ptr<Gui> gui =
-            std::make_shared<Gui>(t.character.texture, name.c_str());
+        std::shared_ptr<Gui> gui = std::make_shared<Gui>(
+            t.character.texture, name + std::to_string(i++));
         gui->addEffect(GraphicalEffect(applyTemp));
         gui->setColor({1, 0, 0, 1});
         gui->setNegate(true);
@@ -457,8 +477,10 @@ PlayMode::~PlayMode() {
 #ifdef VST
     if (this->plugin) delete this->plugin;
 #endif
+    game.setLastScore(score);
+    game.setReplay(start, replay);
     game.resetScene();
-    game.loadMenu("song select");
+    game.loadMenu("score");
 }
 
 void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,
@@ -470,6 +492,11 @@ void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,
 
     if (key == GLFW_KEY_TAB) {
         inst.autoPlay = !inst.autoPlay;
+        for (std::shared_ptr<Gui> &g : inst.autoplayText)
+            if (inst.autoPlay)
+                g->setColor({.5, .5, 0, 1});
+            else
+                g->setColor(glm::vec4(0));
         return;
     }
     if (key == GLFW_KEY_RIGHT) {
@@ -477,8 +504,10 @@ void PlayMode::keyCallback(GLFWwindow *win, int key, int scancode, int action,
         return;
     }
     if (key == GLFW_KEY_ESCAPE) {
+        game->setLastScore(inst.score);
+        game->setReplay(inst.start, inst.replay);
         game->setGamemode(NULL);
-        game->loadMenu("song select");
+        game->loadMenu("score");
         return;
     }
     if (inst.autoPlay) return;

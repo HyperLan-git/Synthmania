@@ -10,8 +10,10 @@ class Synthmania;
 #include "Chart.hpp"
 #include "Gamemode.hpp"
 #include "Judgement.hpp"
+#include "MidiHandler.hpp"
 #include "MidiNote.hpp"
 #include "Note.hpp"
+#include "Score.hpp"
 #include "Utils.hpp"
 
 class PlayMode : public Gamemode {
@@ -60,8 +62,14 @@ class PlayMode : public Gamemode {
     std::vector<std::weak_ptr<Note>> notes;
     std::optional<std::reference_wrapper<AudioSource>> music;
     std::string songFolder;
+    std::vector<std::shared_ptr<Gui>> autoplayText;
+    int64_t start;
+    std::vector<Message> replay;
     std::shared_ptr<Judgement> line;
     bool autoPlay = false, drum = false;
+
+    Score score;
+    uint32_t score_per_note;
 
 #ifdef VST
     AudioPluginHandler *plugin = NULL;

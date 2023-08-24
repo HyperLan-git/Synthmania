@@ -2,7 +2,7 @@
 
 Options::Options(std::string defaults, std::string current) {
     this->path = current;
-    tree *def = readJson(defaults.c_str()), *cur = readJson(current.c_str());
+    tree *def = readJson(defaults), *cur = readJson(current);
     boost::optional<int> opt = cur->get_optional<int>("audio.device");
 
     defaultValues = def;

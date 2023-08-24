@@ -16,6 +16,7 @@ struct Message;
 #include <fstream>
 #include <libremidi/libremidi.hpp>
 #include <libremidi/reader.hpp>
+#include <libremidi/writer.hpp>
 #include <mutex>
 #include <queue>
 
@@ -40,7 +41,7 @@ class MidiHandler {
 
     bool hasMessage();
     Message getMessage();
-    TrackPartition readMidi(const char* path);
+    TrackPartition readMidi(const std::string path);
 
     std::vector<std::string> getMidiPorts();
     void openPort(unsigned int port);
@@ -48,6 +49,8 @@ class MidiHandler {
                   libremidi::midi_in::message_callback callback);
 
     int getOpenPort();
+
+    uint64_t getTime();
 
     ~MidiHandler();
 

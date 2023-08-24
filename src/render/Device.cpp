@@ -126,7 +126,7 @@ VkPhysicalDevice Device::getPhysicalDevice() { return physicalDevice; }
 
 std::optional<Queue> Device::getQueue(std::string name) {
     for (auto entry : queues) {
-        if (entry.first.compare(name.c_str()) == 0)
+        if (entry.first.compare(name) == 0)
             return Queue::getAvailableQueue(entry.second.queues);
     }
     return std::optional<Queue>();

@@ -26,7 +26,7 @@ SongSelectMenu::SongSelectMenu(Game &g, std::string folder) : Menu(g) {
             songs.emplace_back(filename);
             std::string &name = songs[songs.size() - 1];
             std::shared_ptr<Button> but = std::make_shared<Button>(
-                button, button_pressed, name.c_str(), glm::vec2({0, pos}),
+                button, button_pressed, name, glm::vec2({0, pos}),
                 glm::vec2({1, .25}));
             this->buttons.push_back(but);
             for (Text t : g.getTextHandler().createText(name, "Stupid", 10,

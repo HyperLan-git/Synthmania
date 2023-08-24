@@ -28,6 +28,7 @@ class Synthmania;
 #include "PlayMode.hpp"
 #include "Precision.hpp"
 #include "Renderer.hpp"
+#include "ScoreScreen.hpp"
 #include "SongSelectMenu.hpp"
 #include "Window.hpp"
 
@@ -64,6 +65,14 @@ class Synthmania : public Game {
     float getMusicVolume();
     int64_t getAudioLeniency();
 
+    // TODO rework a way to pass data to next menu/screen/gamemode
+    Score getLastScore();
+    void setLastScore(Score score);
+
+    void setReplay(uint64_t replayStart, std::vector<Message> replay);
+    uint64_t getReplayStart();
+    std::vector<Message> getReplay();
+
     virtual void resetScene();
 
     virtual size_t updateUBO(void *&ubo);
@@ -89,6 +98,10 @@ class Synthmania : public Game {
     std::unique_ptr<MidiHandler> handler;
 
     std::shared_ptr<Gamemode> gamemode;
+
+    Score score;
+    uint64_t replayStart;
+    std::vector<Message> replay;
 
     std::string skin;
     std::map<unsigned char, unsigned char> midiMapping;
