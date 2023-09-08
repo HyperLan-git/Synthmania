@@ -26,11 +26,11 @@ void main() {
     float rotation = constants.rotation;
     v = vec4(inPosition.x, inPosition.y, 0, 1.0);
     float c = cos(rotation), s = sin(rotation);
+    v.x *= size.x;
+    v.y *= size.y;
     float temp = v.x;
     v.x = v.x * c - v.y * s;
     v.y = temp * s + v.y * c;
-    v.x *= size.x;
-    v.y *= size.y;
     v.xyz += pos;
     v = ubo.proj * ubo.view * v;
     //v.x = v.x/2;

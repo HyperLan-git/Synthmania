@@ -16,8 +16,8 @@ std::vector<double> splitDuration(double duration) {
     return result;
 }
 
-Texture getTextureForNote(unsigned char pitch, double duration,
-                          Key currentKey) {
+Texture getTextureForNote(unsigned char pitch, double duration, Key currentKey,
+                          bool linked) {
     if (currentKey == Key::DRUM) {
         switch (pitch) {
             case MidiPercussion::CRASH:
@@ -28,6 +28,7 @@ Texture getTextureForNote(unsigned char pitch, double duration,
                 return Texture("note_4th");
         }
     }
+    if (linked) return Texture("note_4th");
     float initial = 2;
     std::string texName = "note_";
     while (initial > duration) initial /= 2;
@@ -80,9 +81,9 @@ bool shouldFlip(unsigned char pitch) { return pitch < 73; }
 
 Note::Note(std::string name, int64_t time, unsigned char pitch,
            double totalDuration, double duration, uint64_t MPQ, Key key,
-           KeySignature signature)
+           KeySignature signature, bool linked)
     : PartitionNotation(name, time, transposePitch(key, pitch),
-                        getTextureForNote(pitch, duration, key), key,
+                        getTextureForNote(pitch, duration, key, linked), key,
                         signature) {
     unsigned char tPitch = transposePitch(key, pitch);
     bool flip = key == Key::DRUM && shouldFlip(tPitch);

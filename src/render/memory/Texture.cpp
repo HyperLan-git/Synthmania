@@ -16,6 +16,10 @@ int64_t Texture::operator-(const Texture& other) const {
     return Texture::HashFunction()(*this) - Texture::HashFunction()(other);
 }
 
+bool Texture::operator<(const Texture& other) const {
+    return (*this - other) < 0;
+}
+
 std::size_t Texture::HashFunction::operator()(const Texture& id) const {
     { return std::hash<std::string>{}(id.identifier); }
 }

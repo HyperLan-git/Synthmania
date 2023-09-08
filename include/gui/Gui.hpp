@@ -32,6 +32,7 @@ class Gui {
     int getNegate() const;
 
     void setPosition(glm::vec2 pos);
+    void setRotation(float rotation);
     void setZ(float z);
     void setSize(glm::vec2 size);
     void setColor(glm::vec4 color);

@@ -16,6 +16,8 @@ bool isFromCMajor(unsigned char pitch);
 
 int getOffset(Key key);
 
+float getNotationPosition(int64_t time, int64_t currentTime = 0);
+
 class PartitionNotation : public Gui {
    public:
     PartitionNotation(std::string name, int64_t time, unsigned char pitch,

@@ -76,9 +76,9 @@ Device& Image::getDevice() { return device; }
 
 std::unique_ptr<Memory>& Image::getMemory() { return memory; }
 
-VkExtent3D Image::getExtent() { return extent; }
+VkExtent3D Image::getExtent() const { return extent; }
 
-uint32_t Image::getLayers() { return layers; }
+uint32_t Image::getLayers() const { return layers; }
 
 VkSubresourceLayout Image::getImageSubresourceLayout(uint32_t mipLevel,
                                                      uint32_t arrayLayer,

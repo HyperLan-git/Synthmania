@@ -1,5 +1,9 @@
 #include "PartitionNotation.hpp"
 
+float getNotationPosition(int64_t time, int64_t currentTime) {
+    return (time - currentTime) / 300000.f - 1.3f;
+}
+
 int getDifferenceFromC4(unsigned char pitch, KeySignature signature) {
     char octave = pitch / 12;
     octave -= 5;
@@ -106,6 +110,6 @@ PartitionNotation::PartitionNotation(std::string name, int64_t time,
 int64_t PartitionNotation::getTime() { return time; }
 
 bool PartitionNotation::update(int64_t time) {
-    this->position.x = (this->time - time) / 300000. - 1.3f;
+    this->position.x = getNotationPosition(this->time, time);
     return false;
 }

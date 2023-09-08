@@ -84,11 +84,16 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
     bar->setPosition({-1.3f, bar->getPosition().y});
     bar->setSize({0.25f, 1.f});
     game.addTGui(bar);
-    std::vector<std::shared_ptr<Gui>> tempNotes;
-    // TODO make this less cringe
+    // FIXME make this less cringe
     {
+        std::vector<std::shared_ptr<Gui>> tempNotes;
         std::vector<std::shared_ptr<Note>> keepAlive;
-        for (MidiNote note : partition.notes) {
+        std::shared_ptr<PartitionNotation> bar;
+        int groupedNotes = 0, beams = 0;
+        std::shared_ptr<Note> groupStart;
+        for (auto iter = partition.notes.cbegin();
+             iter != partition.notes.cend(); iter++) {
+            const MidiNote &note = *iter;
             std::string name = "Note_";
             std::string hash = std::to_string(std::hash<MidiNote>()(note));
             name += hash;
@@ -108,6 +113,57 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
                 partition.MPQ, k, partition.signature);
             keepAlive.push_back(n);
             notes.push_back(n);
+
+            // Beaming
+            /* XXX Shitcode that needs to be removed why am I stupid?
+
+            if (groupedNotes == 0 && totalDuration <= .125) {
+                int groupLimit = 1;
+                beams = 0;
+                groupStart = n;
+                if (totalDuration == .125) {
+                    groupLimit = 4;
+                    beams = 1;
+                }
+                double dur = totalDuration;
+                while (dur < .125) {
+                    groupLimit *= 2;
+                    dur *= 2;
+                    beams++;
+                }
+                auto it2 = iter;
+                uint64_t time = note.timestamp + note.length;
+                while ((++it2) != partition.notes.cend() &&
+                       groupLimit > groupedNotes++) {
+                    if (it2->timestamp != time || it2->length != note.length)
+                        break;
+                    time += note.length;
+                }
+            }
+            if (groupedNotes >= 0) {
+                if (--groupedNotes == 0) {
+                    for (int b = 0; b < beams; b++) {
+                        glm::vec2 sz =
+                            getSizeAndLocForNote(note.length, k, note.note);
+                        bar = std::make_shared<PartitionNotation>(
+                            "linkbar", note.timestamp, 0, Texture("bar"));
+                        float x = getNotationPosition(n->getTime()) -
+                                  getNotationPosition(groupStart->getTime()),
+                              y = n->getPosition().y -
+                                  groupStart->getPosition().y;
+                        bar->setSize({x, .3});
+                        bar->setRotation(std::atan2(y, x));
+                        bar->addEffect(GraphicalEffect(
+                            applyOffset, {-n->getSize().x / 2,
+                                          n->getPosition().y - n->getSize().y -
+                                              y / 2 + b * .05f}));
+                        // bar->addEffect(GraphicalEffect(applyShaking));
+                        game.addTGui(bar);
+                    }
+                }
+            }*/
+
+            // Reading bars
             int diff = getDifferenceFromC4(transposePitch(k, note.note),
                                            partition.signature) +
                        getOffset(k);
@@ -116,8 +172,7 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
                 for (int i = up ? 12 : 0;
                      (up && i <= diff) || (!up && i >= diff);
                      up ? i += 2 : i -= 2) {
-                    std::string barName = "Bar_";
-                    barName.append(hash);
+                    std::string barName = "Bar_" + hash;
                     std::shared_ptr<PartitionNotation> readability =
                         std::make_shared<PartitionNotation>(
                             barName, note.timestamp, (0.5 - 0.083 * i),
@@ -128,6 +183,7 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
                 }
             }
 
+            // Dotted time
             double p = .2;
             for (int i = 0; i < firstDots; i++) {
                 std::shared_ptr<ParentedGui> dot =
@@ -138,10 +194,10 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
                 p += .2;
             }
 
+            // Sharp symbol thing
             Accidental a = getAccidental(note.note, partition.signature);
-            if (k != Key::DRUM && !isFromCMajor(note.note)) {
-                std::string sharpName = "Sharp_";
-                sharpName.append(hash);
+            if (k != Key::DRUM && a == Accidental::SHARP) {
+                std::string sharpName = "Sharp_" + hash;
                 std::shared_ptr<ParentedGui> sharp =
                     std::make_shared<ParentedGui>(Texture("sharp"), sharpName,
                                                   n);
@@ -152,12 +208,10 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
             uint64_t last = note.timestamp;
             uint64_t t = note.timestamp + cutDown[0] * partition.MPQ * 4;
             for (int i = 1; i < cutDown.size(); i++) {
-                std::string name2 = name;
-                name2.append("_");
-                name2.append(std::to_string(i));
+                std::string name2 = name + "_" + std::to_string(i);
                 double d = cutDown[i];
                 std::shared_ptr<ParentedGui> p = std::make_shared<ParentedGui>(
-                    getTextureForNote(note.note, d, k), name2, n);
+                    getTextureForNote(note.note, d, k, false), name2, n);
                 glm::vec2 temp = getSizeAndLocForNote(d, k, note.note);
                 p->setPosition({(t - note.timestamp) / 300000.f, 0});
                 p->addEffect(GraphicalEffect(
@@ -184,8 +238,18 @@ PlayMode::PlayMode(Synthmania &game, std::string songFolder)
         if (tmp.size() > 0) sortGuis(tmp, cmpGuisByTexture);
         if (tempNotes.size() > 0) sortGuis(tempNotes, cmpGuisByTexture);
         for (std::shared_ptr<Gui> &note : tmp) game.addGui(note);
+        for (std::shared_ptr<Gui> &gui : tempNotes) game.addGui(gui);
     }
-    for (std::shared_ptr<Gui> &gui : tempNotes) game.addGui(gui);
+    std::shared_ptr<Note> lastNote(*notes.rbegin());
+    for (int i = 0; i < lastNote->getTime() / partition.MPQ / 4; i++) {
+        auto bar = std::make_shared<PartitionNotation>(
+            "measurebar_" + std::to_string(i), i * partition.MPQ * 4, 0,
+            Texture("bar"));
+        bar->setRotation(glm::half_pi<float>());
+        bar->setSize({.67, .2});
+        bar->addEffect(GraphicalEffect(applyOffset, {-.15, 0}));
+        game.addTGui(bar);
+    }
     AudioHandler &audio = game.getAudioHandler();
     if (chart.audio.compare("None") != 0) {
         std::string wav = songFolder;
@@ -404,8 +468,7 @@ void PlayMode::noteMiss(const std::shared_ptr<Note> &note) {
     int i = 0;
     for (Text t : game.getRenderer().getTextHandler().createText(
              text, "Stupid", 11,
-             {-2, (double)(-.25 + line->getPosition().y +
-                           line->getSize().y / 2.)})) {
+             {-1.8, line->getPosition().y - line->getSize().y / 2.})) {
         std::shared_ptr<Gui> gui = std::make_shared<Gui>(
             t.character.texture, name + std::to_string(i++));
         gui->addEffect(GraphicalEffect(applyTemp));

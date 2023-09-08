@@ -1,9 +1,5 @@
 #include "Gui.hpp"
 
-#ifndef M_PI
-#define M_PI 3.14159265359
-#endif
-
 Gui::Gui(Texture texture, std::string name) {
     this->texture = texture;
     this->name = name;
@@ -15,7 +11,8 @@ glm::vec3 Gui::getPosition() const { return position; }
 glm::vec2 Gui::getRealPosition() const { return position; }
 glm::vec2 Gui::getGraphicalPosition() const { return graphicalPosition; }
 float Gui::getRotation() const {
-    return (rotation - (int)(rotation / (M_PI * 2)) * 2 * M_PI);
+    double tpi = glm::two_pi<double>();
+    return (rotation - (int)(rotation / tpi) * tpi);
 }
 glm::vec2 Gui::getSize() const { return size; }
 glm::vec4 Gui::getColor() const { return color; }
@@ -24,6 +21,8 @@ int Gui::getNegate() const { return negate; }
 void Gui::setPosition(glm::vec2 pos) {
     this->position = glm::vec3(pos.x, pos.y, position.z);
 }
+
+void Gui::setRotation(float rotation) { this->rotation = rotation; }
 
 void Gui::setZ(float z) { this->position.z = z; }
 

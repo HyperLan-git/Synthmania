@@ -31,8 +31,8 @@ class Image {
      * empty if this image is a swapchain image
      */
     std::unique_ptr<Memory> &getMemory();
-    VkExtent3D getExtent();
-    uint32_t getLayers();
+    VkExtent3D getExtent() const;
+    uint32_t getLayers() const;
     VkSubresourceLayout getImageSubresourceLayout(
         uint32_t mipLevel = 0, uint32_t arrayLayer = 0,
         VkImageAspectFlags flags = VK_IMAGE_ASPECT_COLOR_BIT);
@@ -42,6 +42,7 @@ class Image {
    private:
     Device &device;
     VkImage image;
+    // TODO find how to make that layout shit work
     VkImageLayout currentLayout;
     std::unique_ptr<Memory> memory;
     VkExtent3D extent;

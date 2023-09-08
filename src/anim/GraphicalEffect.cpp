@@ -44,13 +44,14 @@ glm::vec2 applyWavy(int64_t time, Gui& gui, std::vector<float>& data,
                     std::vector<int64_t>& tData) {
     if (data.size() < 2) data = {0.f, .2f};
     if (tData.size() < 2) tData = {time, 1000000};
-    float progress =
-        (float)((tData[0] - time) % (int64_t)(tData[1] * M_PI * 2)) / tData[1];
+    float progress = (float)((tData[0] - time) %
+                             (int64_t)(tData[1] * glm::two_pi<double>())) /
+                     tData[1];
     float x = data[0] * std::sin(progress), y = data[1] * std::sin(progress);
     return glm::vec2({x, y});
 }
 
-// TODO replace this with a less heavy system
+// TODO replace this with a less heavy system (compute in shader????)
 glm::vec2 applyOffset(int64_t time, Gui& gui, std::vector<float>& data,
                       std::vector<int64_t>& iData) {
     if (data.size() < 2) return glm::vec2();

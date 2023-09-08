@@ -16,11 +16,14 @@ enum NoteStatus {
     MISSED     // FAILED
 };
 
+// FIXME rewrite all of the code for notes, we need to render separately every element
+
 unsigned char transposePitch(Key k, unsigned char pitch);
 
 std::vector<double> splitDuration(double duration);
 
-Texture getTextureForNote(unsigned char pitch, double duration, Key currentKey);
+Texture getTextureForNote(unsigned char pitch, double duration, Key currentKey,
+                          bool linked);
 
 glm::vec2 getSizeAndLocForNote(double duration, Key k, unsigned char pitch);
 
@@ -28,7 +31,7 @@ class Note : public PartitionNotation {
    public:
     Note(std::string name, int64_t time, unsigned char pitch,
          double totalDuration, double duration, uint64_t MPQ, Key key,
-         KeySignature signature);
+         KeySignature signature, bool linked = false);
 
     void setStatus(NoteStatus status);
 

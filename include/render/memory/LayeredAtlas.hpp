@@ -33,6 +33,7 @@ class LayeredAtlas {
 
     TexPtr getTexture(uint32_t layer, VkFormat format,
                       VkImageAspectFlags aspectFlags, std::string name);
+
     Image &getImage();
 
     virtual ~LayeredAtlas();

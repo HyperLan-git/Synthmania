@@ -17,24 +17,27 @@ class TextureAtlas {
 
     /**
      * Checks whether a new image can fit in this atlas
-     * @return false if the atlas does not have enough remaining space
+     * @return false if the atlas doesn't have enough space and true otherwise
      */
-    bool fits(ImageView *image) const;
+    bool fits(VkExtent2D &imageExtent) const;
 
     /**
-     * Adds to the atlas another image and creates a new view
-     * @arg{ImageView *imageToCopy} an image view
+     * Adds to the atlas another image
+     * @arg{Image &imageToCopy} an image
+     * @arg{Texture id} the id of the texture to index it
+     * @arg{CommandPool &pool} a command pool used for a temporary CommandBuffer
      * @throw std::runtime_error if there is not enough space inside the atlas,
      * make a new one instead and check with TextureAtlas::fits !
-     * @return The index of the texture in the atlas
+     * @return The position and size of the texture in the atlas
      */
-    glm::vec<4, uint32_t> append(ImageView *imageToCopy, CommandPool *pool);
+    glm::vec<4, uint32_t> append(Image &imageToCopy, Texture id,
+                                 CommandPool &pool);
 
-    bool contains(std::string texture) const;
+    bool contains(Texture texture) const;
 
-    glm::vec<4, uint32_t> operator[](std::string texture) const;
+    glm::vec<4, uint32_t> operator[](Texture texture) const;
 
-    ImageView *getTexture();
+    TexPtr getTexture();
 
     Device &getDevice();
 
@@ -42,10 +45,11 @@ class TextureAtlas {
 
    private:
     Device &device;
-    ImageView *img;
+    std::shared_ptr<ImageView> img;
+
     // Write pointer to the upper-left corner of where we can add a new image
     glm::vec2 ptr;
     // Height of the current write row
     float height;
-    std::map<std::string, glm::vec<4, uint32_t>> contents;
+    std::map<Texture, glm::vec<4, uint32_t>> contents;
 };

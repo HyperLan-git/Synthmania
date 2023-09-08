@@ -23,6 +23,8 @@ class Texture {
 
     int64_t operator-(const Texture& other) const;
 
+    bool operator<(const Texture& other) const;
+
     // Overload hash function for unordered_map
     struct HashFunction {
         std::size_t operator()(const Texture& id) const;

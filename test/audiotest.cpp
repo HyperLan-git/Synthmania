@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include <iostream>
 #include <limits>
 #include <thread>
@@ -7,10 +9,6 @@
 
 #define BUFFERS 3
 #define BUFFERSIZE 10024
-
-#ifndef M_PI
-#define M_PI 3.14159265359
-#endif
 
 int main() {
     std::vector<std::string> devices = getAudioDevices();
