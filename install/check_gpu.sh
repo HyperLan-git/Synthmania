@@ -1,0 +1,1 @@
+wget -qO- "https://vulkan.gpuinfo.org/api/internal/devices.php?platform=all&columns[0][searchable]=true&columns[0][search][value]=$1""&order[0][column]=submissiondate&start=0&length=1" | grep '"data":\[\]'

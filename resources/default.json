@@ -1,0 +1,30 @@
+{
+    "audio": {
+        "device": -1,
+        "volume": 0.5,
+        "music": 0.7,
+        "hitsounds": 1
+    },
+    "midi": {
+        "device": 0
+    },
+    "gameplay": {
+        "notes": 0,
+        "audio latency": 0,
+        "graphical latency": 0,
+        "adjusting delay": 20000
+    },
+    "appearance": {
+        "fullscreen": false,
+        "resolutionX": 1920,
+        "resolutionY": 1080,
+        "skin": "default"
+    },
+    "plugin": {
+        "buffer size": 1024,
+        "buffers": 3,
+        "folders": [
+            "plugins"
+        ]
+    }
+}

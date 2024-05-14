@@ -1,1 +1,11 @@
 bin/
+plugins/
+replays/
+vulkan/
+vkvia.html
+resources/songs/*
+!resources/songs/examplesong
+!resources/songs/exampledrums
+**/*.o
+**/*.log
+**/*.gch

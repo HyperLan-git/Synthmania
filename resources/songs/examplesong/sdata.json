@@ -1,0 +1,20 @@
+{
+    "_comment": "diffs is an array of difficulties, audio is the audio file, offset is the audio offset (micros) relative to the midi, plugin is the name of the synth plugin needed to do hitsounds, animation is the special script file or library (WIP)",
+    "diffs": [
+        {
+            "_comment": "The name is the display name, midi is the midi file and track is the midi track",
+            "name": "Normal",
+            "midi": "bruh.MID",
+            "track": 0
+        }
+    ],
+    "name": "Test",
+    "artist": "HyperLan",
+    "charter": "HyperLan",
+    "audio": "None",
+    "offset": 0,
+    "plugin": "None",
+    "plugin2": "Vital",
+    "plugindata": "mysynth.dat",
+    "animation": "None"
+}

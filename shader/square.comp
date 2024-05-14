@@ -1,0 +1,22 @@
+#version 450
+
+layout(local_size_x = 128, local_size_y = 1) in;
+
+layout(push_constant) uniform PushConstants {
+    uint w;
+    uint h;
+} constants;
+
+layout(binding = 0) buffer inBuf {float inArr[];} inputs;
+layout(binding = 1) buffer outBuf {float outArr[];} outputs;
+
+float transform(float x) {
+    return x*x;
+}
+
+void main() {
+    if (constants.w <= gl_GlobalInvocationID.x ||
+            constants.h <= gl_GlobalInvocationID.y) return;
+    const uint i = constants.w * gl_GlobalInvocationID.y + gl_GlobalInvocationID.x;
+    outputs.outArr[i] = transform(inputs.inArr[i]);
+}

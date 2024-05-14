@@ -1,0 +1,6 @@
+[submodule "libs/libremidi"]
+	path = libs/libremidi
+	url = https://github.com/jcelerier/libremidi
+[submodule "libs/SimplePluginHost"]
+	path = libs/SimplePluginHost
+	url = https://github.com/HyperLan-git/SimplePluginHost
