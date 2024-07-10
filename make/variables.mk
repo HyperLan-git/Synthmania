@@ -26,9 +26,9 @@ ifdef DEBUG
 CFLAGS = -std=c++17 -O0 -g -D DEBUG
 endif
 
-LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lX11 -lXrandr -lcurl -lfreetype
+LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lX11 -lXrandr -lfreetype
 ifeq ($(OS),Windows_NT)
-LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lwinmm -lfreetype
+LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lwinmm -lfreetype -lcurl
 endif
 
 OBJDIR = bin/obj
