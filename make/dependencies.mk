@@ -71,5 +71,5 @@ deps:
 ifeq ($(OS),Windows_NT)
 	pacman -S mingw-w64-x86_64-boost mingw-w64-x86_64-glm mingw-w64-x86_64-openal mingw-w64-x86_64-freetype
 else
-	sudo apt-get update ; sudo apt-get upgrade ; sudo apt-get install g++ libglfw3-dev libglm-dev libopenal-dev libfreetype-dev libboost-all-dev
+	sudo apt-get update ; sudo apt-get upgrade ; sudo apt-get install g++ libglfw3-dev libglm-dev libopenal-dev libfreetype-dev libboost-all-dev libasound2-dev
 endif
