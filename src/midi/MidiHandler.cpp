@@ -41,7 +41,8 @@ void MidiHandler::openPort(unsigned int port) {
             m.data2 = (message.bytes.size() > 2) ? message[2] : 0;
             m.timestamp = micros() - this->start_time;
             this->messages.push(m);
-            // std::cout << "note pressed : " << n << octave << std::endl;
+            // TODO maybe show some kind of visual feedback when you input midi?
+            //  std::cout << "note pressed : " << n << octave << std::endl;
         } else if (message[0] <
                    uint8_t(libremidi::message_type::SYSTEM_EXCLUSIVE)) {
             m.type = message.get_message_type();

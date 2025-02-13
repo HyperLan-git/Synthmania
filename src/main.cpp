@@ -9,6 +9,7 @@
 // TODO get device from other arguments when possible
 // TODO this-> ...
 // TODO have any object destroy everything that needs it to exist automatically
+// TODO apparently people don't like macros so maybe remove the few that can be
 // XXX do the same for moving and maybe even copying?
 // XXX namespace shenanigans
 // XXX explicit constructors :crying:

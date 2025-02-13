@@ -151,7 +151,7 @@ Character TextHandler::getCharacter(std::string fontName, unsigned long code) {
     return Character{};
 }
 
-// TODO redo character drawing cause these coefficients fucked up man...
+// TODO redo character drawing cause these coefficients messed up man...
 std::vector<Text> TextHandler::createText(std::string text,
                                           std::string fontName, double size,
                                           glm::vec2 start) {

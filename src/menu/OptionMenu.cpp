@@ -367,7 +367,7 @@ void OptionMenu::save() {
     stream2 << options.save();
 }
 
-// Needed so that shit renders correctly on top of each other
+// Needed so that stuff renders correctly on top of each other
 // XXX fix options rendering
 void OptionMenu::show() {
     for (std::shared_ptr<Button>& b : buttons) game.addTGui(b);

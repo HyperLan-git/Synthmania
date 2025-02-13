@@ -10,6 +10,10 @@
 #define BUFFERS 3
 #define BUFFERSIZE 10024
 
+#ifndef M_PI
+#define M_PI 3.1415926
+#endif
+
 int main() {
     std::vector<std::string> devices = getAudioDevices();
     for (auto device : devices) std::cout << device << std::endl;
@@ -18,7 +22,7 @@ int main() {
     short buf[BUFFERSIZE] = {0};
     int sampleRate = handler->getSampleRate();
     AudioBuffer* buffers = new (BUFFERS) AudioBuffer[BUFFERS];
-    AudioSource* source = new AudioSource(false);
+    AudioSource& source = handler->addSource(AudioSource(false));
     unsigned long t = 0;
     for (int i = 0; i < BUFFERS; i++) {
         for (int j = 0; j < BUFFERSIZE; j++)
@@ -27,28 +31,27 @@ int main() {
         buffers[i].write(AL_FORMAT_STEREO16, buf, BUFFERSIZE * sizeof(short),
                          sampleRate);
     }
-    source->queueBuffers(buffers, BUFFERS);
+    source.queueBuffers(buffers, BUFFERS);
     int err;
     if ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error when queuing buffers:" << err << std::endl;
-    source->play();
+    source.play();
     if ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error when playing source:" << err << std::endl;
-    handler->addSource(source);
     AudioBuffer* b;
     unsigned long i = 0;
     while (i++ < 500000) {  // hehe *burp*
         std::this_thread::yield();
-        source->play();
+        source.play();
         if ((err = alGetError()) != AL_NO_ERROR)
             std::cerr << "OpenAL error when playing source:" << err
                       << std::endl;
-        int proc = source->getProcessedBuffers();
+        int proc = source.getProcessedBuffers();
         if ((err = alGetError()) != AL_NO_ERROR)
             std::cerr << "OpenAL error when getting processed buffers:" << err
                       << std::endl;
         while (proc--) {
-            ALuint* id = source->unqueueBuffers(1);
+            ALuint* id = source.unqueueBuffers(1);
             if ((err = alGetError()) != AL_NO_ERROR)
                 std::cerr << "OpenAL error when unqueuing buffers:" << err
                           << std::endl;
@@ -67,7 +70,7 @@ int main() {
             if ((err = alGetError()) != AL_NO_ERROR)
                 std::cerr << "OpenAL error when writing to buffers:" << err
                           << std::endl;
-            source->queueBuffer(b);
+            source.queueBuffer(b);
             if ((err = alGetError()) != AL_NO_ERROR)
                 std::cerr << "OpenAL error when queuing buffers:" << err
                           << std::endl;
@@ -76,8 +79,9 @@ int main() {
     }
     for (int i = 0; i < BUFFERS; i++) buffers[i].setBuffer(0);
     delete[] buffers;
+
     AudioBuffer *buffer = new AudioBuffer("./resources/sounds/snare.wav"),
-                *buffer2 = new AudioBuffer();
+                &buffer2 = handler->addSound("test", AudioBuffer());
     std::cout << "sz : " << buffer->getSize()
               << "\nfreq : " << buffer->getSamplerate()
               << "\nformat : " << buffer->getChannels() << ","
@@ -110,15 +114,13 @@ int main() {
             }
         }
     }
-    buffer2->write(buffer->getFormat(), d2, sz * sizeof(short),
-                   buffer->getSamplerate());
+    buffer2.write(buffer->getFormat(), d2, sz * sizeof(short),
+                  buffer->getSamplerate());
     delete[] d2;
     delete buffer;
-    handler->addSound("test", buffer2);
     for (int i = 0; i < 10; i++) {
-        AudioSource* src = handler->playSound("test");
-        while (src->getState() != AL_STOPPED)
-            ;
+        AudioSource& src = handler->playSound("test");
+        while (src.getState() != AL_STOPPED);
     }
     delete handler;
 }

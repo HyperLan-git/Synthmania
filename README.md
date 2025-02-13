@@ -40,9 +40,8 @@ You will need to have :
 - JUCE (to work on the plugin host) `https://juce.com/download/`
 
 Imma keep the latest versions of those and make sure project compiles with them (hopefully).
-Shit happens. lol
 
-Windows build needs a shitton of dlls right now (I should fix that in the compilation process...). Idk how I'm going to handle that for the end user. Probably a crappy windows installer hehe
+Windows build needs some dlls right now (I should fix that in the compilation process...). Idk how I'm going to handle that for the end user. Probably a crappy windows installer hehe
 
 ALUT is a crutch and makes you weak.
 

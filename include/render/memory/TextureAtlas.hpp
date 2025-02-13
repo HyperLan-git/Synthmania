@@ -4,6 +4,7 @@ class TextureAtlas;
 
 #include "CommandBuffer.hpp"
 
+// TODO actually use this for text
 class TextureAtlas {
    public:
     TextureAtlas(std::shared_ptr<Image> image, VkFormat format,

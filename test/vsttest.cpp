@@ -23,11 +23,12 @@ int audiorun(void* arg) {
         host->update();
         auto* handler = e->handler;
 
-        std::vector<std::string> devices = getDevices();
-        // for (auto device : devices) std::cout << device << std::endl;
+        // std::vector<std::string> devices = getMidiPorts();
+        //  for (auto device : devices) std::cout << device << std::endl;
         short buf[BUFFERSIZE] = {0};
         int sampleRate = handler->getSampleRate();
-        AudioBuffer* buffers = new AudioBuffer[BUFFERS];
+        AudioBuffer* buffers =
+            new (BUFFERS * sizeof(AudioBuffer)) AudioBuffer[BUFFERS];
         AudioSource* source = new AudioSource();
         // std::cout << sampleRate << std::endl;
 

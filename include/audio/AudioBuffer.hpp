@@ -19,14 +19,15 @@ class AudioBuffer {
     AudioBuffer(const AudioBuffer &) = delete;
     AudioBuffer &operator=(const AudioBuffer &) = delete;
 
-    void* operator new[](size_t buffers) noexcept = delete;
-    // I have to make something fucked up like that bcs new gives the number of
+    // TODO fix this mess
+    void *operator new[](size_t buffers) noexcept = delete;
+    // I have to make something messed up like that bcs new gives the number of
     // bytes allowed to use which are not necessarily related to the number of
     // elements
-    void* operator new[](size_t buffers, size_t elems) noexcept;
-    void operator delete[](void* ptr) noexcept;
+    void *operator new[](size_t buffers, size_t elems) noexcept;
+    void operator delete[](void *ptr) noexcept;
 
-    void write(ALenum format, const ALvoid* data, ALsizei size,
+    void write(ALenum format, const ALvoid *data, ALsizei size,
                ALsizei samplerate);
     ALuint getBuffer();
 
@@ -34,7 +35,7 @@ class AudioBuffer {
     ALint getBits();
     ALint getChannels();
     ALint getSize();
-    std::variant<unsigned char*, short*> getData();
+    std::variant<unsigned char *, short *> getData();
     ALenum getFormat();
 
     void setBuffer(ALuint id);
@@ -43,7 +44,7 @@ class AudioBuffer {
 
    private:
     ALuint bufferID;
-    void* data;
+    void *data;
     ALenum format;
     ALint getBufferi(ALenum param);
 };

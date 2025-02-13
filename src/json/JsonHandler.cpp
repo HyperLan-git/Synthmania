@@ -1,5 +1,6 @@
 #include "JsonHandler.hpp"
 
+// TODO replace with unique ptr
 tree* readJson(const std::string json) {
     tree* t = new tree();
     boost::property_tree::json_parser::read_json(json, *t);

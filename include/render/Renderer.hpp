@@ -148,6 +148,7 @@ class Renderer : public boost::noncopyable {
     void initVulkan();
 
     void createSwapchain();
+    // TODO give back oldSwapchain
     void recreateSwapchain();
 
     void createInstance();

@@ -29,7 +29,7 @@ class Window {
 
     GLFWwindow *getWindow();
 
-    // This function is FUCKED UP BRAH
+    // XXX This function is MESSED UP BRAH
     void getFramebufferSize(uint32_t *width, uint32_t *height);
 
     VkResult createSurface(Instance *instance,

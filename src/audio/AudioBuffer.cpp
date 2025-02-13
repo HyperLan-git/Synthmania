@@ -9,7 +9,7 @@ AudioBuffer::AudioBuffer(std::string file) : AudioBuffer() {
     try {
         AudioData result = loadWavFile(file);
         this->write(result.format, result.data, result.size, result.frequency);
-        this->data = new char[result.size];
+        this->data = new unsigned char[result.size];
         this->format = result.format;
         memcpy(this->data, result.data, result.size);
         delete[] (unsigned char*)result.data;
@@ -36,17 +36,18 @@ void AudioBuffer::write(ALenum format, const ALvoid* data, ALsizei size,
                         ALsizei samplerate) {
     alBufferData(bufferID, format, data, size, samplerate);
     OPENAL_DEBUG("filling buffer");
-    // if (this->data) delete[] (unsigned char*)this->data;
-    // this->data = new unsigned char[size];
-    // memcpy(this->data, data, size);
+    if (this->data) delete[] (unsigned char*)this->data;
+    this->data = new unsigned char[size];
+    memcpy(this->data, data, size);
     int err;
     if ((err = alGetError()) != AL_NO_ERROR)
         std::cerr << "OpenAL error when writing buffer:" << err << std::endl;
 }
 
 void* AudioBuffer::operator new[](size_t sz, size_t elems) noexcept {
-    if (elems == sz) sz++;
-    void* ptr = ::operator new[](sz);
+    if (elems * sizeof(ALuint) > sz) sz += sizeof(ALuint);
+    // TODO wip
+    void* ptr = std::malloc(sz);
     ALuint* p = (ALuint*)ptr;
     alGenBuffers(elems, p);
     p[elems] = 0;
@@ -101,6 +102,6 @@ void AudioBuffer::setBuffer(ALuint id) {
 
 AudioBuffer::~AudioBuffer() {
     if (bufferID != 0 && alIsBuffer(bufferID)) alDeleteBuffers(1, &bufferID);
-    if (data) delete[] (char*)data;
+    if (data) delete[] (unsigned char*)data;
     OPENAL_DEBUG("deleting buffer");
 }

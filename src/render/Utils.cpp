@@ -128,7 +128,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
         return capabilities.currentExtent;
     } else {
         VkExtent2D actualExtent;
-        // FIXME FUCKING STOP CALLING GLFW CODE IN VULKAN AAAAAAAAAAAAAAA
+        // FIXME STOP CALLING GLFW CODE IN VULKAN AAAAAAAAAAAAAAA
         window.getFramebufferSize(&actualExtent.width, &actualExtent.height);
 
         actualExtent.width =

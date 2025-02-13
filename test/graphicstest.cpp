@@ -61,17 +61,17 @@ class Test : public Game {
             addGui(gui);
         }
 
-        /*
-         for (Text t : renderer->getTextHandler()->createText(
-                  "Hello", "Stupid", 55, glm::vec2({-1, 0}))) {
-             std::string name = "hi";
-             name.append(std::to_string(i++));
-             Gui* gui = new Gui(t.character.texture, name.c_str());
-             gui->setColor(glm::vec4({1, 0, 0, 1}));
-             gui->setPosition(t.pos);
-             gui->setSize(t.size);
-             addGui(gui);
-         }*/
+        for (Text t : renderer->getTextHandler().createText(
+                 "Hello", "Stupid", 55, glm::vec2({-1, 0}))) {
+            std::string name = "hi";
+            name.append(std::to_string(i++));
+            std::shared_ptr<Gui> gui =
+                std::make_shared<Gui>(t.character.texture, name.c_str());
+            gui->setColor(glm::vec4({1, 0, 0, 1}));
+            gui->setPosition(t.pos);
+            gui->setSize(t.size);
+            addGui(gui);
+        }
     }
 
     virtual void update() override {}

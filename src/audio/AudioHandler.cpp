@@ -29,10 +29,10 @@ AudioHandler::AudioHandler(const ALCchar* device) {
     OPENAL_DEBUG("creating context");
 }
 
-void AudioHandler::addSound(std::string name, AudioBuffer&& sound) {
+AudioBuffer& AudioHandler::addSound(std::string name, AudioBuffer&& sound) {
     auto iter = sounds.find(name);
     if (iter != sounds.end()) sounds.erase(iter);
-    auto elem = sounds.emplace(name, std::move(sound));
+    return sounds.emplace(name, std::move(sound)).first->second;
 }
 
 AudioSource& AudioHandler::playSound(std::string name) {
@@ -43,15 +43,16 @@ AudioSource& AudioHandler::playSound(std::string name) {
     return result;
 }
 
-void AudioHandler::addSource(AudioSource&& source) {
-    sources.emplace_back(std::move(source));
+AudioSource& AudioHandler::addSource(AudioSource&& source) {
+    return sources.emplace_back(std::move(source));
 }
 
 ALCint AudioHandler::getSampleRate() { return sampleRate; }
 
 void AudioHandler::setVolume(float volume) {
     this->volume = volume;
-    // alListenerf(AL_GAIN, volume);
+    // TODO
+    //  alListenerf(AL_GAIN, volume);
     for (AudioSource& source : this->sources) source.setGain(volume);
 }
 

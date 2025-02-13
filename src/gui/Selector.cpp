@@ -97,12 +97,12 @@ void Selector::recalculatePositions() {
         g->setPosition(gpos);
         g->setSize(this->size);
     }
-    for (std::vector<std::pair<Text, std::shared_ptr<Gui>>> elements :
+    for (std::vector<std::pair<Text, std::shared_ptr<Gui>>>& elements :
          strings) {
         int place = i + 1;
         if (i == current) place = 0;
 
-        for (std::pair<Text, std::shared_ptr<Gui>> c : elements) {
+        for (std::pair<Text, std::shared_ptr<Gui>>& c : elements) {
             glm::vec2 pos = c.first.pos;
             pos.y += this->position.y + this->size.y * place;
             pos.x += this->position.x - this->size.x * .25;

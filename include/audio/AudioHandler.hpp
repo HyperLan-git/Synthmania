@@ -15,6 +15,7 @@ class AudioHandler;
 
 std::vector<std::string> getAudioDevices();
 
+// TODO lopass sidechain when playing kick
 class AudioHandler {
    public:
     AudioHandler(const ALCchar* device = NULL);
@@ -25,7 +26,7 @@ class AudioHandler {
      * @param name The name of the sound to be used in playSound
      * @param sound The buffer of the sound
      */
-    void addSound(std::string name, AudioBuffer&& sound);
+    AudioBuffer& addSound(std::string name, AudioBuffer&& sound);
     AudioSource& playSound(std::string name);
 
     void removeSound(AudioSource& source);
@@ -36,7 +37,7 @@ class AudioHandler {
 
     void setDevice(const ALCchar* device);
 
-    void addSource(AudioSource&& source);
+    AudioSource& addSource(AudioSource&& source);
 
     ALCint getSampleRate();
 
