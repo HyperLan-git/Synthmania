@@ -10,9 +10,10 @@ TextHandler::TextHandler(Device& device, unsigned int textureSize)
 Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
                                   CommandPool& commandPool) {
     FT_GlyphSlot glyphSlot = face->glyph;
+    if (!glyphSlot) return NULL;
     FT_UInt i = FT_Get_Char_Index(face, character);
-    FT_Load_Glyph(face, i, FT_LOAD_DEFAULT);
-    FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL);
+    if (FT_Load_Glyph(face, i, FT_LOAD_DEFAULT)) return NULL;
+    if (FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL)) return NULL;
     const unsigned int w = glyphSlot->bitmap.width + 2,
                        h = glyphSlot->bitmap.rows + 2;
 
@@ -59,6 +60,7 @@ void TextHandler::loadFonts(
     for (const auto& entry : fontsToLoad) {
         FT_Face f;
         if (FT_New_Face(lib, entry.first.c_str(), 0, &f)) continue;
+        if (!f) continue;
         if (FT_Set_Pixel_Sizes(f, 0, textureSize)) continue;
 
         std::shared_ptr<Image> img = std::make_shared<Image>(
@@ -83,13 +85,15 @@ void TextHandler::loadFonts(
 
         Font font;
         font.textures = atlas;
-        font.name = f->family_name;
+        font.name = f->family_name != NULL ? f->family_name : "unknown";
+
         uint32_t i = 0;
         for (const unsigned long c : entry.second) {
-            std::string charName = f->family_name;
+            std::string charName = font.name;
             charName.append("_");
             charName.append(std::to_string(c));
             Image* ch = loadCharacter(f, c, commandPool);
+            if (!ch) continue;
             {
                 CommandBuffer buf(commandPool, true);
                 buf.begin();
@@ -103,7 +107,7 @@ void TextHandler::loadFonts(
 
             TexPtr& ptr = this->textures.emplace_back(atlas->getTexture(
                 layer, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT,
-                std::string("font_") + f->family_name + '_' +
+                std::string("font_") + font.name + '_' +
                     std::to_string(layer)));
             Character chr{.texture = Texture(ptr->getName())};
             chr.character = c;

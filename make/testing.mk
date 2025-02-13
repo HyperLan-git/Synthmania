@@ -17,6 +17,10 @@ GOBJ = $(GSRC:$(SRCFOLDER)/%.cpp=$(OBJDIR)/%.o)
 midi: $(MIDIOBJ)
 	g++ $(CFLAGS) -o bin/MidiTest test/miditest.cpp\
 		$(MIDIOBJ) $(LDFLAGS) $(DEBUG)
+		
+freetype: $(FTOBJ)
+	g++ $(CFLAGS) -o bin/FontTest test/freetypetest.cpp\
+		$(FTOBJ) $(LDFLAGS) $(DEBUG)
 
 audio: $(AUDIOOBJ)
 	g++ $(CFLAGS) -o bin/AudioTest  test/audiotest.cpp\

@@ -8,6 +8,8 @@ class TextHandler;
 #include <freetype/freetype.h>
 #include <freetype/ftbitmap.h>
 
+#include <filesystem>
+
 #include "Device.hpp"
 #include "Font.hpp"
 #include "Image.hpp"

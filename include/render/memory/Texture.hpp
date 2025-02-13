@@ -2,6 +2,7 @@
 
 class Texture;
 
+#include <cstdint>
 #include <string>
 
 /**

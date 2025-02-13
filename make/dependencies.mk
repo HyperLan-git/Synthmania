@@ -45,7 +45,7 @@ install-vulkan:
 	$(info Could not find vulkan, attempt to install...)
 ifeq ($(OS),Windows_NT)
 	$(info Installing from msys2 package vulkan sdk...)
-	pacman -S mingw-w64-x86_64-vulkan-devel
+	pacman -S mingw-w64-x86_64-vulkan-devel mingw-w64-x86_64-shaderc
 else
 ifeq ($(DISTRO),Ubuntu)
 ifneq (,$(filter 18.04,20.04,22.04,$(VERSION)))
@@ -69,7 +69,7 @@ vulkan-tarball:
 
 deps:
 ifeq ($(OS),Windows_NT)
-	pacman -S mingw-w64-x86_64-boost mingw-w64-x86_64-glm mingw-w64-x86_64-openal mingw-w64-x86_64-freetype
+	pacman -S mingw-w64-x86_64-boost mingw-w64-x86_64-glm mingw-w64-x86_64-openal mingw-w64-x86_64-freetype mingw-w64-x86_64-glfw
 else
 	sudo apt-get update ; sudo apt-get upgrade ; sudo apt-get install g++ libglfw3-dev libglm-dev libopenal-dev libfreetype-dev libboost-all-dev libasound2-dev
 endif

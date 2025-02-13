@@ -11,7 +11,6 @@ class Options {
    public:
     Options(std::string defaults, std::string current);
 
-    // reminder to keep template definitions in the header file
     template <typename T>
     std::optional<T> getValue(std::string path) {
         boost::optional<T> result = this->options->get_optional<T>(path);

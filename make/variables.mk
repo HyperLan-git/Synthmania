@@ -18,7 +18,10 @@ IDIRS = $(shell pkg-config --cflags freetype2)\
 			$(VSTINCLUDE)
 
 ifeq ($(OS),Windows_NT)
-IDIRS += -I ./mingw-std-threads
+IDIRS += -I ./mingw-std-threads\
+		-I C:/VulkanSDK/1.3.290.0/Include\
+		-I ~/glfw-3.4/include\
+		-I /mingw64/include
 endif
 
 CFLAGS = -std=c++17 -O3
@@ -28,7 +31,7 @@ endif
 
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lX11 -lXrandr -lfreetype
 ifeq ($(OS),Windows_NT)
-LDFLAGS = $(IDIRS) -lglfw3 -lvulkan-1 -lopenal -lwinmm -lfreetype -lcurl
+LDFLAGS = $(IDIRS) -L /mingw64/lib -lglfw3 -lvulkan-1 -lopenal -lwinmm -lfreetype -lcurl
 endif
 
 OBJDIR = bin/obj

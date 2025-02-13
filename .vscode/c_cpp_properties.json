@@ -4,12 +4,12 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
+                "C:/msys64/mingw64/include/freetype2",
+                "C:/msys64/mingw64/include/",
                 "${workspaceFolder}/../SimplePluginHost/export/include",
-                "D:/mysys64/mingw64/include/freetype",
-                "D:/mysys64/mingw64/include/"
             ],
             "defines": [],
-            "compilerPath": "D:/mysys64/mingw64/bin/gcc.exe",
+            "compilerPath": "C:/msys64/usr/bin/g++.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-gcc-x64"

@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.embeddedhtml": "html",
         "optional": "cpp",
         "stdexcept": "cpp",
         "array": "cpp",
@@ -106,7 +107,10 @@
         "any": "cpp",
         "unordered_set": "cpp",
         "regex": "cpp",
-        "*.hpp11": "cpp"
+        "*.hpp11": "cpp",
+        "source_location": "cpp",
+        "ranges": "cpp",
+        "stdfloat": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabledIfIncludesResolve",
     "editor.formatOnSave": true,

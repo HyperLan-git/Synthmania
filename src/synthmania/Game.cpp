@@ -5,11 +5,14 @@
 Game::Game() {
     textures = std::map<std::string, std::string>();
     textures.emplace("missing", "resources/textures/missing.jpg");
-    const char *list =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
-        "&\"'(-_)=+|#{}[]`\\^@*,;:!?./%$";
+    constexpr char
+        list[] =
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
+            "&\"'(-_)=+|#{}[]`\\^@*,;:!?./%$",
+        alphanum[] =
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
 
-    const char *title = "Synthmai ";
+    constexpr char *title = "Synthmai ";
     std::vector<unsigned long> tit;
     for (const char *c = title; *c != '\0'; c++) tit.push_back(*c);
     std::vector<unsigned long> chars;

@@ -18,10 +18,10 @@ int main(int argc, char **argv) {
     if (argc > 1 && argv[1][0] != '\0') skin = std::string(argv[1]);
     Synthmania instance(skin, config);
 
-    instance.setWindow(std::move(std::make_unique<Window>(
-        1920, 1080, "Synthmania", instance.isFullscreen())));
+    instance.setWindow(std::make_unique<Window>(1920, 1080, "Synthmania",
+                                                instance.isFullscreen()));
     instance.setRenderer(
-        std::move(std::make_unique<Renderer>(instance, instance.getWindow())));
+        std::make_unique<Renderer>(instance, instance.getWindow()));
     instance.init();
     instance.loadMenu("main");
     instance.run();

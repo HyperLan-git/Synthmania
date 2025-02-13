@@ -41,7 +41,7 @@ void ScoreScreen::show() {
     replayStart = s.getReplayStart();
     std::string rating;
     if (score.misses == 0) {
-        if (score.far == score.near && score.far == 0)
+        if (score.fars == score.nears && score.fars == 0)
             rating = "SS";
         else
             rating = "FC";
@@ -66,9 +66,9 @@ void ScoreScreen::show() {
 
     SPAWN_TEXT(text, guis, "Perfects : " + std::to_string(score.perfects),
                "perfects", "Stupid", 15, glm::vec2({-1.75, .05}), glm::vec4(1));
-    SPAWN_TEXT(text, guis, "Near : " + std::to_string(score.near), "near",
+    SPAWN_TEXT(text, guis, "Near : " + std::to_string(score.nears), "near",
                "Stupid", 15, glm::vec2({-1.75, .25}), glm::vec4(1));
-    SPAWN_TEXT(text, guis, "Far : " + std::to_string(score.far), "far",
+    SPAWN_TEXT(text, guis, "Far : " + std::to_string(score.fars), "far",
                "Stupid", 15, glm::vec2({-1.75, .45}), glm::vec4(1));
     SPAWN_TEXT(text, guis, "Missed : " + std::to_string(score.misses), "misses",
                "Stupid", 15, glm::vec2({-1.75, .65}), glm::vec4(1));

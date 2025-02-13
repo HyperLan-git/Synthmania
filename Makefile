@@ -2,6 +2,9 @@ all: test
 
 include make/*.mk
 
+package: Synthmania
+	zip -r game.zip bin/Synthmania.exe bin/config.json resources game.bat $(SHADERS_SPV)
+
 dependencies: detect-requirements check-env check-vulkan
 	@echo -n "Are you sure? [y/N] " && read ans && if [ $${ans:-'N'} = 'y' ]; then make deps; fi
 

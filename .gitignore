@@ -9,3 +9,4 @@ resources/songs/*
 **/*.o
 **/*.log
 **/*.gch
+*.exe*

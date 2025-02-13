@@ -8,7 +8,7 @@ std::vector<double> splitDuration(double duration) {
     if (duration <= A_32TH) return {duration};
     std::vector<double> result;
     while (duration > A_32TH) {
-        double d = 2;
+        double d = 1;
         while (d > duration) d /= 2;
         duration -= d;
         result.push_back(d);
@@ -29,10 +29,9 @@ Texture getTextureForNote(unsigned char pitch, double duration, Key currentKey,
         }
     }
     if (linked) return Texture("note_4th");
-    float initial = 2;
+    float initial = 1;
     std::string texName = "note_";
     while (initial > duration) initial /= 2;
-    // std::cout << duration << " " << (int)pitch << std::endl;
     if (duration < A_32TH) initial = A_32TH;
 
     if (initial < 1)

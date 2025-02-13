@@ -10,9 +10,9 @@ class Test : public Game {
    public:
     Test(int width, int height, const char* title) : Game() {
         this->audio = NULL;
-        this->window = new Window(width, height, title);
+        this->window = std::make_unique<Window>(width, height, title);
         window->setWindowUserPointer(this);
-        this->renderer = new Renderer(this, window);
+        this->renderer = std::make_unique<Renderer>(*this, this->getWindow());
         Device& device = renderer->getDevice();
         VkPushConstantRange range{.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
                                   .offset = 0,
@@ -29,18 +29,17 @@ class Test : public Game {
         out.pImmutableSamplers = NULL;
         out.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         VkDescriptorSetLayoutBinding bindings[] = {in, out};
-        VkDeviceSize bufSizes[] = {128 * sizeof(float), 128 * sizeof(float)};
         ComputeShader shader(device, readFile("bin/square.comp.spv"), "main",
                              128);
         CommandPool pool(device);
-        ComputeModule module(renderer->getPhysicalDevice(), device, &pool,
-                             &shader, &range, 1, bindings, 2, bufSizes, 2);
+        ComputeModule module(pool, shader, {range}, {in, out},
+                             {128 * sizeof(float), 128 * sizeof(float)});
         float arr[128];
         for (int i = 0; i < 128; i++) arr[i] = i * i;
         module.fillBuffer(0, arr);
         unsigned int constants[] = {126, 1};
-        module.run(device.getQueue("compute"), constants,
-                   2 * sizeof(unsigned int), 128);
+        Queue q = *device.getQueue("compute");
+        module.run(q, constants, 2 * sizeof(unsigned int), 128);
         module.emptyBuffer(1, arr);
         for (int i = 0; i < 128; i++) {
             std::cout << i * i << " squared = " << arr[i] << std::endl;
@@ -53,8 +52,8 @@ class Test : public Game {
         g->setSize({1.f, 1.f});
         addGui(g);
         int i = 0;
-        for (auto t : this->getTextHandler()->createText("Hell o", "Stupid", 55,
-                                                         glm::vec2({-2, 0}))) {
+        for (auto t : this->getTextHandler().createText("Hell o", "Stupid", 55,
+                                                        glm::vec2({-2, 0}))) {
             std::shared_ptr<Gui> gui =
                 std::make_shared<Gui>(t.character.texture, "hi");
             gui->setPosition(t.pos);
@@ -83,9 +82,8 @@ class Test : public Game {
 };
 
 int main() {
-    Test* game = new Test(1920, 1080, "GraphicsTest");
-    game->init();
-    game->run();
-    delete game;
+    Test game(1920, 1080, "GraphicsTest");
+    game.init();
+    game.run();
     return 0;
 }

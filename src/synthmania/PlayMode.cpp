@@ -427,15 +427,15 @@ void PlayMode::noteHit(const std::shared_ptr<Note> &note) {
         color = glm::vec4(.2, .2, 1, 1);
         score.perfects++;
     } else if (great) {
-        text = "Great!";
+        text = "Great";
         score.score += score_per_note * .7;
         color = glm::vec4(.3, 1, .3, 1);
-        score.near++;
+        score.nears++;
     } else if (good) {
         score.score += score_per_note * .5;
         text = "Good";
         color = glm::vec4(.3, 1, .3, 1);
-        score.far++;
+        score.fars++;
     } else {
         text = "BAD";
         color = glm::vec4(.3, .3, .3, 1);
@@ -517,9 +517,12 @@ void PlayMode::playDrumSound(unsigned char pitch) {
     }
 }
 
+// 2^(1/12)
+constexpr double ST = 1.0594630943592952646;
+
 void PlayMode::playPianoSound(unsigned char pitch) {
     AudioSource &source = game.getAudioHandler().playSound("piano");
-    float p = std::pow(1. + 1. / 12., (pitch - 60));
+    float p = std::pow(ST, (pitch - 60));
     source.setPitch(p);
 }
 

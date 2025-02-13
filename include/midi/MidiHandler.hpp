@@ -4,7 +4,7 @@ class MidiHandler;
 struct Message;
 
 #define LIBREMIDI_HEADER_ONLY 1
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__)
 #define LIBREMIDI_WINMM 1
 #else
 #define LIBREMIDI_ALSA 1

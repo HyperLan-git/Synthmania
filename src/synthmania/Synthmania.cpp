@@ -19,7 +19,7 @@ void Synthmania::resetAudio() {
     audio->addSound("click",
                     std::move(AudioBuffer("resources/sounds/click.wav")));
     // TODO handle soundfonts?
-    audio->addSound("piano", AudioBuffer("resources/sounds/painoC4.wav"));
+    audio->addSound("piano", AudioBuffer("resources/sounds/pianoC4.wav"));
     audio->addSound("kick", AudioBuffer("resources/sounds/kick.wav"));
     audio->addSound("snare", AudioBuffer("resources/sounds/snare.wav"));
     audio->addSound("hat", AudioBuffer("resources/sounds/hat.wav"));
@@ -62,24 +62,21 @@ void Synthmania::setTimeMicros(int64_t time) {
 
 void Synthmania::resetScene() { Game::resetScene(); }
 
+#define UPDATE_AND_DELETE(list, cond, time)                               \
+    list.erase(                                                           \
+        std::remove_if(list.begin(), list.end(),                          \
+                       [=](auto &e) { return e->update(time) || cond; }), \
+        list.end());
+
 void Synthmania::update() {
     int64_t time_from_start = this->getCurrentTimeMicros();
 
-    this->guis.erase(std::remove_if(guis.begin(), guis.end(),
-                                    [=](std::shared_ptr<Gui> &g) {
-                                        return g->update(time_from_start) ||
-                                               g->isDestroyed();
-                                    }),
-                     this->guis.end());
+    UPDATE_AND_DELETE(this->guis, e->isDestroyed(), time_from_start);
     // TODO send update graphics elsewhere
     for (std::shared_ptr<Gui> &g : guis) g->updateGraphics(time_from_start);
-    if (!this->entities.empty())
-        this->entities.erase(
-            std::remove_if(entities.begin(), entities.end(),
-                           [=](std::shared_ptr<Entity> &e) {
-                               return e->update(time_from_start);
-                           }),
-            this->entities.end());
+    if (!this->entities.empty()) {
+        UPDATE_AND_DELETE(this->entities, false, time_from_start);
+    }
     if (gamemode && gamemode->update()) gamemode.reset();
 
     std::this_thread::yield();

@@ -5,5 +5,5 @@
 
 struct Score {
     std::string chart, charter, diff;
-    uint32_t score, perfects, misses, near, far;
+    uint32_t score, perfects, misses, nears, fars;
 };
