@@ -26,7 +26,7 @@ std::vector<std::string> MidiHandler::getMidiPorts() {
 
 uint64_t MidiHandler::getTime() { return micros() - this->start_time; }
 
-void MidiHandler::openPort(unsigned int port) {
+bool MidiHandler::openPort(unsigned int port) {
     this->port = port;
     in.set_callback([this](const libremidi::message &message) {
         Message m;
@@ -53,14 +53,28 @@ void MidiHandler::openPort(unsigned int port) {
             this->messages.push(m);
         }
     });
-    in.open_port(port);
+    try {
+        in.open_port(port);
+    } catch (std::runtime_error &e) {
+        in.set_callback(nullptr);
+        this->port = -1;
+        return false;
+    }
+    return true;
 }
 
-void MidiHandler::openPort(unsigned int port,
+bool MidiHandler::openPort(unsigned int port,
                            libremidi::midi_in::message_callback callback) {
     this->port = port;
     in.set_callback(callback);
-    in.open_port(port);
+    try {
+        in.open_port(port);
+    } catch (std::runtime_error &e) {
+        in.set_callback(nullptr);
+        this->port = -1;
+        return false;
+    }
+    return true;
 }
 
 int MidiHandler::getOpenPort() { return port; }

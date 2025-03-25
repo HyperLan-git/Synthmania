@@ -159,6 +159,7 @@ void Game::addEntity(std::shared_ptr<Entity> &entity) {
 float prevZ = 0.9999f;
 
 void Game::addGui(std::shared_ptr<Gui> &gui) {
+    // XXX assert no more than 10000 guis
     if (guis.empty())
         prevZ = 0.9999f;
     else

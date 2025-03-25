@@ -891,7 +891,6 @@ void Renderer::drawGui(Gui& gui, CommandBuffer& commandBuffer) {
 }
 
 void Renderer::updateUniformBuffer(uint32_t currentImage) {
-    double time_from_start = game.getCurrentTimeMicros() / 1000000.;
     float x = 0, y = 0;
 
     float ratio =

@@ -35,6 +35,7 @@ struct Message {
     uint64_t timestamp;
 };
 
+// TODO add a button in options to reload midi peripherals
 class MidiHandler {
    public:
     MidiHandler();
@@ -44,8 +45,8 @@ class MidiHandler {
     TrackPartition readMidi(const std::string path);
 
     std::vector<std::string> getMidiPorts();
-    void openPort(unsigned int port);
-    void openPort(unsigned int port,
+    bool openPort(unsigned int port);
+    bool openPort(unsigned int port,
                   libremidi::midi_in::message_callback callback);
 
     int getOpenPort();
