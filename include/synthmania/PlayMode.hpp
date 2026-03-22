@@ -50,7 +50,7 @@ class PlayMode : public Gamemode {
     static void keyCallback(GLFWwindow* win, int key, int scancode, int action,
                             int mods);
 
-    inline float getSpeed() { return speedModifier; }
+    // inline float getSpeed() { return speedModifier; }
 
    private:
     Synthmania& game;

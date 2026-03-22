@@ -612,8 +612,10 @@ void PlayMode::keyCallback(GLFWwindow* win, int key, int scancode, int action,
 void PlayMode::onClockAdjust(int64_t t) {
     if (music)
         music->get().setSampleOffset(
-            (game.getCurrentTimeMicros() + chart.offset / this->speedModifier) *
-            44100 / 1000000.f);  // * this->speedModifier);
+            (game.getCurrentTimeMicros() +
+             chart.offset) *  // / this->speedModifier) *
+            44100 /
+            1000000.f);  // * this->speedModifier);
 }
 
 void PlayMode::onConfigChange() {
