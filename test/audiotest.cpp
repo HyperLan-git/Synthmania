@@ -110,7 +110,7 @@ int main() {
             ifft(data);
             for (size_t i = 0; i < data.size(); i++) {
                 d2[(p * samples + i) * ch] = data[i].real();
-                d2[(p * samples + i) * ch + 1] = 0;
+                d2[(p * samples + i) * ch + 1] = data[i].imag();
             }
         }
     }

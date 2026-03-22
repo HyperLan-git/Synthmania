@@ -15,7 +15,7 @@ Judgement::Judgement(std::string name, Texture texture, TrackPartition notes)
 
 bool Judgement::update(int64_t time) {
     if (this->partition.notes.empty() || this->partition.drumming) return false;
-    auto notes = this->partition.notes;
+    auto& notes = this->partition.notes;
     MidiNote prev = (notes[0]), next = (notes[notes.size() - 1]);
     if (time < 0) {
         this->position.y =

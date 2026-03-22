@@ -52,7 +52,7 @@ Here is what the game looks like for people who don't want to/know how to compil
 
 Maybe I'll actually do something right and code short scripts to detect your platform and install everything automatically (WIP but try).
 
-Current focus: Making decent visuals in menus and adding a score screen.
+Current focus: Getting a prototype out for curious people
 
-# Rights
-Every sound, image, font, etc... in this should be free to use to my knowledge without any mentioning of the authors or of any licence. I still have kept the mails of the authors and will try to contact them just to be sure. Freeware ftw.
+# Foolishness
+It was dumb to expect developers to find out about this project by themselves and reach out to me. 

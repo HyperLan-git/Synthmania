@@ -31,7 +31,7 @@ endif
 
 LDFLAGS = $(IDIRS) -lglfw -lvulkan -ldl -lpthread -lasound -lopenal -lX11 -lXrandr -lfreetype
 ifeq ($(OS),Windows_NT)
-LDFLAGS = $(IDIRS) -L /mingw64/lib -lglfw3 -lvulkan-1 -lopenal -lwinmm -lfreetype -lcurl
+LDFLAGS = $(IDIRS) -L /mingw64/lib -lglfw3 -lvulkan-1 -lopenal -lwinmm -lfreetype -lshell32
 endif
 
 OBJDIR = bin/obj

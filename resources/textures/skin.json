@@ -1,7 +1,7 @@
 {
     "missing": "missing.jpg",
     "background": "bg.png",
-    "score_bg": "score_bg.png",
+    "score_bg": "score_basic.png",
     "button": "button.png",
     "button-pressed": "button-pressed.png",
     "piano": "piano.png",

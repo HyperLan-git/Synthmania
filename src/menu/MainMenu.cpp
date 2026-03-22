@@ -171,6 +171,10 @@ MainMenu::MainMenu(Game& g) : Menu(g) {
 
 void MainMenu::show() { Menu::show(); }
 
+#ifdef _WIN32
+#include <shellapi.h>
+#include <windows.h>
+#endif
 void MainMenu::onPressed(const std::shared_ptr<Button>& b) {
     Synthmania& s = dynamic_cast<Synthmania&>(game);
     s.playSound("click");
@@ -181,8 +185,11 @@ void MainMenu::onPressed(const std::shared_ptr<Button>& b) {
         s.resetScene();
         s.loadMenu("options");
     } else if (b->getName() == "extra") {
-        if (std::system("open https://github.com/HyperLan-git/Synthmania"))
-            ;  // TODO Idk show text with error or popup idec
+#ifdef _WIN32
+        ShellExecuteA(NULL, "open",
+                      "https://github.com/HyperLan-git/Synthmania", NULL, NULL,
+                      SW_SHOWNORMAL);
+#endif
     }
 }
 

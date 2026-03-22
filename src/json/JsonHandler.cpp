@@ -21,7 +21,9 @@ Chart readChart(const std::string json) {
     c.plugindata = t->get<std::string>("plugindata", str);
     c.offset =
         (c.audio.compare("None") != 0) ? t->get<int64_t>("offset", n) : 3000000;
-    tree diffs = t->get_child("diffs", tree());
+    // Needed to not have an error over moved value
+    tree def;
+    tree diffs = t->get_child("diffs", def);
     for (auto elem : diffs) {
         tree diff = elem.second;
         Diff d;

@@ -18,12 +18,12 @@ class Synthmania;
 
 class PlayMode : public Gamemode {
    public:
-    PlayMode(Synthmania &game, std::string songFolder);
+    PlayMode(Synthmania& game, std::string songFolder);
 
     virtual bool update() override;
 
-    void noteHit(const std::shared_ptr<Note> &note);
-    void noteMiss(const std::shared_ptr<Note> &note);
+    void noteHit(const std::shared_ptr<Note>& note);
+    void noteMiss(const std::shared_ptr<Note>& note);
 
     Chart getChart();
     TrackPartition getPartition();
@@ -35,23 +35,25 @@ class PlayMode : public Gamemode {
 
     void spawnNote(MidiNote note);
 
-    virtual void onSpawn(std::shared_ptr<Gui> &g) override;
+    virtual void onSpawn(std::shared_ptr<Gui>& g) override;
     virtual void onClockAdjust(int64_t value) override;
     virtual void onConfigChange() override;
 
-    virtual size_t updateUBO(void *&ubo) override;
-    virtual void freeUBO(void *&ubo) override;
+    virtual size_t updateUBO(void*& ubo) override;
+    virtual void freeUBO(void*& ubo) override;
 
-    virtual size_t updateFinalUBO(void *&ubo) override;
-    virtual void freeFinalUBO(void *&ubo) override;
+    virtual size_t updateFinalUBO(void*& ubo) override;
+    virtual void freeFinalUBO(void*& ubo) override;
 
     virtual ~PlayMode();
 
-    static void keyCallback(GLFWwindow *win, int key, int scancode, int action,
+    static void keyCallback(GLFWwindow* win, int key, int scancode, int action,
                             int mods);
 
+    inline float getSpeed() { return speedModifier; }
+
    private:
-    Synthmania &game;
+    Synthmania& game;
 
     TrackPartition partition;
     Chart chart;
@@ -71,8 +73,11 @@ class PlayMode : public Gamemode {
     Score score;
     uint32_t score_per_note;
 
+    // TODO remake this it messes up the notation
+    // float speedModifier = 1;
+
 #ifdef VST
-    AudioPluginHandler *plugin = NULL;
+    AudioPluginHandler* plugin = NULL;
 #endif
 };
 

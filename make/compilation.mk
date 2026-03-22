@@ -6,6 +6,7 @@ bin/config.json:
 
 # shaders
 bin/%.spv: shader/%
+	@mkdir -p '$(@D)'
 	glslc $< -o $@
 
 # libs

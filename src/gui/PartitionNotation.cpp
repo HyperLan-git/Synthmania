@@ -1,7 +1,9 @@
 #include "PartitionNotation.hpp"
 
+#define HORIZONTAL_SCALING 500000.f
+
 float getNotationPosition(int64_t time, int64_t currentTime) {
-    return (time - currentTime) / 300000.f - 1.3f;
+    return (time - currentTime) / HORIZONTAL_SCALING - 1.3f;
 }
 
 int getDifferenceFromC4(unsigned char pitch, KeySignature signature) {
