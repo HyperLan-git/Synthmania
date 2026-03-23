@@ -80,10 +80,10 @@ bool shouldFlip(unsigned char pitch) { return pitch < 73; }
 
 Note::Note(std::string name, int64_t time, unsigned char pitch,
            double totalDuration, double duration, uint64_t MPQ, Key key,
-           KeySignature signature, bool linked)
+           KeySignature keySignature, bool linked)
     : PartitionNotation(name, time, transposePitch(key, pitch),
                         getTextureForNote(pitch, duration, key, linked), key,
-                        signature) {
+                        keySignature) {
     unsigned char tPitch = transposePitch(key, pitch);
     bool flip = key == Key::DRUM && shouldFlip(tPitch);
     this->totalDuration = totalDuration * MPQ * 4;

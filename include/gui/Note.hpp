@@ -16,7 +16,8 @@ enum NoteStatus {
     MISSED     // FAILED
 };
 
-// FIXME rewrite all of the code for notes, we need to render separately every element
+// FIXME rewrite all of the code for notes, we need to render separately every
+// element
 
 unsigned char transposePitch(Key k, unsigned char pitch);
 
@@ -31,7 +32,7 @@ class Note : public PartitionNotation {
    public:
     Note(std::string name, int64_t time, unsigned char pitch,
          double totalDuration, double duration, uint64_t MPQ, Key key,
-         KeySignature signature, bool linked = false);
+         KeySignature keySignature, bool linked = false);
 
     void setStatus(NoteStatus status);
 

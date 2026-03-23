@@ -15,6 +15,7 @@ typedef glm::vec2 (*GraphicalEffectFunction)(int64_t time, Gui& gui,
 
 class GraphicalEffect {
    public:
+    // TODO make this constexpr
     GraphicalEffect(GraphicalEffectFunction function,
                     std::initializer_list<float> data = {},
                     std::initializer_list<int64_t> tData = {});

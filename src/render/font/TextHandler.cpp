@@ -297,3 +297,24 @@ std::vector<std::shared_ptr<Gui>> TextHandler::printVerticalString(
     }
     return result;
 }
+
+std::vector<std::shared_ptr<PartitionNotation>>
+TextHandler::printStringAsNotation(std::string text, std::string entityNames,
+                                   std::string font, uint64_t time, double size,
+                                   double verticalPosition, glm::vec4 color) {
+    std::vector<std::shared_ptr<PartitionNotation>> result;
+    int i = 0;
+    std::string name = entityNames;
+    for (Text t : createText(text, font, size, {0, 0})) {
+        std::shared_ptr<PartitionNotation> gui =
+            std::make_shared<PartitionNotation>(name + std::to_string(i++),
+                                                time, verticalPosition,
+                                                t.character.texture);
+        gui->setColor(color);
+        gui->setNegate(1);
+        gui->setSize(t.size);
+        gui->addEffect(GraphicalEffect(applyOffset, {t.pos.x, t.pos.y}));
+        result.push_back(gui);
+    }
+    return result;
+}

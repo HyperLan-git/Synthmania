@@ -2,6 +2,7 @@
 
 #define HORIZONTAL_SCALING 500000.f
 
+// TODO variable scaling with bpm
 float getNotationPosition(int64_t time, int64_t currentTime) {
     return (time - currentTime) / HORIZONTAL_SCALING - 1.3f;
 }

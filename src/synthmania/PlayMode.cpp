@@ -1,5 +1,7 @@
 #include "PlayMode.hpp"
 
+void generateBeamings() {}
+
 PlayMode::PlayMode(Synthmania& game, std::string songFolder)
     : game(game), songFolder(songFolder), score() {
     game.getWindow().setKeycallback(PlayMode::keyCallback);
@@ -9,6 +11,7 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
     diff = chart.diffs[0];
     game.resetClock();  //<==> game->startTime = chart.offset;
     Renderer& renderer = game.getRenderer();
+    TextHandler& textHandler = renderer.getTextHandler();
     // TODO could be in a function
     if (chart.animation.compare("None") != 0) {
         std::cout << "loading animation" << std::endl;
@@ -84,6 +87,26 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
     bar->setPosition({-1.3f, bar->getPosition().y});
     bar->setSize({0.25f, 1.f});
     game.addTGui(bar);
+
+    // draw time signatures
+    {
+        int i = 0;
+        std::vector<std::shared_ptr<PartitionNotation>> texts;
+        for (auto& sig : partition.timeSignatures) {
+            // Cannot reuse the utility functions as it has to be notation
+            std::string num = std::to_string(sig.numerator);
+            std::string den = std::to_string(sig.getDenominator());
+            SPAWN_TEXT_FUN(textHandler, texts, printStringAsNotation, num,
+                           "numerator_" + std::to_string(i), "", sig.timestamp,
+                           20., 0.5, {1, 1, 1, 0.2});
+            SPAWN_TEXT_FUN(textHandler, texts, printStringAsNotation, den,
+                           "denominator_" + std::to_string(i), "",
+                           sig.timestamp, 20., -0.5, {1, 1, 1, 0.2});
+            i++;
+        }
+        // for (auto& ptr : texts) game.addTGui(ptr);
+    }
+
     // FIXME make this less cringe
     {
         std::vector<std::shared_ptr<Gui>> tempNotes;
@@ -98,9 +121,16 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
             std::string name = "Note_";
             std::string hash = std::to_string(std::hash<MidiNote>()(note));
             name += hash;
+
+            TempoChange tempo = partition.tempoChanges.empty()
+                                    ? DEFAULT_TEMPO
+                                    : partition.getTempoAt(time);
+            KeySignature keySignature = partition.keyChanges.empty()
+                                            ? DEFAULT_KEY
+                                            : partition.getKeySignatureAt(time);
             // XXX cheap fix to float error
-            double totalDuration =
-                note.length / (long double)partition.MPQ / 4. + .03125f / 2;
+            double totalDuration = note.length / tempo.MPQ / 4. + .03125 / 2;
+            //    note.length / (long double)partition.MPQ / 4. + .03125f / 2;
             std::vector<double> cutDown = splitDuration(totalDuration);
             short firstDots = 0;
             for (int i = 1; i < cutDown.size(); i++)
@@ -110,9 +140,9 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
                 cutDown[1] += cutDown[0];
                 cutDown.erase(cutDown.begin());
             }
-            std::shared_ptr<Note> n = std::make_shared<Note>(
-                name, time, note.note, totalDuration, cutDown[0], partition.MPQ,
-                k, partition.signature);
+            std::shared_ptr<Note> n =
+                std::make_shared<Note>(name, time, note.note, totalDuration,
+                                       cutDown[0], tempo.MPQ, k, keySignature);
             keepAlive.push_back(n);
             notes.push_back(n);
 
@@ -167,7 +197,7 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
 
             // Reading bars
             int diff = getDifferenceFromC4(transposePitch(k, note.note),
-                                           partition.signature) +
+                                           keySignature) +
                        getOffset(k);
             if (diff <= 0 || diff >= 12) {
                 bool up = diff >= 12;
@@ -196,7 +226,7 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
             }
 
             // Sharp symbol thing
-            Accidental a = getAccidental(note.note, partition.signature);
+            Accidental a = getAccidental(note.note, keySignature);
             if (k != Key::DRUM && a == Accidental::SHARP) {
                 std::string sharpName = "Sharp_" + hash;
                 std::shared_ptr<ParentedGui> sharp =
@@ -207,7 +237,7 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
                 tempNotes.push_back(sharp);
             }
             uint64_t last = time;
-            uint64_t t = time + cutDown[0] * partition.MPQ * 4;
+            uint64_t t = time + cutDown[0] * tempo.MPQ * 4;
             for (int i = 1; i < cutDown.size(); i++) {
                 std::string name2 = name + "_" + std::to_string(i);
                 double d = cutDown[i];
@@ -222,13 +252,12 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
                 std::shared_ptr<ParentedGui> arc =
                     std::make_shared<ParentedGui>(Texture("arc"), name2, n);
                 arc->setPosition({(((t + last) / 2) - time) / 300000.f, 0});
-                arc->addEffect(GraphicalEffect(
-                    applyOffset,
-                    std::initializer_list<float>{0, temp.x - .15f}));
+                arc->addEffect(
+                    GraphicalEffect(applyOffset, {0.f, temp.x - .15f}));
                 arc->setSize({(t - last) / 350000.f, .15f});
                 tempNotes.push_back(arc);
                 last = t;
-                t += d * partition.MPQ * 4;
+                t += d * tempo.MPQ * 4;
             }
         }
         std::vector<std::shared_ptr<Gui>> tmp;
@@ -240,15 +269,25 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
         for (std::shared_ptr<Gui>& note : tmp) game.addGui(note);
         for (std::shared_ptr<Gui>& gui : tempNotes) game.addGui(gui);
     }
-    std::shared_ptr<Note> lastNote(*notes.rbegin());
-    for (int i = 0; i < lastNote->getTime() / partition.MPQ / 4; i++) {
+    std::shared_ptr<Note> lastNote(notes.back());
+    uint64_t t = 0;
+    int i = 0;
+    // Measure bars
+    while (t < lastNote->getTime()) {
+        TempoChange tempo = partition.tempoChanges.empty()
+                                ? DEFAULT_TEMPO
+                                : partition.getTempoAt(t);
+        TimeSignature timeSig = partition.timeSignatures.empty()
+                                    ? DEFAULT_TIME_SIGNATURE
+                                    : partition.getTimeSignatureAt(t);
         auto bar = std::make_shared<PartitionNotation>(
-            "measurebar_" + std::to_string(i), i * partition.MPQ * 4, 0,
-            Texture("bar"));
+            "measurebar_" + std::to_string(i), (int64_t)t, 0, Texture("bar"));
         bar->setRotation(glm::half_pi<float>());
         bar->setSize({.67, .2});
         bar->addEffect(GraphicalEffect(applyOffset, {-.15, 0}));
         game.addTGui(bar);
+        t += timeSig.getMicrosPerMeasure(tempo.MPQ);
+        i++;
     }
     AudioHandler& audio = game.getAudioHandler();
     if (chart.audio.compare("None") != 0) {
@@ -280,8 +319,7 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
     text.append(" by ");
     text.append(chart.artist);
 
-    for (std::shared_ptr<Gui>& g :
-         renderer.getTextHandler().printShadowedString(
+    for (std::shared_ptr<Gui>& g : textHandler.printShadowedString(
              text, "title_", "Stupid", 11, {-1.75, -.9}, {.2, .2, 1, 1}))
         game.addGui(g);
 

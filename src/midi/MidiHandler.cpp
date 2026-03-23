@@ -1,10 +1,13 @@
 #include "MidiHandler.hpp"
 
-const char *notes[] = {"Do",  "Do#", "Re",   "Re#", "Mi",  "Fa",
+const char* notes[] = {"Do",  "Do#", "Re",   "Re#", "Mi",  "Fa",
                        "Fa#", "Sol", "Sol#", "La",  "La#", "Si"};
 
+const char* notes_en[] = {"C",  "C#", "D",  "D#", "E",  "F",
+                          "F#", "G",  "G#", "A",  "A#", "B"};
+
 size_t std::hash<libremidi::message>::operator()(
-    libremidi::message const &message) const {
+    libremidi::message const& message) const {
     return ((message.bytes[0] << 7) | (message.bytes[1] << 6) |
             (message.bytes[2] << 5) | (message.bytes[2] << 4)) ^
            (int)(666556507 * message.timestamp);
@@ -28,12 +31,12 @@ uint64_t MidiHandler::getTime() { return micros() - this->start_time; }
 
 bool MidiHandler::openPort(unsigned int port) {
     this->port = port;
-    in.set_callback([this](const libremidi::message &message) {
+    in.set_callback([this](const libremidi::message& message) {
         Message m;
         if (message.is_note_on_or_off()) {
             int note = message[1];
             int velocity = message[2];
-            const char *n = notes[note % 12];
+            const char* n = notes[note % 12];
             int octave = note / 12 - 1;
             m.type = message.get_message_type();
             m.channel = message.get_channel();
@@ -55,7 +58,7 @@ bool MidiHandler::openPort(unsigned int port) {
     });
     try {
         in.open_port(port);
-    } catch (std::runtime_error &e) {
+    } catch (std::runtime_error& e) {
         in.set_callback(nullptr);
         this->port = -1;
         return false;
@@ -69,7 +72,7 @@ bool MidiHandler::openPort(unsigned int port,
     in.set_callback(callback);
     try {
         in.open_port(port);
-    } catch (std::runtime_error &e) {
+    } catch (std::runtime_error& e) {
         in.set_callback(nullptr);
         this->port = -1;
         return false;
@@ -92,25 +95,27 @@ TrackPartition MidiHandler::readMidi(const std::string path) {
     // Parse
     libremidi::reader::parse_result result = r.parse(bytes);
     std::vector<MidiNote> notes;
+    std::vector<TimeSignature> timeSignatures;
+    std::vector<KeySignature> keySignatures;
 
-    // r.startingTempo = 120;
     uint64_t MPQ = 250000 * 60 / r.startingTempo;
+    double curTempo = r.startingTempo;
 
-    // If parsing succeeded, use the parsed data
+    std::vector<TempoChange> tempoChanges;
+
     if (result == libremidi::reader::invalid)
-        return TrackPartition{false, MPQ, notes};
+        return TrackPartition{false, notes, timeSignatures, tempoChanges};
     // Pitch wheel : 0x2000 = 8192 = +-0 semitones 0x0 = -2 semitones
     // and 0x3FFF = +2 semitones
     std::vector<MidiNote> currentNotes;
     bool drum = false;
-    KeySignature signature = {0, false};
     // TODO track chosen
-    for (auto &track : r.tracks) {
-        unsigned long long t = 0;
-        for (auto &event : track) {
+    for (auto& track : r.tracks) {
+        uint64_t t = 0;
+        for (auto& event : track) {
             libremidi::message message = event.m;
-            unsigned long long dt = event.tick;
-            dt = dt * 1000000 / r.ticksPerBeat * 60 / r.startingTempo;
+            uint64_t dt = event.tick;
+            dt = dt * 1000000 / r.ticksPerBeat * 60 / curTempo;
             t += dt;
             switch (message.get_message_type()) {
                 case libremidi::message_type::NOTE_ON:
@@ -171,7 +176,13 @@ TrackPartition MidiHandler::readMidi(const std::string path) {
                 case libremidi::message_type::SYSTEM_RESET:
                     switch (message.get_meta_event_type()) {
                         case libremidi::meta_event_type::KEY_SIGNATURE:
-                            signature = {(char)message[3], message[4] != 0};
+                            keySignatures.push_back(KeySignature{
+                                t, (short)message[3], message[4] != 0});
+                            break;
+                        case libremidi::meta_event_type::TIME_SIGNATURE:
+                            timeSignatures.push_back(
+                                TimeSignature{t, message[3], message[4],
+                                              message[5], message[6]});
                             break;
                         case libremidi::meta_event_type::TEMPO_CHANGE:
                             MPQ = message[3];
@@ -179,7 +190,8 @@ TrackPartition MidiHandler::readMidi(const std::string path) {
                             MPQ += message[4];
                             MPQ = MPQ << 8;
                             MPQ += message[5];
-                            r.startingTempo = (60 * 1000000.) / MPQ;
+                            curTempo = (60 * 1000000.) / MPQ;
+                            tempoChanges.push_back(TempoChange{t, MPQ});
                             break;
                         default:
                             std::cout << "msg=" << std::hex << (int)message[0]
@@ -196,10 +208,10 @@ TrackPartition MidiHandler::readMidi(const std::string path) {
         }
         currentNotes.clear();
     }
-
+    // We must close the file only at the end
     file.close();
-
-    return TrackPartition{drum, MPQ, notes, signature};
+    return TrackPartition{drum, notes, timeSignatures, tempoChanges,
+                          keySignatures};
 }
 
 bool MidiHandler::hasMessage() { return !messages.empty(); }

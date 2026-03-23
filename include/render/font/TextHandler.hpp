@@ -14,11 +14,11 @@ class TextHandler;
 #include "Font.hpp"
 #include "Image.hpp"
 #include "ImageView.hpp"
+#include "PartitionNotation.hpp"
 #include "Utils.hpp"
 
-#define SPAWN_TEXT_FUN(textHandler, container, fun, args...)    \
-    for (std::shared_ptr<Gui> & g_text : textHandler.fun(args)) \
-        container.push_back(g_text);
+#define SPAWN_TEXT_FUN(textHandler, container, fun, args...) \
+    for (auto& g_text : textHandler.fun(args)) container.push_back(g_text);
 
 #define SPAWN_TEXT(textHandler, container, args...) \
     SPAWN_TEXT_FUN(textHandler, container, printString, args)
@@ -84,6 +84,11 @@ class TextHandler {
     std::vector<std::shared_ptr<Gui>> printShakingString(
         std::string text, std::string entityNames, std::string font,
         double size, glm::vec2 pos, float shake,
+        glm::vec4 color = {0, 0, 0, 1});
+
+    std::vector<std::shared_ptr<PartitionNotation>> printStringAsNotation(
+        std::string text, std::string entityNames, std::string font,
+        uint64_t time, double size, double verticalPosition,
         glm::vec4 color = {0, 0, 0, 1});
 
     ~TextHandler();
