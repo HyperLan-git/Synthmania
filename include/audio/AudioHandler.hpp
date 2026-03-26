@@ -41,7 +41,7 @@ class AudioHandler {
 
     ALCint getSampleRate();
 
-    bool update();
+    bool update(int64_t time);
 
     ~AudioHandler();
 

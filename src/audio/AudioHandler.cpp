@@ -68,13 +68,27 @@ void AudioHandler::setDevice(const ALCchar* device) {
         throw std::runtime_error("Couldn't bind context !");
 }
 
-bool AudioHandler::update() {
+constexpr int64_t RELEASE = 100000;
+
+bool AudioHandler::update(int64_t time) {
     for (auto iter = sources.begin(); iter != sources.end(); iter++) {
+        if (iter->getEnd() != INT64_MIN && iter->getEnd() < time) {
+            iter->release();
+            float progress = (time - iter->getEnd()) / (float)RELEASE;
+            if (progress > 1) {
+                iter = sources.erase(iter);
+                iter--;
+                continue;
+            }
+            float val = pow(10.0f, (-progress) * 2.f);
+            val = std::clamp(val, iter->getMinGain(), iter->getMaxGain());
+            iter->setGain(iter->getReleaseGain() * val);
+        }
         if (!iter->destroyOnFinished()) continue;
         ALenum state = iter->getState();
         if (state == AL_STOPPED) {
-            sources.erase(iter);
-            return update();
+            iter = sources.erase(iter);
+            iter--;
         }
     }
     return !sources.empty();

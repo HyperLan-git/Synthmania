@@ -1,6 +1,27 @@
 #include "PlayMode.hpp"
 
-void generateBeamings() {}
+void PlayMode::generateBeamings() {
+    for (auto& n : notes) {
+        if (n.expired()) continue;
+        std::shared_ptr<Note> note(n);
+
+        uint64_t time = note->getTime(), duration = note->getTotalDuration();
+
+        TempoChange tempo = partition.tempoChanges.empty()
+                                ? DEFAULT_TEMPO
+                                : partition.getTempoAt(time);
+        KeySignature keySignature = partition.keyChanges.empty()
+                                        ? DEFAULT_KEY
+                                        : partition.getKeySignatureAt(time);
+        TimeSignature timeSignature = partition.timeSignatures.empty()
+                                          ? DEFAULT_TIME_SIGNATURE
+                                          : partition.getTimeSignatureAt(time);
+
+        if (duration >= tempo.MPQ) continue;
+        if (duration) {
+        }
+    }
+}
 
 PlayMode::PlayMode(Synthmania& game, std::string songFolder)
     : game(game), songFolder(songFolder), score() {
@@ -88,32 +109,10 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
     bar->setSize({0.25f, 1.f});
     game.addTGui(bar);
 
-    // draw time signatures
-    {
-        int i = 0;
-        std::vector<std::shared_ptr<PartitionNotation>> texts;
-        for (auto& sig : partition.timeSignatures) {
-            // Cannot reuse the utility functions as it has to be notation
-            std::string num = std::to_string(sig.numerator);
-            std::string den = std::to_string(sig.getDenominator());
-            SPAWN_TEXT_FUN(textHandler, texts, printStringAsNotation, num,
-                           "numerator_" + std::to_string(i), "", sig.timestamp,
-                           20., 0.5, {1, 1, 1, 0.2});
-            SPAWN_TEXT_FUN(textHandler, texts, printStringAsNotation, den,
-                           "denominator_" + std::to_string(i), "",
-                           sig.timestamp, 20., -0.5, {1, 1, 1, 0.2});
-            i++;
-        }
-        // for (auto& ptr : texts) game.addTGui(ptr);
-    }
-
     // FIXME make this less cringe
     {
         std::vector<std::shared_ptr<Gui>> tempNotes;
         std::vector<std::shared_ptr<Note>> keepAlive;
-        std::shared_ptr<PartitionNotation> bar;
-        int groupedNotes = 0, beams = 0;
-        std::shared_ptr<Note> groupStart;
         for (auto iter = partition.notes.cbegin();
              iter != partition.notes.cend(); iter++) {
             const MidiNote& note = *iter;
@@ -128,8 +127,9 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
             KeySignature keySignature = partition.keyChanges.empty()
                                             ? DEFAULT_KEY
                                             : partition.getKeySignatureAt(time);
-            // XXX cheap fix to float error
-            double totalDuration = note.length / tempo.MPQ / 4. + .03125 / 2;
+            // XXX cheap fix to float error and daws cutting off note ends
+            double totalDuration = note.length / 4.;
+            totalDuration = totalDuration / tempo.MPQ + 1 / 64.;
             //    note.length / (long double)partition.MPQ / 4. + .03125f / 2;
             std::vector<double> cutDown = splitDuration(totalDuration);
             short firstDots = 0;
@@ -288,6 +288,25 @@ PlayMode::PlayMode(Synthmania& game, std::string songFolder)
         game.addTGui(bar);
         t += timeSig.getMicrosPerMeasure(tempo.MPQ);
         i++;
+    }
+
+    // draw time signatures
+    {
+        int i = 0;
+        std::vector<std::shared_ptr<PartitionNotation>> texts;
+        for (auto& sig : partition.timeSignatures) {
+            // Cannot reuse the utility functions as it has to be notation
+            std::string num = std::to_string(sig.numerator);
+            std::string den = std::to_string(sig.getDenominator());
+            SPAWN_TEXT_FUN(textHandler, texts, printStringAsNotation, num,
+                           "numerator_" + std::to_string(i), "Open Sans",
+                           sig.timestamp, 20., -0.1, {0, 0, 0, 0.5});
+            SPAWN_TEXT_FUN(textHandler, texts, printStringAsNotation, den,
+                           "denominator_" + std::to_string(i), "Open Sans",
+                           sig.timestamp, 20., 0.2, {0, 0, 0, 0.5});
+            i++;
+        }
+        for (auto& ptr : texts) game.addTGui(ptr);
     }
     AudioHandler& audio = game.getAudioHandler();
     if (chart.audio.compare("None") != 0) {
@@ -455,7 +474,8 @@ void PlayMode::noteHit(const std::shared_ptr<Note>& note) {
                              time + note->getTotalDuration() - delta);
         else
 #endif
-            playPianoSound(note->getPitch());
+            playPianoSound(note->getPitch(),
+                           time + note->getTotalDuration() - delta);
     } /*else
         playDrumSound(note->getPitch());*/
     note->setStatus(HIT);
@@ -563,10 +583,14 @@ void PlayMode::playDrumSound(unsigned char pitch) {
 // 2^(1/12)
 constexpr double ST = 1.0594630943592952646;
 
-void PlayMode::playPianoSound(unsigned char pitch) {
+void PlayMode::playPianoSound(unsigned char pitch, int64_t end) {
+    if (end != INT64_MIN) {
+        if (this->game.getCurrentTimeMicros() > end) return;
+    }
     AudioSource& source = game.getAudioHandler().playSound("piano");
     float p = std::pow(ST, (pitch - 60));
     source.setPitch(p);
+    source.setEnd(end);
 }
 
 void PlayMode::spawnNote(MidiNote note) {}

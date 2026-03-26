@@ -140,6 +140,8 @@ void AudioSource::setGain(ALfloat gain) { setSourcef(AL_GAIN, gain); }
 
 void AudioSource::setPitch(ALfloat pitch) { setSourcef(AL_PITCH, pitch); }
 
+void AudioSource::setEnd(int64_t end) { this->end = end; }
+
 void AudioSource::setSourcef(ALenum param, ALfloat value) {
     alSourcef(sourceID, param, value);
     OPENAL_DEBUG("setting sourcef(" << param << ")");

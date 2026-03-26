@@ -48,6 +48,8 @@ class AudioSource {
     ALint getProcessedBuffers();
     ALint getFreq();
 
+    int64_t getEnd() { return end; }
+
     bool destroyOnFinished();
 
     void setDestroyOnFinished(bool destroy);
@@ -61,6 +63,12 @@ class AudioSource {
     void setLooping(bool looping);
     void setGain(ALfloat gain);
     void setPitch(ALfloat pitch);
+
+    void setEnd(int64_t end);
+    void release() {
+        if (std::isnan(this->gainAtEnd)) this->gainAtEnd = this->getGain();
+    }
+    ALfloat getReleaseGain() { return gainAtEnd; }
 
     bool operator==(const AudioSource&) const;
 
@@ -77,4 +85,6 @@ class AudioSource {
 
     ALuint sourceID;
     bool destroy;
+    int64_t end = INT64_MIN;
+    ALfloat gainAtEnd = NAN;
 };

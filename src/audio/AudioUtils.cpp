@@ -96,18 +96,14 @@ AudioData loadWavFile(std::string filename) {
         if (!fread(&wave_data, sizeof(WAVE_Data), 1, soundFile))
             throw "Wave data read fail !";
 
-        // Skip the LIST headers if there is any
+        // Skip any other headers if there are any
         while (
-            wave_data.subChunkID[0] == 'L' && wave_data.subChunkID[1] == 'I' &&
-            wave_data.subChunkID[2] == 'S' && wave_data.subChunkID[3] == 'T') {
+            wave_data.subChunkID[0] != 'd' || wave_data.subChunkID[1] != 'a' ||
+            wave_data.subChunkID[2] != 't' || wave_data.subChunkID[3] != 'a') {
             fseek(soundFile, wave_data.subChunk2Size, SEEK_CUR);
             if (!fread(&wave_data, sizeof(WAVE_Data), 1, soundFile))
-                throw "Wave data read fail !";
+                throw "Subchunk data read fail !";
         }
-
-        if (wave_data.subChunkID[0] != 'd' || wave_data.subChunkID[1] != 'a' ||
-            wave_data.subChunkID[2] != 't' || wave_data.subChunkID[3] != 'a')
-            throw("Invalid data header");
 
         result.data = new unsigned char[wave_data.subChunk2Size];
 
@@ -122,11 +118,17 @@ AudioData loadWavFile(std::string filename) {
                 result.format = AL_FORMAT_MONO8;
             else if (wave_format.bitsPerSample == 16)
                 result.format = AL_FORMAT_MONO16;
+            else if (wave_format.bitsPerSample == 24)
+                throw std::runtime_error("24 bps unsupported !");
         } else if (wave_format.numChannels == 2) {
             if (wave_format.bitsPerSample == 8)
                 result.format = AL_FORMAT_STEREO8;
             else if (wave_format.bitsPerSample == 16)
                 result.format = AL_FORMAT_STEREO16;
+            else if (wave_format.bitsPerSample == 24)
+                throw std::runtime_error("24 bps unsupported !");
+        } else {
+            throw std::runtime_error("More than 2 channels unsupported !");
         }
         fclose(soundFile);
     } catch (const char* error) {

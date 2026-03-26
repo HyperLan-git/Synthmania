@@ -31,7 +31,7 @@ class PlayMode : public Gamemode {
     std::string getSongFolder();
 
     void playDrumSound(unsigned char pitch);
-    void playPianoSound(unsigned char pitch);
+    void playPianoSound(unsigned char pitch, int64_t end = INT64_MIN);
 
     void spawnNote(MidiNote note);
 
@@ -75,6 +75,8 @@ class PlayMode : public Gamemode {
 
     // TODO remake this it messes up the notation
     // float speedModifier = 1;
+
+    void generateBeamings();
 
 #ifdef VST
     AudioPluginHandler* plugin = NULL;
