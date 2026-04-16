@@ -1,30 +1,33 @@
 #include "TextHandler.hpp"
 
-TextHandler::TextHandler(Device& device, unsigned int textureSize)
-    : device(device) {
+TextHandler::TextHandler(Device &device, unsigned int textureSize) :
+    device(device) {
     this->textureSize = textureSize;
     if (FT_Init_FreeType(&lib))
         throw std::runtime_error("Could not init freetype !");
 }
 
-Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
-                                  CommandPool& commandPool) {
+Image *TextHandler::loadCharacter(FT_Face face, unsigned long character,
+                                  CommandPool &commandPool) {
     FT_GlyphSlot glyphSlot = face->glyph;
-    if (!glyphSlot) return NULL;
+    if (!glyphSlot)
+        return NULL;
     FT_UInt i = FT_Get_Char_Index(face, character);
-    if (FT_Load_Glyph(face, i, FT_LOAD_DEFAULT)) return NULL;
-    if (FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL)) return NULL;
+    if (FT_Load_Glyph(face, i, FT_LOAD_DEFAULT))
+        return NULL;
+    if (FT_Render_Glyph(glyphSlot, FT_RENDER_MODE_NORMAL))
+        return NULL;
     const unsigned int w = glyphSlot->bitmap.width + 2,
                        h = glyphSlot->bitmap.rows + 2;
 
-    uint8_t* bitmap = glyphSlot->bitmap.buffer;
+    uint8_t *bitmap = glyphSlot->bitmap.buffer;
 
-    Image* image = new Image(device, w, h, VK_FORMAT_R8G8B8A8_SRGB,
-                             VK_IMAGE_TILING_LINEAR,  // Fricking tiling
+    Image *image = new Image(device, w, h, VK_FORMAT_R8G8B8A8_SRGB,
+                             VK_IMAGE_TILING_LINEAR, // Fricking tiling
                              VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
-                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+                                 | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+                                 | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     VkSubresourceLayout layout = image->getImageSubresourceLayout();
     uint8_t buffer[layout.rowPitch * h] = {0};
     for (int y = 0; y < h; ++y)
@@ -55,23 +58,27 @@ Image* TextHandler::loadCharacter(FT_Face face, unsigned long character,
 
 void TextHandler::loadFonts(
     std::map<std::string, std::vector<unsigned long>> fontsToLoad,
-    CommandPool& commandPool) {
+    CommandPool &commandPool) {
     Queue queue = *device.getQueue("secondary");
-    for (const auto& entry : fontsToLoad) {
+    for (const auto &entry : fontsToLoad) {
         FT_Face f;
-        if (FT_New_Face(lib, entry.first.c_str(), 0, &f)) continue;
-        if (!f) continue;
-        if (FT_Set_Pixel_Sizes(f, 0, textureSize)) continue;
+        if (FT_New_Face(lib, entry.first.c_str(), 0, &f))
+            continue;
+        if (!f)
+            continue;
+        if (FT_Set_Pixel_Sizes(f, 0, textureSize))
+            continue;
 
         std::shared_ptr<Image> img = std::make_shared<Image>(
-            this->device, textureSize, textureSize, VK_FORMAT_R8G8B8A8_SRGB,
-            VK_IMAGE_TILING_LINEAR,  // XXX Fricking tiling
+            this->device, textureSize, textureSize * 1.3,
+            VK_FORMAT_R8G8B8A8_SRGB,
+            VK_IMAGE_TILING_LINEAR, // XXX Fricking tiling
             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+                | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+                | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
             entry.second.size());
-        LayeredAtlas* atlas = new LayeredAtlas(img);
+        LayeredAtlas *atlas = new LayeredAtlas(img);
 
         {
             CommandBuffer buf(commandPool, true);
@@ -92,8 +99,9 @@ void TextHandler::loadFonts(
             std::string charName = font.name;
             charName.append("_");
             charName.append(std::to_string(c));
-            Image* ch = loadCharacter(f, c, commandPool);
-            if (!ch) continue;
+            Image *ch = loadCharacter(f, c, commandPool);
+            if (!ch)
+                continue;
             {
                 CommandBuffer buf(commandPool, true);
                 buf.begin();
@@ -103,12 +111,15 @@ void TextHandler::loadFonts(
                 buf.submit(queue);
             }
 
+            if (!atlas->fits(*ch)) {
+                throw std::runtime_error("Character too big for atlas !");
+            }
             uint32_t layer = atlas->append(*ch, commandPool);
 
-            TexPtr& ptr = this->textures.emplace_back(atlas->getTexture(
+            TexPtr &ptr = this->textures.emplace_back(atlas->getTexture(
                 layer, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT,
-                std::string("font_") + font.name + '_' +
-                    std::to_string(layer)));
+                std::string("font_") + font.name + '_'
+                    + std::to_string(layer)));
             Character chr{.texture = Texture(ptr->getName())};
             chr.character = c;
             chr.width = f->glyph->bitmap.width + 2;
@@ -136,16 +147,23 @@ void TextHandler::loadFonts(
     }
 }
 
-std::vector<Font> TextHandler::getFonts() { return fonts; }
+std::vector<Font> TextHandler::getFonts() {
+    return fonts;
+}
 
-std::vector<TexPtr> TextHandler::getTextures() { return textures; }
+std::vector<TexPtr> TextHandler::getTextures() {
+    return textures;
+}
 
-unsigned int TextHandler::getTextureSize() { return textureSize; }
+unsigned int TextHandler::getTextureSize() {
+    return textureSize;
+}
 
 Character TextHandler::getCharacter(std::string fontName, unsigned long code) {
-    for (Font& f : fonts)
+    for (Font &f : fonts)
         if (fontName.compare(f.name) == 0) {
-            if (!f.characters.count(code)) return Character{};
+            if (!f.characters.count(code))
+                return Character{};
             return f.characters.at(code);
         }
     return Character{};
@@ -199,10 +217,10 @@ std::vector<Text> TextHandler::createVerticalText(std::string text,
     for (int i = 0; i < text.size(); i++) {
         Character c = getCharacter(fontName, (unsigned long)text[i]);
         Text t{.character = c};
-        t.pos = {start.x + (double)(this->textureSize * 2 - c.width) * sz / 2 -
-                     c.offsetLeft * sz * .75,
-                 start.y + (double)this->textureSize * sz / 2 -
-                     c.offsetTop * sz * .75};
+        t.pos = {start.x + (double)(this->textureSize * 2 - c.width) * sz / 2
+                     - c.offsetLeft * sz * .75,
+                 start.y + (double)this->textureSize * sz / 2
+                     - c.offsetTop * sz * .75};
         t.size = {(double)this->textureSize * sz,
                   (double)this->textureSize * sz};
         result.push_back(t);
@@ -212,13 +230,15 @@ std::vector<Text> TextHandler::createVerticalText(std::string text,
 }
 
 TextHandler::~TextHandler() {
-    for (Font& f : fonts) delete f.textures;
+    for (Font &f : fonts)
+        delete f.textures;
     FT_Done_FreeType(lib);
 }
 
-std::vector<std::shared_ptr<Gui>> TextHandler::printString(
-    std::string text, std::string entityNames, std::string font, double size,
-    glm::vec2 pos, glm::vec4 color) {
+std::vector<std::shared_ptr<Gui>>
+TextHandler::printString(std::string text, std::string entityNames,
+                         std::string font, double size, glm::vec2 pos,
+                         glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
     std::string name = entityNames;
@@ -234,9 +254,10 @@ std::vector<std::shared_ptr<Gui>> TextHandler::printString(
     return result;
 }
 
-std::vector<std::shared_ptr<Gui>> TextHandler::printShadowedString(
-    std::string text, std::string entityNames, std::string font, double size,
-    glm::vec2 pos, glm::vec4 color) {
+std::vector<std::shared_ptr<Gui>>
+TextHandler::printShadowedString(std::string text, std::string entityNames,
+                                 std::string font, double size, glm::vec2 pos,
+                                 glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result, result2;
     glm::vec2 shadowPos = pos;
     shadowPos += glm::vec2({.0005 * size, .0005 * size});
@@ -259,9 +280,10 @@ std::vector<std::shared_ptr<Gui>> TextHandler::printShadowedString(
     return result2;
 }
 
-std::vector<std::shared_ptr<Gui>> TextHandler::printShakingString(
-    std::string text, std::string entityNames, std::string font, double size,
-    glm::vec2 pos, float shake, glm::vec4 color) {
+std::vector<std::shared_ptr<Gui>>
+TextHandler::printShakingString(std::string text, std::string entityNames,
+                                std::string font, double size, glm::vec2 pos,
+                                float shake, glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
     std::string name = entityNames;
@@ -279,9 +301,10 @@ std::vector<std::shared_ptr<Gui>> TextHandler::printShakingString(
     return result;
 }
 
-std::vector<std::shared_ptr<Gui>> TextHandler::printVerticalString(
-    std::string text, std::string entityNames, std::string font, double size,
-    glm::vec2 pos, glm::vec4 color) {
+std::vector<std::shared_ptr<Gui>>
+TextHandler::printVerticalString(std::string text, std::string entityNames,
+                                 std::string font, double size, glm::vec2 pos,
+                                 glm::vec4 color) {
     std::vector<std::shared_ptr<Gui>> result;
     int i = 0;
     for (Text t : createVerticalText(text, font, size, pos)) {

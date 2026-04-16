@@ -24,6 +24,8 @@ make dependencies
 make
 ```
 
+If you want to use clangd as the language server, use `bear make` to generate the needed `compile_commands.json`.
+
 ## Modules
 This part is not final and will probably have to be replaced with a more portable scripting language (I hate those when they are badly designed), but right now shader modifications as well as animations in charts work with dynamic cpp libraries.
 Simply add in a folder in /module your source code (cpp and hpp files) and use `make module MOD="folder"`.

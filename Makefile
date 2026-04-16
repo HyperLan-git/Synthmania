@@ -16,7 +16,7 @@ else
 endif
 
 dependencies: detect-requirements check-env check-vulkan
-	@echo -n "Are you sure? [y/N] " && read ans && if [ $${ans:-'N'} = 'y' ]; then make deps; fi
+	@echo -n "Are you sure you want to install dependencies? [y/N] " && read ans && if [ $${ans:-'N'} = 'y' ]; then make deps; fi
 
 Synthmania: shader $(LIBSOBJ) $(VSTLIB) bin/config.json
 	@make $(OBJ) -j 10

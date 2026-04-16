@@ -7,7 +7,8 @@
 static void framebufferResizeCallback(GLFWwindow *window, int width,
                                       int height) {
     void *ptr = glfwGetWindowUserPointer(window);
-    if (ptr == NULL) return;
+    if (ptr == NULL)
+        return;
     Game *game = reinterpret_cast<Game *>(ptr);
     game->getWindow().onResize();
 }
@@ -29,15 +30,23 @@ Window::Window(const uint32_t width, const uint32_t height, const char *title,
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
-bool Window::shouldClose() { return glfwWindowShouldClose(window); }
+bool Window::shouldClose() {
+    return glfwWindowShouldClose(window);
+}
 
-void Window::onResize() { resized = true; }
+void Window::onResize() {
+    resized = true;
+}
 
-bool Window::hasResized() { return resized; }
+bool Window::hasResized() {
+    return resized;
+}
 
 void Window::getFramebufferSize(uint32_t *width, uint32_t *height) {
     int x, y;
     glfwGetFramebufferSize(window, &x, &y);
+    if (x < 0 || y < 0)
+        x = y = 0;
     *width = x;
     *height = y;
 }
@@ -49,13 +58,17 @@ VkResult Window::createSurface(Instance *instance,
                                    allocator, surface);
 }
 
-void Window::setResized(bool resized) { this->resized = resized; }
+void Window::setResized(bool resized) {
+    this->resized = resized;
+}
 
 void Window::setWindowUserPointer(void *pointer) {
     glfwSetWindowUserPointer(window, pointer);
 }
 
-void Window::setKeycallback(GLFWkeyfun fun) { glfwSetKeyCallback(window, fun); }
+void Window::setKeycallback(GLFWkeyfun fun) {
+    glfwSetKeyCallback(window, fun);
+}
 
 void Window::setMousecallback(GLFWmousebuttonfun fun) {
     glfwSetMouseButtonCallback(window, fun);
@@ -102,12 +115,14 @@ void Window::fullscreen(bool fullscreen) {
         return;
     }
     GLFWmonitor *m = glfwGetWindowMonitor(window);
-    if (m == NULL) m = glfwGetPrimaryMonitor();
+    if (m == NULL)
+        m = glfwGetPrimaryMonitor();
     const GLFWvidmode *mode = glfwGetVideoMode(m);
     glfwSetWindowMonitor(window, m, 0, 0, mode->width, mode->height,
                          GLFW_DONT_CARE);
 }
 
 Window::~Window() {
-    if (window) glfwDestroyWindow(window);
+    if (window)
+        glfwDestroyWindow(window);
 }

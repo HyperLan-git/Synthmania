@@ -13,7 +13,7 @@ struct Character {
 
 struct Font {
     std::string name;
-    LayeredAtlas* textures;
+    LayeredAtlas *textures;
     std::map<unsigned long, Character> characters;
 };
 

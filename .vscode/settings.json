@@ -116,5 +116,20 @@
     "editor.formatOnSave": true,
     "C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: Google, UseTab: Never, IndentWidth: 4, TabWidth: 4}",
     "cmake.configureOnOpen": false,
-    "C_Cpp.default.compilerPath": "/usr/bin/g++"
+    "C_Cpp.default.compilerPath": "/usr/bin/g++",
+    "editor.defaultFormatter": "xaver.clang-format",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.autocomplete": "disabled",
+    "C_Cpp.formatting": "disabled",
+    "C_Cpp.codeAnalysis.enabled": false,
+
+
+    "clangd.arguments": [
+        "--background-index",
+        "--clang-tidy",
+        "--all-scopes-completion",
+        "--header-insertion=never",
+        "-j=2"
+    ],
+    "clangd.onConfigChanged": "restart",
 }

@@ -12,7 +12,7 @@ endif
 VSTLIB = libs/SimplePluginHost/export/lib/libSimplePluginHost.a
 endif
 
-IDIRS = $(shell pkg-config --cflags freetype2)\
+IDIRS = $(shell pkg-config --cflags freetype2 vulkan)\
 		$(addprefix -I ,$(shell find include -type d | sed -z 's/\n/ /g'))\
 			-I libs/stbi -I libs/obj -I libs/libremidi/include/\
 			$(VSTINCLUDE)

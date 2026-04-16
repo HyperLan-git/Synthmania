@@ -6,7 +6,7 @@
                 "${workspaceFolder}/**",
                 "C:/msys64/mingw64/include/freetype2",
                 "C:/msys64/mingw64/include/",
-                "${workspaceFolder}/../SimplePluginHost/export/include",
+                "${workspaceFolder}/../SimplePluginHost/export/include"
             ],
             "defines": [],
             "compilerPath": "C:/msys64/usr/bin/g++.exe",
@@ -22,7 +22,8 @@
                 "${workspaceFolder}/libs/obj",
                 "${workspaceFolder}/libs/libremidi/include",
                 "${workspaceFolder}/libs/SimplePluginHost/export/include",
-                "/usr/include/freetype2"
+                "/usr/include/freetype2",
+                "${workspaceFolder}/vulkan/1.4.341.1/source/Vulkan-Headers/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

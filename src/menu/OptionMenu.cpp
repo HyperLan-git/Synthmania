@@ -1,8 +1,8 @@
 #include "OptionMenu.hpp"
 
-OptionMenu::OptionMenu(Game& game)
-    : Menu(game), options(dynamic_cast<Synthmania&>(game).getOptions()) {
-    TextHandler& text = game.getTextHandler();
+OptionMenu::OptionMenu(Game &game) :
+    Menu(game), options(dynamic_cast<Synthmania &>(game).getOptions()) {
+    TextHandler &text = game.getTextHandler();
     Texture sliderBg("slider"), sliderTex("slider_button"), button("button"),
         button_pressed("button-pressed"), selector("selector"),
         text_area("text_area");
@@ -142,7 +142,7 @@ OptionMenu::OptionMenu(Game& game)
     midiDevice->setSize({.7, .15});
     midiDevice->select(*(options.getValue<int>("midi.device")));
     midiDevice->recalculatePositions();
-    for (std::shared_ptr<Gui>& g : midiDevice->getGuis())
+    for (std::shared_ptr<Gui> &g : midiDevice->getGuis())
         this->guis.push_back(g);
     this->elements.push_back(midiDevice);
     std::vector<std::string> audioDevices = getAudioDevices();
@@ -163,7 +163,8 @@ OptionMenu::OptionMenu(Game& game)
     notation->setSize({.7, .15});
     notation->select(*(options.getValue<int>("gameplay.notes")));
     notation->recalculatePositions();
-    for (std::shared_ptr<Gui> g : notation->getGuis()) this->guis.push_back(g);
+    for (std::shared_ptr<Gui> g : notation->getGuis())
+        this->guis.push_back(g);
     this->elements.push_back(notation);
     for (Text t :
          text.createText("Audio latency", "Stupid", 6, glm::vec2({.17, -.1}))) {
@@ -173,7 +174,7 @@ OptionMenu::OptionMenu(Game& game)
         g->setSize(t.size);
         guis.push_back(g);
     }
-    wchar_t c = L'I';  //"│";
+    wchar_t c = L'I'; //"│";
     audioLatency =
         std::make_shared<TextArea>(text_area, "audio latency", text, "Stupid",
                                    4, 4, c, 8, integerPredicate);
@@ -182,7 +183,7 @@ OptionMenu::OptionMenu(Game& game)
     std::string latency =
         std::to_string(*(options.getValue<int>("gameplay.audio latency")));
     audioLatency->setTextStr(latency);
-    for (std::shared_ptr<Gui>& g : audioLatency->getGuis())
+    for (std::shared_ptr<Gui> &g : audioLatency->getGuis())
         this->guis.push_back(g);
     audioLatency->recalculateText();
     audioLatency->recalculateCursor();
@@ -251,14 +252,16 @@ OptionMenu::OptionMenu(Game& game)
         guis.push_back(g);
     }
     // TODO make skin system
-    skin = std::make_shared<Selector>(selector, button, game, "note selector",
+    skin = std::make_shared<Selector>(selector, button, game, "skin selector",
                                       std::vector<std::string>({"default"}), 5,
                                       "Stupid", 18);
     skin->setPosition({.5, .3});
     skin->setSize({.7, .15});
-    skin->select(*(options.getValue<int>("appearance.skin")));
+    std::string sk = *options.getValue<std::string>("appearance.skin");
+    skin->select(0);
     skin->recalculatePositions();
-    for (std::shared_ptr<Gui> g : skin->getGuis()) this->guis.push_back(g);
+    for (std::shared_ptr<Gui> g : skin->getGuis())
+        this->guis.push_back(g);
     this->elements.push_back(skin);
     for (Text t :
          text.createText("Buffer size", "Stupid", 6, glm::vec2({-.9, .6}))) {
@@ -282,7 +285,8 @@ OptionMenu::OptionMenu(Game& game)
     bufSize->setPosition({-.3, .6});
     bufSize->setText(
         std::to_wstring(*(options.getValue<int>("plugin.buffer size"))));
-    for (std::shared_ptr<Gui> g : bufSize->getGuis()) this->guis.push_back(g);
+    for (std::shared_ptr<Gui> g : bufSize->getGuis())
+        this->guis.push_back(g);
     bufSize->recalculateText();
     bufSize->recalculateCursor();
     this->elements.push_back(bufSize);
@@ -292,7 +296,8 @@ OptionMenu::OptionMenu(Game& game)
     bufAmt->setPosition({.7, .6});
     bufAmt->setText(
         std::to_wstring(*(options.getValue<int>("plugin.buffers"))));
-    for (std::shared_ptr<Gui> g : bufAmt->getGuis()) this->guis.push_back(g);
+    for (std::shared_ptr<Gui> g : bufAmt->getGuis())
+        this->guis.push_back(g);
     bufAmt->recalculateText();
     bufAmt->recalculateCursor();
     this->elements.push_back(bufAmt);
@@ -323,8 +328,8 @@ OptionMenu::OptionMenu(Game& game)
     this->elements.push_back(pluginFolders);
 }
 
-void OptionMenu::onPressed(const std::shared_ptr<Button>& b) {
-    Synthmania& s = dynamic_cast<Synthmania&>(game);
+void OptionMenu::onPressed(const std::shared_ptr<Button> &b) {
+    Synthmania &s = dynamic_cast<Synthmania &>(game);
     save();
     s.applyOptions();
     s.resetAudio();
@@ -370,22 +375,28 @@ void OptionMenu::save() {
 // Needed so that stuff renders correctly on top of each other
 // XXX fix options rendering
 void OptionMenu::show() {
-    for (std::shared_ptr<Button>& b : buttons) game.addTGui(b);
-    for (std::shared_ptr<Gui>& g : guis) game.addGui(g);
-    for (std::shared_ptr<MenuElement>& e : elements) game.addTGui(e);
-    game.getWindow().setTextcallback([](GLFWwindow* window, unsigned int c) {
-        Game* g = (Game*)(glfwGetWindowUserPointer(window));
-        if (g == NULL) return;
-        Menu& menu = g->getCurrentMenu();
+    for (std::shared_ptr<Button> &b : buttons)
+        game.addTGui(b);
+    for (std::shared_ptr<Gui> &g : guis)
+        game.addGui(g);
+    for (std::shared_ptr<MenuElement> &e : elements)
+        game.addTGui(e);
+    game.getWindow().setTextcallback([](GLFWwindow *window, unsigned int c) {
+        Game *g = (Game *)(glfwGetWindowUserPointer(window));
+        if (g == NULL)
+            return;
+        Menu &menu = g->getCurrentMenu();
         menu.textCallback(window, c);
     });
     game.getWindow().setKeycallback(
-        [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-            Game* g = (Game*)(glfwGetWindowUserPointer(window));
-            if (g == NULL) return;
-            Menu& menu = g->getCurrentMenu();
+        [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+            Game *g = (Game *)(glfwGetWindowUserPointer(window));
+            if (g == NULL)
+                return;
+            Menu &menu = g->getCurrentMenu();
             menu.keyCallback(window, key, scancode, action, mods);
         });
 }
 
-OptionMenu::~OptionMenu() {}
+OptionMenu::~OptionMenu() {
+}

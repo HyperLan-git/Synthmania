@@ -29,7 +29,7 @@ if ! test -d $ver; then
     tar xf $filename
 fi
 echo "Installing..."
-$ver/vulkansdk --maxjobs
+$ver/vulkansdk --maxjobs vulkan-headers loader shaderc vulkan-extensionlayer && $ver/vulkansdk --maxjobs tools
 echo "Finalizing setup..."
 source "$ver/setup-env.sh"
 echo "source $(pwd)/$ver/setup-env.sh" >>~/.profile

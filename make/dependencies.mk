@@ -4,7 +4,8 @@ GPU = $(strip $(shell wmic path win32_VideoController get name | sed -n 2p))
 msys_version = $(if $(findstring Msys, $(shell uname -o)),$(word 1, $(subst ., ,$(shell uname -r))),0)
 else
 GPU = $(strip $(shell lspci | grep ' VGA ' | cut -d" " -f 5- \
-			| sed -E -e 's/(\[[^][]*\])|(\([^()]*\))//g' | sed -E -e 's/(Intel)|(Corporation)//g'))
+			| sed -E -e 's/(\[[^][]*\])|(\([^()]*\))//g' | sed -E -e 's/(Intel)|(Corporation)//g'\
+			| sed -E -e 's/Skylake-U/SKL/g'))
 endif
 
 detect-requirements:
@@ -23,23 +24,38 @@ check-env:
 	$(info Checking environment...)
 ifeq ($(OS),Windows_NT)
 	$(info OS : $(OS))
+
 ifeq ("pacman:","$(shell whereis pacman)")
 	$(error pacman is not installed !!!)
 endif
+
 else
 	$(info OS : $(DISTRO) $(VERSION))
-ifneq ($(DISTRO),Ubuntu)
-	$(error Deps for your OS not implemented !)
-endif
+ifeq ($(DISTRO),Ubuntu)
+
 ifeq ("apt:","$(shell whereis apt)")
 	$(error apt-get is not installed !!!)
+endif
+
+else
+
+ifeq ($(DISTRO),Arch)
+
+ifeq ("pacman:","$(shell whereis pacman)")
+	$(error pacman is not installed !!!)
+endif
+
+else
+	$(error Deps for your OS not implemented !)
+endif
+
 endif
 endif
 	$(info Environment checked...)
 
 check-vulkan:
 	$(info Testing vulkan installation...)
-	@vkvia>/dev/null || make install-vulkan
+	@vulkaninfo>/dev/null || make install-vulkan
 
 install-vulkan:
 	$(info Could not find vulkan, attempt to install...)
@@ -48,28 +64,43 @@ ifeq ($(OS),Windows_NT)
 	pacman -S mingw-w64-x86_64-vulkan-devel mingw-w64-x86_64-shaderc
 else
 ifeq ($(DISTRO),Ubuntu)
+
 ifneq (,$(filter 18.04,20.04,22.04,$(VERSION)))
 	$(info Installing from Ubuntu package vulkan sdk...)
 	sudo apt-get install vulkan_sdk
 else
 	make vulkan-tarball
 endif
+
 else
 	make vulkan-tarball
 endif
 endif
 	$(info Vulkan installation complete, testing...)
-	@vkvia
+	@vulkaninfo
 
 vulkan-tarball:
 	$(info Attempting to install Vulkan from tarball...)
+
+ifeq ($(DISTRO),Arch)
+	sudo pacman -Su
+	sudo pacman -S --needed jq wget sed tar
+endif
+
 	@install/install-vulkan.sh
-	@vkvia
+	@vulkaninfo
 	
 
 deps:
 ifeq ($(OS),Windows_NT)
 	pacman -S mingw-w64-x86_64-boost mingw-w64-x86_64-glm mingw-w64-x86_64-openal mingw-w64-x86_64-freetype mingw-w64-x86_64-glfw
 else
+ifeq ($(DISTRO),Ubuntu)
 	sudo apt-get update ; sudo apt-get upgrade ; sudo apt-get install g++ libglfw3-dev libglm-dev libopenal-dev libfreetype-dev libboost-all-dev libasound2-dev
+else
+ifeq ($(DISTRO),Arch)
+	sudo pacman -Su
+	sudo pacman -S --needed gcc glfw glm openal freetype2 boost boost-libs alsa-lib
+endif
+endif
 endif
